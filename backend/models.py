@@ -8,6 +8,7 @@ import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import wikipedia
+from data_analyzer import AdvancedAnalyzer
 
 logger = logging.getLogger(__name__)
 
@@ -280,6 +281,21 @@ class MAXY1_1:
             ]), 0.85)
     
     @staticmethod
+    def analyze_casual_context(message: str, history: List[Dict]) -> str:
+        """Analyze context for casual conversation continuity"""
+        if not history:
+            return ""
+            
+        last_user_msg = next((m['content'] for m in reversed(history) if m['role'] == 'user'), "")
+        last_ai_msg = next((m['content'] for m in reversed(history) if m['role'] == 'assistant'), "")
+        
+        # Check if we asked a question
+        if "?" in last_ai_msg:
+            return "continuing_conversation"
+            
+        return "new_topic"
+
+    @staticmethod
     def process_message(
         message: str,
         include_thinking: bool = True,
@@ -289,6 +305,9 @@ class MAXY1_1:
         
         # Analyze user intent for better understanding
         intent_analysis = MAXY1_1.analyze_user_intent(message)
+        
+        # Context analysis
+        context_status = MAXY1_1.analyze_casual_context(message, conversation_history or [])
         
         # Generate thinking process
         thinking = None
@@ -301,6 +320,12 @@ class MAXY1_1:
         
         # Generate appropriate concise response
         response, confidence = MAXY1_1.generate_concise_response(intent_analysis, message)
+        
+        # Adjust for context
+        if context_status == "continuing_conversation" and intent_analysis['intents']['greeting']:
+            # Don't greet again if we are continuing
+            response = "I'm listening! Go on." 
+            confidence = 0.99
         
         # Ensure response is 3-4 sentences max for MAXY 1.1
         sentences = response.split('. ')
@@ -449,7 +474,13 @@ class MAXY1_2:
             # Source
             response += f"**Source**\n"
             response += f"📚 Wikipedia: {url}\n"
-            response += f"For the complete article, visit the link above."
+            
+            # Related Topics (Mock implementation for now, ideally would parse links)
+            response += f"\n**Related Topics:**\n"
+            response += f"• {search_results[1] if len(search_results) > 1 else 'General Knowledge'}\n"
+            response += f"• {search_results[2] if len(search_results) > 2 else 'Related History'}\n"
+            
+            response += f"\nFor the complete article, visit the link above."
             
             return {
                 'success': True,
@@ -1056,8 +1087,48 @@ DEALLOCATE item_cursor;'''
         msg_lower = message.lower().strip()
         response = None
         
+        # Detect numeric data for analysis
+        import re
+        numbers = re.findall(r'-?\d+\.?\d*', message)
+        
+
+        # Check prior to file_data if we have direct analysis request
+        if len(numbers) >= 3 and any(x in msg_lower for x in ['analyze', 'stats', 'statistics', 'mean', 'average', 'data']):
+            try:
+                data_points = [float(n) for n in numbers]
+                analysis = AdvancedAnalyzer.generate_comprehensive_analysis(data_points)
+                
+                if 'error' not in analysis:
+                    response = f"### 📊 Statistical Analysis\n\n"
+                    response += f"I analyzed the **{len(data_points)} data points** you provided.\n\n"
+                    
+                    response += f"**Central Tendency:**\n"
+                    response += f"- **Mean:** {analysis['central_tendency']['mean']}\n"
+                    response += f"- **Median:** {analysis['central_tendency']['median']}\n"
+                    if analysis['central_tendency']['mode']:
+                        response += f"- **Mode:** {analysis['central_tendency']['mode']}\n"
+                        
+                    response += f"\n**Dispersion:**\n"
+                    response += f"- **Std Dev:** {analysis['dispersion']['std_dev']}\n"
+                    response += f"- **Range:** {analysis['dispersion']['range']['min']} to {analysis['dispersion']['range']['max']}\n"
+                    
+                    if analysis['trends']['trend'] != 'insufficient_data':
+                        response += f"\n**Trend Analysis:**\n"
+                        response += f"- **Direction:** {analysis['trends']['trend'].title()}\n"
+                        response += f"- **Strength:** {analysis['trends']['strength'].title()}\n"
+                        
+                    outliers = analysis['outliers']['count']
+                    if outliers > 0:
+                         response += f"\n**⚠️ Outliers Detected:** {outliers} potential outliers found.\n"
+
+                    confidence = 0.95
+                else:
+                    response = f"I tried to analyze the numbers, but encountered an error: {analysis['error']}"
+            except Exception as e:
+                logger.error(f"Error in quick analysis: {e}")
+
         # Check if we have file data to analyze
-        if file_data:
+        elif file_data:
             file_name = file_data.get('name', 'unknown file')
             file_type = file_data.get('type', 'unknown')
             file_content = file_data.get('content', '')
