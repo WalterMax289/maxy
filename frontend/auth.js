@@ -40,14 +40,14 @@ function decryptPassword(encryptedPass) {
 function isLoggedIn() {
     const session = localStorage.getItem('maxySession');
     if (!session) return false;
-    
+
     try {
         const sessionData = JSON.parse(session);
         // Check if session is still valid (24 hours)
         const now = new Date().getTime();
         const sessionAge = now - sessionData.timestamp;
         const maxAge = 24 * 60 * 60 * 1000; // 24 hours
-        
+
         if (sessionAge > maxAge) {
             localStorage.removeItem('maxySession');
             return false;
@@ -62,7 +62,7 @@ function isLoggedIn() {
 function getCurrentUser() {
     const session = localStorage.getItem('maxySession');
     if (!session) return null;
-    
+
     try {
         return JSON.parse(session);
     } catch (e) {
@@ -74,12 +74,12 @@ function getCurrentUser() {
 function registerUser(name, email, password) {
     // Get existing users
     let users = JSON.parse(localStorage.getItem('maxyUsers')) || [];
-    
+
     // Check if email already exists
     if (users.find(u => u.email === email)) {
         return { success: false, message: 'Email already registered' };
     }
-    
+
     // Create new user
     const newUser = {
         id: 'user_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9),
@@ -89,11 +89,11 @@ function registerUser(name, email, password) {
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
     };
-    
+
     // Add to users list
     users.push(newUser);
     localStorage.setItem('maxyUsers', JSON.stringify(users));
-    
+
     // Create session
     const session = {
         id: newUser.id,
@@ -102,10 +102,10 @@ function registerUser(name, email, password) {
         timestamp: new Date().getTime()
     };
     localStorage.setItem('maxySession', JSON.stringify(session));
-    
+
     // Save user data to text file format
     saveUserToFile(newUser);
-    
+
     return { success: true, message: 'Registration successful' };
 }
 
@@ -113,22 +113,22 @@ function registerUser(name, email, password) {
 function loginUser(email, password) {
     // Get users
     let users = JSON.parse(localStorage.getItem('maxyUsers')) || [];
-    
+
     // Find user by email
     const user = users.find(u => u.email === email);
     if (!user) {
         return { success: false, message: 'Invalid email or password' };
     }
-    
+
     // Verify password
     if (user.password !== hashPassword(password)) {
         return { success: false, message: 'Invalid email or password' };
     }
-    
+
     // Update last login
     user.lastLogin = new Date().toISOString();
     localStorage.setItem('maxyUsers', JSON.stringify(users));
-    
+
     // Create session
     const session = {
         id: user.id,
@@ -137,13 +137,13 @@ function loginUser(email, password) {
         timestamp: new Date().getTime()
     };
     localStorage.setItem('maxySession', JSON.stringify(session));
-    
+
     // Also save to profile data for compatibility
     localStorage.setItem('maxyUser', JSON.stringify({
         name: user.name,
         email: user.email
     }));
-    
+
     return { success: true, message: 'Login successful' };
 }
 
@@ -167,12 +167,12 @@ Registration Date: ${date}
 User ID: ${user.id}
 ========================================
 `;
-    
+
     // Store in localStorage for accumulation
     let allUserData = localStorage.getItem('maxyUserDataFile') || '';
     allUserData += fileContent;
     localStorage.setItem('maxyUserDataFile', allUserData);
-    
+
     // Create downloadable file
     downloadUserDataFile();
 }
@@ -181,7 +181,7 @@ User ID: ${user.id}
 function downloadUserDataFile() {
     const userData = localStorage.getItem('maxyUserDataFile') || '';
     if (!userData) return;
-    
+
     const blob = new Blob([userData], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -199,7 +199,7 @@ function exportAllUsersData() {
     let exportContent = 'MAXY CHAT - ALL USERS DATA\n';
     exportContent += 'Generated: ' + new Date().toLocaleString() + '\n';
     exportContent += '========================================\n\n';
-    
+
     users.forEach((user, index) => {
         exportContent += `USER #${index + 1}\n`;
         exportContent += '----------------------------------------\n';
@@ -211,11 +211,11 @@ function exportAllUsersData() {
         exportContent += `User ID: ${user.id}\n`;
         exportContent += '----------------------------------------\n\n';
     });
-    
+
     exportContent += '========================================\n';
     exportContent += 'END OF REPORT\n';
     exportContent += '========================================\n';
-    
+
     const blob = new Blob([exportContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -232,20 +232,20 @@ function openAuthModal(type = 'login') {
     const modal = document.getElementById('authModal');
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
-    
+
     if (!modal) return;
-    
+
     modal.style.display = 'flex';
-    
+
     if (type === 'login') {
         if (loginForm) loginForm.style.display = 'block';
         if (signupForm) signupForm.style.display = 'none';
-        
+
         // Autofill email if remembered
         const rememberedEmail = localStorage.getItem('maxyRememberedEmail');
         const emailInput = document.getElementById('loginEmail');
         const rememberCheckbox = document.getElementById('rememberEmail');
-        
+
         if (rememberedEmail && emailInput) {
             emailInput.value = rememberedEmail;
             if (rememberCheckbox) rememberCheckbox.checked = true;
@@ -266,36 +266,36 @@ function handleModalSignup() {
     const nameInput = document.getElementById('signupName');
     const emailInput = document.getElementById('signupEmail');
     const passwordInput = document.getElementById('signupPassword');
-    
+
     if (!nameInput || !emailInput || !passwordInput) return;
-    
+
     const name = nameInput.value.trim();
     const email = emailInput.value.trim();
     const password = passwordInput.value;
-    
+
     // Validation
     if (!name || !email || !password) {
         showAuthToast('Please fill in all fields', 'error');
         return;
     }
-    
+
     if (password.length < 6) {
         showAuthToast('Password must be at least 6 characters', 'error');
         return;
     }
-    
+
     if (!email.includes('@') || !email.includes('.')) {
         showAuthToast('Please enter a valid email', 'error');
         return;
     }
-    
+
     // Register user
     const result = registerUser(name, email, password);
-    
+
     if (result.success) {
         showAuthToast('Account created! Welcome to MAXY!', 'success');
         closeAuthModal();
-        
+
         // Redirect to chat after a delay
         setTimeout(() => {
             window.location.href = 'chat.html';
@@ -310,32 +310,32 @@ function handleModalLogin() {
     const emailInput = document.getElementById('loginEmail');
     const passwordInput = document.getElementById('loginPassword');
     const rememberCheckbox = document.getElementById('rememberEmail');
-    
+
     if (!emailInput || !passwordInput) return;
-    
+
     const email = emailInput.value.trim();
     const password = passwordInput.value;
     const rememberEmail = rememberCheckbox ? rememberCheckbox.checked : false;
-    
+
     if (!email || !password) {
         showAuthToast('Please enter email and password', 'error');
         return;
     }
-    
+
     // Save or remove remembered email
     if (rememberEmail) {
         localStorage.setItem('maxyRememberedEmail', email);
     } else {
         localStorage.removeItem('maxyRememberedEmail');
     }
-    
+
     // Login user
     const result = loginUser(email, password);
-    
+
     if (result.success) {
         showAuthToast('Welcome back!', 'success');
         closeAuthModal();
-        
+
         // Redirect to chat after a delay
         setTimeout(() => {
             window.location.href = 'chat.html';
@@ -368,7 +368,7 @@ function handleTryMaxyClick(event) {
 function requireAuth() {
     if (!isLoggedIn()) {
         // Redirect to landing page with login modal
-        window.location.href = 'maxy.html?auth=required';
+        window.location.href = 'index.html?auth=required';
         return false;
     }
     return true;
@@ -378,7 +378,7 @@ function requireAuth() {
 function showAuthToast(message, type = 'info') {
     const existingToast = document.querySelector('.auth-toast');
     if (existingToast) existingToast.remove();
-    
+
     const toast = document.createElement('div');
     toast.className = `auth-toast ${type}`;
     toast.textContent = message;
@@ -396,9 +396,9 @@ function showAuthToast(message, type = 'info') {
         animation: slideDown 0.3s ease;
         box-shadow: 0 10px 40px rgba(0,0,0,0.3);
     `;
-    
+
     document.body.appendChild(toast);
-    
+
     setTimeout(() => {
         toast.style.animation = 'slideUp 0.3s ease';
         setTimeout(() => toast.remove(), 300);

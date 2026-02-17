@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,17 +31,17 @@
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
             --shadow-glow: 0 0 40px rgb(133, 133, 133);
         }
-        
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-        
+
         html {
             scroll-behavior: smooth;
         }
-        
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg-primary);
@@ -49,7 +50,7 @@
             line-height: 1.6;
             overflow-x: hidden;
         }
-        
+
         /* Background */
         .bg-container {
             position: fixed;
@@ -57,7 +58,7 @@
             z-index: 0;
             overflow: hidden;
         }
-        
+
         .bg-video {
             position: absolute;
             width: 100%;
@@ -65,7 +66,7 @@
             object-fit: cover;
             opacity: 0.9;
         }
-        
+
         .bg-noise {
             position: absolute;
             inset: 0;
@@ -73,7 +74,7 @@
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
             pointer-events: none;
         }
-        
+
         /* Header */
         header {
             position: fixed;
@@ -90,13 +91,13 @@
             justify-content: space-between;
             padding: 0 48px;
         }
-        
+
         .header-left {
             display: flex;
             align-items: center;
             gap: 16px;
         }
-        
+
         .logo {
             width: 40px;
             height: 40px;
@@ -106,18 +107,18 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             box-shadow: 0 0 20px rgba(104, 104, 104, 0.3);
         }
-        
+
         .logo:hover {
             transform: scale(1.05) rotate(-3deg);
             box-shadow: 0 0 30px rgba(128, 128, 128, 0.5);
         }
-        
+
         .logo img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        
+
         .header-title {
             font-size: 18px;
             font-weight: 600;
@@ -126,13 +127,13 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        
+
         .header-nav {
             display: flex;
             align-items: center;
             gap: 8px;
         }
-        
+
         .nav-link {
             display: flex;
             align-items: center;
@@ -145,18 +146,18 @@
             border-radius: 10px;
             transition: all 0.2s ease;
         }
-        
+
         .nav-link:hover {
             color: var(--text-primary);
             background: var(--bg-card);
         }
-        
+
         .nav-link.active {
             color: var(--text-primary);
             background: var(--bg-tertiary);
             border: 1px solid var(--border);
         }
-        
+
         /* Main Content */
         main {
             position: relative;
@@ -165,20 +166,20 @@
             max-width: 1400px;
             margin: 0 auto;
         }
-        
+
         .profile-layout {
             display: grid;
             grid-template-columns: 340px 1fr;
             gap: 32px;
             align-items: start;
         }
-        
+
         /* Profile Card */
         .profile-sidebar {
             position: sticky;
             top: 104px;
         }
-        
+
         .profile-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -187,19 +188,19 @@
             backdrop-filter: blur(20px);
             transition: all 0.3s ease;
         }
-        
+
         .profile-card:hover {
             border-color: var(--border-hover);
             box-shadow: var(--shadow-glow);
         }
-        
+
         .avatar-section {
             position: relative;
             width: 140px;
             height: 140px;
             margin: 0 auto 24px;
         }
-        
+
         .avatar {
             width: 100%;
             height: 100%;
@@ -216,13 +217,13 @@
             transition: all 0.3s ease;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
-        
+
         .avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        
+
         .avatar-upload {
             position: absolute;
             bottom: 4px;
@@ -240,20 +241,20 @@
             font-size: 16px;
             box-shadow: var(--shadow-md);
         }
-        
+
         .avatar-upload:hover {
             background: var(--accent);
             border-color: var(--accent);
             transform: scale(1.1);
         }
-        
+
         .avatar-upload input {
             position: absolute;
             inset: 0;
             opacity: 0;
             cursor: pointer;
         }
-        
+
         .profile-name {
             font-size: 24px;
             font-weight: 700;
@@ -261,14 +262,14 @@
             margin-bottom: 4px;
             letter-spacing: -0.5px;
         }
-        
+
         .profile-email {
             font-size: 14px;
             color: var(--text-secondary);
             text-align: center;
             margin-bottom: 20px;
         }
-        
+
         .profile-status {
             display: inline-flex;
             align-items: center;
@@ -284,7 +285,7 @@
             display: flex;
             width: fit-content;
         }
-        
+
         .status-dot {
             width: 6px;
             height: 6px;
@@ -292,12 +293,19 @@
             border-radius: 50%;
             animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
-        
+
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
-        
+
         /* Stats Section */
         .stats-grid {
             display: grid;
@@ -305,7 +313,7 @@
             gap: 16px;
             margin-bottom: 32px;
         }
-        
+
         .stat-item {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -314,13 +322,13 @@
             text-align: center;
             transition: all 0.3s ease;
         }
-        
+
         .stat-item:hover {
             transform: translateY(-4px);
             border-color: var(--border-hover);
             background: rgba(255, 255, 255, 0.05);
         }
-        
+
         .stat-value {
             font-size: 32px;
             font-weight: 700;
@@ -330,7 +338,7 @@
             margin-bottom: 4px;
             line-height: 1;
         }
-        
+
         .stat-label {
             font-size: 13px;
             color: var(--text-tertiary);
@@ -338,7 +346,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        
+
         /* Content Sections */
         .content-section {
             background: var(--bg-card);
@@ -348,14 +356,14 @@
             margin-bottom: 24px;
             backdrop-filter: blur(20px);
         }
-        
+
         .section-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 24px;
         }
-        
+
         .section-title {
             font-size: 16px;
             font-weight: 600;
@@ -363,7 +371,7 @@
             align-items: center;
             gap: 10px;
         }
-        
+
         .section-icon {
             width: 36px;
             height: 36px;
@@ -374,24 +382,24 @@
             justify-content: center;
             font-size: 18px;
         }
-        
+
         /* Form Styles */
         .form-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 20px;
         }
-        
+
         .form-group {
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
-        
+
         .form-group.full-width {
             grid-column: 1 / -1;
         }
-        
+
         .form-label {
             font-size: 13px;
             font-weight: 500;
@@ -399,7 +407,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        
+
         .form-input {
             padding: 12px 16px;
             background: var(--bg-secondary);
@@ -410,21 +418,21 @@
             font-family: inherit;
             transition: all 0.2s ease;
         }
-        
+
         .form-input:hover {
             border-color: var(--border-hover);
         }
-        
+
         .form-input:focus {
             outline: none;
             border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
         }
-        
+
         .form-input::placeholder {
             color: var(--text-tertiary);
         }
-        
+
         /* Buttons */
         .btn {
             display: inline-flex;
@@ -440,53 +448,53 @@
             transition: all 0.2s ease;
             font-family: inherit;
         }
-        
+
         .btn-primary {
             background: linear-gradient(135deg, var(--gradient-1) 0%, var(--gradient-2) 100%);
             color: white;
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
         }
-        
+
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(136, 136, 136, 0.5);
         }
-        
+
         .btn-secondary {
             background: var(--bg-secondary);
             color: var(--text-primary);
             border: 1px solid var(--border);
         }
-        
+
         .btn-secondary:hover {
             background: var(--bg-tertiary);
             border-color: var(--border-hover);
         }
-        
+
         .btn-danger {
             background: rgba(239, 68, 68, 0.1);
             color: var(--danger);
             border: 1px solid rgba(239, 68, 68, 0.2);
         }
-        
+
         .btn-danger:hover {
             background: rgba(239, 68, 68, 0.2);
             border-color: rgba(239, 68, 68, 0.3);
         }
-        
+
         .btn-group {
             display: flex;
             gap: 12px;
             margin-top: 24px;
         }
-        
+
         /* Settings List */
         .settings-list {
             display: flex;
             flex-direction: column;
             gap: 4px;
         }
-        
+
         .setting-item {
             display: flex;
             align-items: center;
@@ -495,23 +503,23 @@
             border-radius: 12px;
             transition: background 0.2s ease;
         }
-        
+
         .setting-item:hover {
             background: rgba(255, 255, 255, 0.03);
         }
-        
+
         .setting-info h4 {
             font-size: 15px;
             font-weight: 500;
             margin-bottom: 2px;
             color: var(--text-primary);
         }
-        
+
         .setting-info p {
             font-size: 13px;
             color: var(--text-tertiary);
         }
-        
+
         /* Toggle Switch */
         .toggle {
             position: relative;
@@ -523,12 +531,12 @@
             transition: all 0.3s ease;
             border: 1px solid var(--border);
         }
-        
+
         .toggle.active {
             background: linear-gradient(135deg, var(--gradient-1) 0%, var(--gradient-2) 100%);
             border-color: transparent;
         }
-        
+
         .toggle::after {
             content: '';
             position: absolute;
@@ -541,11 +549,11 @@
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: var(--shadow-sm);
         }
-        
+
         .toggle.active::after {
             transform: translateX(22px);
         }
-        
+
         /* Toast */
         .toast-container {
             position: fixed;
@@ -556,7 +564,7 @@
             flex-direction: column;
             gap: 12px;
         }
-        
+
         .toast {
             background: var(--bg-secondary);
             border: 1px solid var(--border);
@@ -571,123 +579,127 @@
             opacity: 0;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         .toast.show {
             transform: translateX(0);
             opacity: 1;
         }
-        
+
         .toast-icon {
             font-size: 20px;
         }
-        
+
         .toast-content {
             flex: 1;
         }
-        
+
         .toast-title {
             font-weight: 600;
             font-size: 14px;
         }
-        
+
         .toast-message {
             font-size: 13px;
             color: var(--text-secondary);
         }
-        
+
         /* Responsive */
         @media (max-width: 1024px) {
             .profile-layout {
                 grid-template-columns: 280px 1fr;
                 gap: 24px;
             }
-            
+
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
-        
+
         @media (max-width: 768px) {
             header {
                 padding: 0 24px;
                 height: 64px;
             }
-            
+
             .header-title {
                 display: none;
             }
-            
+
             main {
                 padding: 88px 24px 24px;
             }
-            
+
             .profile-layout {
                 grid-template-columns: 1fr;
             }
-            
+
             .profile-sidebar {
                 position: relative;
                 top: 0;
             }
-            
+
             .stats-grid {
                 grid-template-columns: repeat(3, 1fr);
             }
-            
+
             .form-grid {
                 grid-template-columns: 1fr;
             }
         }
-        
+
         @media (max-width: 480px) {
             .stats-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .btn-group {
                 flex-direction: column;
             }
-            
+
             .btn {
                 width: 100%;
             }
-            
+
             .section-header {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 16px;
             }
         }
-        
+
         /* Loading Animation */
         .skeleton {
-            background: linear-gradient(
-                90deg,
-                var(--bg-tertiary) 25%,
-                rgba(255, 255, 255, 0.05) 50%,
-                var(--bg-tertiary) 75%
-            );
+            background: linear-gradient(90deg,
+                    var(--bg-tertiary) 25%,
+                    rgba(255, 255, 255, 0.05) 50%,
+                    var(--bg-tertiary) 75%);
             background-size: 200% 100%;
             animation: shimmer 1.5s infinite;
             border-radius: 8px;
         }
-        
+
         @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
         }
     </style>
 </head>
+
 <body>
     <!-- Auth Check - Must be logged in -->
     <script src="auth.js"></script>
     <script>
         // Check if user is logged in
         if (!isLoggedIn()) {
-            window.location.href = 'maxy.html?auth=required';
+            window.location.href = 'index.html?auth=required';
         }
     </script>
-    
+
     <!-- Background -->
     <div class="bg-container">
         <video class="bg-video" autoplay loop muted playsinline>
@@ -696,24 +708,26 @@
         <div class="bg-gradient"></div>
         <div class="bg-noise"></div>
     </div>
-    
+
     <!-- Header -->
     <header>
         <div class="header-left">
-            <div class="logo" onclick="window.location.href='maxy.html'">
+            <div class="logo" onclick="window.location.href='index.html'">
                 <img src="assets/maxy12.gif" alt="MAXY">
             </div>
             <span class="header-title">Profile</span>
         </div>
         <nav class="header-nav">
             <a href="chat.html" class="nav-link">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
                 Chat
             </a>
             <a href="profile.html" class="nav-link active">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                     <circle cx="12" cy="7" r="4"></circle>
                 </svg>
@@ -721,7 +735,7 @@
             </a>
         </nav>
     </header>
-    
+
     <!-- Main Content -->
     <main>
         <div class="profile-layout">
@@ -733,24 +747,27 @@
                             <span id="avatarLetter">G</span>
                         </div>
                         <div class="avatar-upload">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
+                                </path>
                                 <circle cx="12" cy="13" r="4"></circle>
                             </svg>
                             <input type="file" id="avatarInput" accept="image/*" onchange="handleAvatarUpload(event)">
                         </div>
                     </div>
-                    
+
                     <h2 class="profile-name" id="profileName">Guest User</h2>
                     <p class="profile-email" id="profileEmail">guest@example.com</p>
-                    
+
                     <div class="profile-status">
                         <span class="status-dot"></span>
                         <span>Online</span>
                     </div>
                 </div>
             </aside>
-            
+
             <!-- Main Content Area -->
             <div class="main-content">
                 <!-- Stats -->
@@ -768,7 +785,7 @@
                         <div class="stat-label">Days Active</div>
                     </div>
                 </div>
-                
+
                 <!-- Profile Information -->
                 <div class="content-section">
                     <div class="section-header">
@@ -777,7 +794,7 @@
                             Profile Information
                         </h3>
                     </div>
-                    
+
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label">Display Name</label>
@@ -789,13 +806,15 @@
                         </div>
                         <div class="form-group full-width">
                             <label class="form-label">Bio</label>
-                            <input type="text" class="form-input" id="inputBio" placeholder="Tell us a little about yourself...">
+                            <input type="text" class="form-input" id="inputBio"
+                                placeholder="Tell us a little about yourself...">
                         </div>
                     </div>
-                    
+
                     <div class="btn-group">
                         <button class="btn btn-primary" onclick="saveProfile()">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                                 <polyline points="17 21 17 13 7 13 7 21"></polyline>
                                 <polyline points="7 3 7 8 15 8"></polyline>
@@ -805,7 +824,7 @@
                         <button class="btn btn-secondary" onclick="resetProfile()">Cancel</button>
                     </div>
                 </div>
-                
+
                 <!-- Preferences -->
                 <div class="content-section">
                     <div class="section-header">
@@ -814,7 +833,7 @@
                             Preferences
                         </h3>
                     </div>
-                    
+
                     <div class="settings-list">
                         <div class="setting-item">
                             <div class="setting-info">
@@ -839,7 +858,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Account Actions -->
                 <div class="content-section">
                     <div class="section-header">
@@ -848,17 +867,21 @@
                             Account Actions
                         </h3>
                     </div>
-                    
+
                     <div class="btn-group">
                         <button class="btn btn-secondary" onclick="clearHistory()">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                <path
+                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                </path>
                             </svg>
                             Clear Chat History
                         </button>
                         <button class="btn btn-danger" onclick="logout()">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                                 <polyline points="16 17 21 12 16 7"></polyline>
                                 <line x1="21" y1="12" x2="9" y2="12"></line>
@@ -870,16 +893,16 @@
             </div>
         </div>
     </main>
-    
+
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
-    
+
     <script>
         // Get current user from auth session
         function getAuthUserData() {
             const session = JSON.parse(localStorage.getItem('maxySession')) || {};
             const profile = JSON.parse(localStorage.getItem('maxyUser')) || {};
-            
+
             // Merge session and profile data (profile has more details like bio, avatar)
             return {
                 name: session.name || profile.name || 'Guest User',
@@ -888,7 +911,7 @@
                 avatar: profile.avatar || null
             };
         }
-        
+
         // User data
         let userData = getAuthUserData();
         let preferences = JSON.parse(localStorage.getItem('maxyPreferences')) || {
@@ -896,35 +919,35 @@
             scroll: true,
             typing: true
         };
-        
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             loadUserData();
             loadStats();
             loadPreferences();
         });
-        
+
         // Load user data
         function loadUserData() {
             // Refresh user data from auth
             userData = getAuthUserData();
-            
+
             const name = userData.name || 'Guest User';
             const email = userData.email || 'guest@example.com';
             const bio = userData.bio || '';
             const avatar = userData.avatar || null;
-            
+
             // Update profile card
             document.getElementById('profileName').textContent = name;
             document.getElementById('profileEmail').textContent = email;
             document.getElementById('inputName').value = name;
             document.getElementById('inputEmail').value = email;
             document.getElementById('inputBio').value = bio;
-            
+
             // Update avatar
             const avatarEl = document.getElementById('userAvatar');
             const letterEl = document.getElementById('avatarLetter');
-            
+
             if (avatar) {
                 avatarEl.innerHTML = `<img src="${avatar}" alt="Profile">`;
             } else {
@@ -933,13 +956,13 @@
                 letterEl.textContent = firstLetter;
             }
         }
-        
+
         // Load stats
         function loadStats() {
             const chats = JSON.parse(localStorage.getItem('maxyChats')) || [];
             const totalChats = chats.length;
             const totalMessages = chats.reduce((sum, chat) => sum + (chat.messages?.length || 0), 0);
-            
+
             // Calculate days active
             let daysActive = 1;
             if (chats.length > 0) {
@@ -948,51 +971,51 @@
                 const days = Math.floor((Date.now() - earliest) / (1000 * 60 * 60 * 24)) + 1;
                 daysActive = Math.max(1, days);
             }
-            
+
             // Animate numbers
             animateNumber('statChats', totalChats);
             animateNumber('statMessages', totalMessages);
             animateNumber('statDays', daysActive);
         }
-        
+
         // Animate number counting
         function animateNumber(elementId, target) {
             const element = document.getElementById(elementId);
             const duration = 1500;
             const start = 0;
             const startTime = performance.now();
-            
+
             function update(currentTime) {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
                 const easeOut = 1 - Math.pow(1 - progress, 4);
                 const current = Math.floor(start + (target - start) * easeOut);
-                
+
                 element.textContent = current.toLocaleString();
-                
+
                 if (progress < 1) {
                     requestAnimationFrame(update);
                 }
             }
-            
+
             requestAnimationFrame(update);
         }
-        
+
         // Handle avatar upload
         function handleAvatarUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
-            
+
             if (!file.type.startsWith('image/')) {
                 showToast('Error', 'Please select an image file', 'error');
                 return;
             }
-            
+
             if (file.size > 5 * 1024 * 1024) {
                 showToast('Error', 'Image must be less than 5MB', 'error');
                 return;
             }
-            
+
             const reader = new FileReader();
             reader.onload = (e) => {
                 const avatarData = e.target.result;
@@ -1000,7 +1023,7 @@
                 console.log('Saving avatar, userData:', userData);
                 localStorage.setItem('maxyUser', JSON.stringify(userData));
                 console.log('Avatar saved to localStorage');
-                
+
                 // Notify other pages (chat.html) about avatar update
                 if (typeof BroadcastChannel !== 'undefined') {
                     try {
@@ -1012,44 +1035,44 @@
                         console.log('BroadcastChannel failed:', e);
                     }
                 }
-                
+
                 document.getElementById('userAvatar').innerHTML = `<img src="${avatarData}" alt="Profile">`;
                 showToast('Success', 'Profile picture updated', 'success');
             };
             reader.readAsDataURL(file);
         }
-        
+
         // Save profile
         function saveProfile() {
             const name = document.getElementById('inputName').value.trim();
             const email = document.getElementById('inputEmail').value.trim();
             const bio = document.getElementById('inputBio').value.trim();
-            
+
             if (!name) {
                 showToast('Error', 'Please enter your name', 'error');
                 return;
             }
-            
+
             if (!email || !email.includes('@')) {
                 showToast('Error', 'Please enter a valid email', 'error');
                 return;
             }
-            
+
             userData.name = name;
             userData.email = email;
             userData.bio = bio;
-            
+
             console.log('Saving user data:', userData);
             localStorage.setItem('maxyUser', JSON.stringify(userData));
             console.log('User data saved to localStorage');
-            
+
             // Update auth session with new name/email
             const session = JSON.parse(localStorage.getItem('maxySession')) || {};
             session.name = name;
             session.email = email;
             localStorage.setItem('maxySession', JSON.stringify(session));
             console.log('Auth session updated');
-            
+
             // Also update in users array for auth system
             let users = JSON.parse(localStorage.getItem('maxyUsers')) || [];
             const userIndex = users.findIndex(u => u.id === session.id);
@@ -1059,7 +1082,7 @@
                 localStorage.setItem('maxyUsers', JSON.stringify(users));
                 console.log('Users array updated');
             }
-            
+
             // Notify other pages (chat.html) about profile update
             if (typeof BroadcastChannel !== 'undefined') {
                 try {
@@ -1071,49 +1094,49 @@
                     console.log('BroadcastChannel failed:', e);
                 }
             }
-            
+
             // Update display
             document.getElementById('profileName').textContent = name;
             document.getElementById('profileEmail').textContent = email;
-            
+
             // Update avatar letter if no custom avatar
             if (!userData.avatar) {
                 const firstLetter = email.charAt(0).toUpperCase();
                 document.getElementById('avatarLetter').textContent = firstLetter;
             }
-            
+
             showToast('Success', 'Profile saved successfully', 'success');
         }
-        
+
         // Reset profile form
         function resetProfile() {
             loadUserData();
             showToast('Info', 'Changes discarded', 'info');
         }
-        
+
         // Load preferences
         function loadPreferences() {
             document.getElementById('toggleSound').classList.toggle('active', preferences.sound);
             document.getElementById('toggleScroll').classList.toggle('active', preferences.scroll);
             document.getElementById('toggleTyping').classList.toggle('active', preferences.typing);
         }
-        
+
         // Toggle preference
         function togglePreference(key) {
             preferences[key] = !preferences[key];
             localStorage.setItem('maxyPreferences', JSON.stringify(preferences));
-            
+
             document.getElementById(`toggle${key.charAt(0).toUpperCase() + key.slice(1)}`).classList.toggle('active', preferences[key]);
-            
+
             const labels = {
                 sound: 'Sound effects',
                 scroll: 'Auto-scroll',
                 typing: 'Typing indicators'
             };
-            
+
             showToast('Success', `${labels[key]} ${preferences[key] ? 'enabled' : 'disabled'}`, 'success');
         }
-        
+
         // Clear chat history
         function clearHistory() {
             if (confirm('Are you sure you want to delete all chat history? This action cannot be undone.')) {
@@ -1122,7 +1145,7 @@
                 setTimeout(() => location.reload(), 1000);
             }
         }
-        
+
         // Logout
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
@@ -1132,19 +1155,19 @@
                 setTimeout(() => window.location.href = 'maxy.html', 1000);
             }
         }
-        
+
         // Show toast notification
         function showToast(title, message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             toast.className = 'toast';
-            
+
             const icons = {
                 success: '✓',
                 error: '✕',
                 info: 'ℹ'
             };
-            
+
             toast.innerHTML = `
                 <div class="toast-icon">${icons[type]}</div>
                 <div class="toast-content">
@@ -1152,13 +1175,13 @@
                     <div class="toast-message">${message}</div>
                 </div>
             `;
-            
+
             container.appendChild(toast);
-            
+
             requestAnimationFrame(() => {
                 toast.classList.add('show');
             });
-            
+
             setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => toast.remove(), 400);
@@ -1166,4 +1189,5 @@
         }
     </script>
 </body>
+
 </html>
