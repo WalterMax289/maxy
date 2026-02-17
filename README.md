@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # MAXY Chat Backend 
 
 ## Overview
@@ -436,6 +435,3 @@ For issues or questions:
 ---
 
 **MAXY Chat Backend v2.0** - Advanced AI-powered conversational system with thinking display, multi-model architecture, and comprehensive data analysis capabilities.
-=======
-# maxy
->>>>>>> 44240afb8f0cf3987eebcfff3b59b8c48be8c2c8
