@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAXY Chat</title>
+  <link rel="stylesheet" href="chat.css">
+</head>
+
+<body>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo-container">
+      <a href="maxy.html">
+        <img src="assets/maxy12.gif" alt="MAXY Logo" class="logo-circle">
+      </a>
+    </div>
+    <div class="search-bar">
+      ⌕ <input type="text" placeholder="Search Ctrl+K">
+    </div>
+    <div class="menu-item active" id="newChatBtn">New Chat</div>
+    <div class="recents-heading">Recents</div>
+    <div id="recentsList"></div>
+
+
+  </aside>
+
+  <!-- Mobile Sidebar Toggle -->
+  <button id="mobileSidebarToggle" class="mobile-sidebar-toggle" aria-label="Toggle sidebar">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
+
+  <!-- Desktop Sidebar Toggle -->
+  <button id="sidebarToggleDesktop" class="sidebar-toggle-desktop" aria-label="Toggle sidebar">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"></polyline>
+    </svg>
+  </button>
+
+  <!-- Sidebar Backdrop -->
+  <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
+  <!-- MAIN CHAT -->
+  <main class="main">
+    <!-- Background -->
+    <div class="chat-bg-video">
+      <video autoplay muted loop playsinline poster="assets/chat-bg-poster.jpg">
+        <source src="assets/chat-bg.mp4" type="video/mp4">
+      </video>
+    </div>
+
+    <!-- Top Header Bar -->
+    <div class="chat-header">
+      <div class="chat-header-title"></div>
+      <div class="chat-header-actions">
+        <button class="profile-btn-header" id="profileBtnHeader" aria-label="User Profile" title="Go to Profile"
+          onclick="window.location.href='profile.html'">
+          <div class="profile-avatar">👤</div>
+          <span class="profile-name">Guest</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Connection Status Banner -->
+    <div id="connectionBanner" style="display: none; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 10px 20px; text-align: center; font-size: 14px; position: relative; z-index: 100;">
+      <span>⚠️ Not connected to backend. </span>
+      <a href="#" onclick="location.reload(); return false;" style="color: #fff; text-decoration: underline; font-weight: bold;">Refresh page</a>
+      <span> or start the server: </span>
+      <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px; font-family: monospace;">python backend/server.py</code>
+    </div>
+
+    <div class="chat-content">
+      <!-- Welcome Screen -->
+      <div class="welcome" id="welcome">
+        <div class="maxy-title">MAXY</div>
+      </div>
+      <!-- Messages Area -->
+      <div class="messages" id="messages"></div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-container">
+      <div class="upload-btn" aria-label="Upload file" role="button" tabindex="0" id="uploadBtn"
+        title="Click to upload file">📎
+        <div class="upload-submenu">
+          <button data-type="image"> Upload Image</button>
+          <button data-type="pdf"> Upload PDF</button>
+          <button data-type="doc"> Upload Document</button>
+          <button data-type="any"> Open Any File...</button>
+        </div>
+      </div>
+      <div class="input-wrapper">
+        <div id="fileIndicator">
+          <span id="fileIcon">📎</span>
+          <span id="fileName"></span>
+          <button id="clearFileBtn">✕</button>
+        </div>
+        <textarea placeholder="Ask MAXY anything... (or upload a file to analyze)" rows="1"
+          id="messageInput"></textarea>
+      </div>
+
+      <!-- MAXY Model Selector (in input area) -->
+      <div class="maxy-selector">
+        <button class="maxy-trigger" id="maxyTrigger" aria-label="Select MAXY model" aria-expanded="false">
+          <span class="model-icon">✦</span>
+          <span class="maxy-trigger-text">MAXY</span>
+          <span class="maxy-trigger-version" id="maxyVersion">1.1</span>
+          <span class="dropdown-arrow">▼</span>
+        </button>
+        <div class="maxy-menu" id="maxyMenu" role="menu">
+          <div class="menu-section-title">Select Model</div>
+          <div class="model-option" data-model="maxy1.1">
+            <span class="model-icon">✦</span>
+            <div class="model-info">
+              <div class="model-name">MAXY 1.1</div>
+              <div class="model-desc">Quick responses</div>
+            </div>
+            <span class="checkmark">✓</span>
+          </div>
+          <div class="model-option" data-model="maxy1.2">
+            <span class="model-icon">📖</span>
+            <div class="model-info">
+              <div class="model-name">MAXY 1.2</div>
+              <div class="model-desc">Knowledge & Information</div>
+            </div>
+            <span class="checkmark">✓</span>
+          </div>
+          <div class="model-option" data-model="maxy1.3">
+            <span class="model-icon">📊</span>
+            <div class="model-info">
+              <div class="model-name">MAXY 1.3</div>
+              <div class="model-desc">Advanced Text & Data Analysis</div>
+            </div>
+            <span class="checkmark">✓</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="send-btn" id="sendBtn" aria-label="Send message">➤</button>
+
+  </main>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal">
+    <div class="modal-content">
+      <p>Are you sure you want to delete this conversation?</p>
+      <div class="modal-buttons">
+        <button id="cancelDelete">Cancel</button>
+        <button id="confirmDelete">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden file inputs -->
+  <input type="file" id="file-image" class="hidden-file-input" accept="image/*" style="display:none">
+  <input type="file" id="file-pdf" class="hidden-file-input" accept=".pdf" style="display:none">
+  <input type="file" id="file-doc" class="hidden-file-input" accept=".doc,.docx" style="display:none">
+  <input type="file" id="file-any" class="hidden-file-input" style="display:none">
+
+  <!-- Connection status indicator - Color only: Red=disconnected, Orange=connecting, Green=connected -->
+  <div id="connectionStatus" class="connection-status"
+    style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; cursor: help;" title="Server Connection Status">
+    <span class="status-dot" id="statusDot"
+      style="display: block; width: 12px; height: 12px; border-radius: 50%; background: #f59e0b; box-shadow: 0 0 10px #f59e0b; transition: all 0.3s ease;"></span>
+  </div>
+
+  <!-- Credits display - Made more prominent -->
+  <div id="creditsDisplay" class="credits-display"
+    style="position: fixed; bottom: 20px; left: 20px; display: none; align-items: center; gap: 10px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9)); padding: 12px 20px; border-radius: 30px; color: white; font-size: 14px; z-index: 1000; cursor: pointer; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); border: 1px solid rgba(255,255,255,0.2); font-weight: 600;"
+    title="Click to refresh credits">
+    <span style="font-size: 18px;">💎</span>
+    <span id="creditsText">Loading...</span>
+    <span style="font-size: 11px; opacity: 0.8; margin-left: 4px;">(click to refresh)</span>
+  </div>
+
+  <!-- Credits exhausted modal -->
+  <div id="creditsModal"
+    style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center;">
+    <div
+      style="background: var(--card-bg); padding: 40px; border-radius: 20px; text-align: center; max-width: 400px; border: 1px solid var(--border);">
+      <div style="font-size: 48px; margin-bottom: 20px;">⏰</div>
+      <h2 style="margin-bottom: 16px; color: var(--text);">Out of Messages!</h2>
+      <p style="color: var(--text-muted); margin-bottom: 24px;">You've used all your messages for this session.</p>
+      <div id="creditsCountdown" style="font-size: 24px; font-weight: bold; color: #f59e0b; margin-bottom: 24px;">
+        03:00:00</div>
+      <p style="color: var(--text-muted); font-size: 14px;">Credits refresh every 3 hours</p>
+    </div>
+  </div>
+
+  <!-- Auth Check - Must be logged in to access chat -->
+  <script src="auth.js"></script>
+  <script>
+    // Auth check disabled by user request
+    console.log("Auth check skipped: Direct access to chat.html allowed");
+  </script>
+  <script src="chat.js"></script>
+</body>
+
+</html>

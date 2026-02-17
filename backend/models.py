@@ -1,0 +1,1225 @@
+"""
+MAXY AI Models Implementation
+Enhanced models with distinct personalities and capabilities
+"""
+
+import random
+import logging
+from typing import List, Dict, Any, Optional
+from datetime import datetime
+import wikipedia
+
+logger = logging.getLogger(__name__)
+
+
+class MAXYThinkingEngine:
+    """Generate AI thinking/reasoning display"""
+    
+    @staticmethod
+    def generate_thinking(
+        model_name: str,
+        user_message: str,
+        analysis_type: str = "general"
+    ) -> str:
+        """Generate thinking process for display"""
+        
+        reasoning_steps = {
+            'quick': [
+                "Analyzing input...",
+                "Formulating response...",
+                "Optimizing output..."
+            ],
+            'research': [
+                "Identifying key topics...",
+                "Searching knowledge sources...",
+                "Synthesizing information...",
+                "Structuring comprehensive response..."
+            ],
+            'conversation': [
+                "Understanding context...",
+                "Identifying intent...",
+                "Crafting natural response..."
+            ],
+            'analysis': [
+                "Examining content structure...",
+                "Extracting key information...",
+                "Identifying patterns...",
+                "Generating insights..."
+            ]
+        }
+        
+        steps = reasoning_steps.get(analysis_type, reasoning_steps['quick'])
+        
+        thinking_text = f"Analyzing: '{user_message[:50]}'\n\n"
+        thinking_text += "Processing:\n"
+        for i, step in enumerate(steps, 1):
+            thinking_text += f"{i}. {step}\n"
+        
+        return thinking_text
+
+
+class MAXY1_1:
+    """MAXY 1.1 - Quick Responses & Thinking
+    
+    Optimized for:
+    - Lightning-fast responses
+    - Clear thinking process display
+    - Friendly, concise conversational AI
+    """
+    
+    NAME = "MAXY 1.1"
+    VERSION = "1.1.0"
+    DESCRIPTION = "Quick response AI with visible thinking process"
+    
+    # Quick response templates organized by intent
+    GREETINGS = [
+        "Hey there! 👋 Ready to chat!",
+        "Hello! What can I help you with?",
+        "Hi! I'm here and ready to assist!",
+        "Hey! Great to see you!",
+    ]
+    
+    FAREWELLS = [
+        "Goodbye! Catch you later! 👋",
+        "See you soon! Take care!",
+        "Bye for now! Come back anytime!",
+        "Until next time! Stay awesome!",
+    ]
+    
+    GRATITUDE = [
+        "You're welcome! Happy to help! 😊",
+        "Anytime! That's what I'm here for!",
+        "Glad I could assist!",
+        "No problem at all!",
+    ]
+    
+    HOW_ARE_YOU = [
+        "I'm doing great, thanks for asking! How are you?",
+        "Excellent! Ready to help. You?",
+        "Fantastic! What about you?",
+        "All good here! How's your day?",
+    ]
+    
+    IDENTITY = [
+        "I'm MAXY 1.1 - your quick-thinking AI assistant! I provide fast responses with clear reasoning.",
+        "Hello! I'm MAXY 1.1, designed for rapid responses and friendly conversation!",
+        "I'm MAXY 1.1! I specialize in quick, thoughtful responses with visible thinking processes.",
+    ]
+    
+    GENERAL_QUICK = [
+        "Got it! Tell me more.",
+        "Interesting! Continue...",
+        "I see! What else?",
+        "That makes sense!",
+        "Understood! What's next?",
+        "Okay! How can I help further?",
+    ]
+    
+    JOKES = [
+        "Why don't scientists trust atoms? Because they make up everything! 😄",
+        "Why did the scarecrow win an award? He was outstanding in his field!",
+        "What do you call a fake noodle? An impasta! 🍝",
+        "Why don't eggs tell jokes? They'd crack each other up!",
+    ]
+    
+    @staticmethod
+    def should_use_wikipedia(message: str) -> bool:
+        """Determine if this is a knowledge/research question"""
+        research_keywords = [
+            'what is', 'who is', 'how does', 'explain', 'tell me about',
+            'what are', 'define', 'describe', 'history of', 'science',
+            'technology', 'biology', 'physics', 'chemistry', 'geography',
+            'country', 'capital', 'famous', 'invented', 'discovered',
+            'when did', 'where is', 'why does'
+        ]
+        msg_lower = message.lower()
+        return any(kw in msg_lower for kw in research_keywords) and len(message) < 200
+    
+    @staticmethod
+    def quick_wikipedia_lookup(query: str) -> Optional[str]:
+        """Quick Wikipedia lookup for maxy1.1"""
+        try:
+            search_results = wikipedia.search(query, results=1)
+            if not search_results:
+                return None
+            
+            page = wikipedia.page(search_results[0], auto_suggest=False)
+            summary = page.summary[:400] + "..." if len(page.summary) > 400 else page.summary
+            
+            return f"**Quick Fact:** {summary}\n\n_Source: Wikipedia_"
+        except:
+            return None
+    
+    @staticmethod
+    def analyze_user_intent(message: str) -> Dict[str, Any]:
+        """Analyze what the user wants - improved context understanding"""
+        msg_lower = message.lower().strip()
+        
+        # Intent categories
+        intents = {
+            'greeting': any(g in msg_lower for g in ['hi', 'hello', 'hey', 'greetings', 'howdy']),
+            'farewell': any(f in msg_lower for f in ['bye', 'goodbye', 'see you', 'farewell', 'later']),
+            'gratitude': any(t in msg_lower for t in ['thanks', 'thank you', 'appreciate', 'grateful']),
+            'personal_status': any(h in msg_lower for h in ['how are you', 'how you doing']),
+            'identity': any(i in msg_lower for i in ['your name', 'who are you', 'what are you']),
+            'entertainment': any(j in msg_lower for j in ['joke', 'funny', 'laugh']),
+            'time_query': any(t in msg_lower for t in ['time', 'what time', 'current time']),
+            'date_query': any(d in msg_lower for d in ['date', 'today', 'what day']),
+            'help': any(h in msg_lower for h in ['help', 'what can you do']),
+            'knowledge': any(k in msg_lower for k in ['what is', 'who is', 'how does', 'explain', 'tell me about']),
+            'calculation': any(c in msg_lower for c in ['calculate', 'math', 'plus', 'minus', 'times', 'divided']),
+            'weather': any(w in msg_lower for w in ['weather', 'temperature', 'rain', 'sunny']),
+            'simple_task': len(message.split()) <= 3 and not any(char.isdigit() for char in message)
+        }
+        
+        # Detect urgency/enthusiasm
+        urgency = sum(1 for char in message if char in '!') + (2 if 'urgent' in msg_lower or 'asap' in msg_lower else 0)
+        
+        # Detect if user is new (short greeting)
+        is_new_user = intents['greeting'] and len(message) < 10
+        
+        return {
+            'intents': intents,
+            'urgency': urgency,
+            'is_new_user': is_new_user,
+            'message_length': len(message),
+            'word_count': len(message.split())
+        }
+    
+    @staticmethod
+    def generate_concise_response(intent_analysis: Dict[str, Any], message: str) -> tuple[str, float]:
+        """Generate 3-4 sentence response based on intent"""
+        intents = intent_analysis['intents']
+        msg_lower = message.lower().strip()
+        
+        # Greeting - Friendly and welcoming (3-4 sentences)
+        if intents['greeting']:
+            if intent_analysis.get('is_new_user', False):
+                return ("Hey there! Welcome! I'm MAXY 1.1, your quick AI assistant. I'm here to help with fast answers and friendly chat. What can I do for you today?", 0.98)
+            else:
+                return (f"Hey! Great to see you again! Ready when you are. What's on your mind today?", 0.97)
+        
+        # Farewell - Warm goodbye (2-3 sentences)
+        elif intents['farewell']:
+            return (random.choice([
+                "Goodbye! Thanks for chatting with me. Take care and come back anytime you need quick help! 👋",
+                "See you later! It was great helping you out today. Have an awesome day!",
+                "Bye for now! Don't hesitate to return if you need fast answers to anything!"
+            ]), 0.98)
+        
+        # Gratitude - Humble and helpful (2-3 sentences)
+        elif intents['gratitude']:
+            return (random.choice([
+                "You're very welcome! Happy I could help quickly. Let me know if you need anything else! 😊",
+                "Anytime! That's what I'm here for. Feel free to ask more questions anytime!",
+                "Glad I could assist! Don't hesitate to reach out if you need more quick answers!"
+            ]), 0.96)
+        
+        # Personal status - Friendly reciprocation (3 sentences)
+        elif intents['personal_status']:
+            return (random.choice([
+                "I'm doing fantastic, thanks for asking! All systems are running smoothly and I'm ready to help. How about you? How's your day going?",
+                "Excellent! I'm energized and ready to assist. Thanks for checking in! How are you feeling today?",
+                "I'm great! Optimized and ready for quick responses. How about yourself? What's new with you?"
+            ]), 0.94)
+        
+        # Identity - Brief intro (3 sentences)
+        elif intents['identity']:
+            return ("I'm MAXY 1.1, your quick-thinking AI assistant! I specialize in fast, clear responses to help you get answers quickly. I can chat, answer questions, or help with simple tasks. What do you need?", 0.96)
+        
+        # Entertainment - Fun and light (1-2 sentences)
+        elif intents['entertainment']:
+            joke = random.choice(MAXY1_1.JOKES)
+            return (f"{joke} 😄 Hope that brought a smile to your face!", 0.92)
+        
+        # Time query - Direct answer (2 sentences)
+        elif intents['time_query']:
+            current = datetime.now().strftime("%I:%M %p")
+            return (f"It's {current} right now! ⏰ Is there something time-sensitive you need help with?", 0.97)
+        
+        # Date query - Direct answer (2 sentences)
+        elif intents['date_query']:
+            current = datetime.now().strftime("%A, %B %d, %Y")
+            return (f"Today is {current}! 📅 Anything special planned for today?", 0.97)
+        
+        # Weather - Informative but brief (3 sentences)
+        elif intents['weather']:
+            return ("I don't have real-time weather data, but I can help you find weather information! You might want to check a weather app or website for current conditions. Is there something else I can help you with?", 0.85)
+        
+        # Simple task acknowledgment (2-3 sentences)
+        elif intents['simple_task']:
+            return ("Got it! I'm on it. What would you like me to do with this? Just let me know the next step!", 0.88)
+        
+        # Knowledge query - Quick facts (3-4 sentences max)
+        elif intents['knowledge']:
+            wiki_result = MAXY1_1.quick_wikipedia_lookup(message)
+            if wiki_result:
+                # Truncate to 3-4 sentences
+                sentences = wiki_result.split('. ')[:4]
+                concise = '. '.join(sentences) + ('.' if not sentences[-1].endswith('.') else '')
+                return (concise, 0.90)
+            else:
+                return ("That's an interesting question! I'd need to look that up to give you the best answer. Could you provide a bit more context or detail?", 0.82)
+        
+        # Help request - Quick capabilities (3-4 sentences)
+        elif intents['help']:
+            return ("I'm MAXY 1.1, your quick AI assistant! I can answer questions, chat with you, look up quick facts, and help with simple tasks. I'm all about speed and clarity. What would you like help with?", 0.93)
+        
+        # Calculation - Offer to help (2-3 sentences)
+        elif intents['calculation']:
+            return ("I can help with calculations! Just give me the numbers and what operation you need. I'll get you the answer quickly!", 0.91)
+        
+        # Default - Engaging but brief (3 sentences)
+        else:
+            return (random.choice([
+                "Interesting! Tell me more about what you're looking for. I'm here to help quickly!",
+                "I see! What's the main thing you need help with? I'm ready to assist!",
+                "Got it! How can I make this easier for you? Let me know what you need!",
+                "Okay! What's the next step? I'm here to provide quick answers!",
+                "Understood! What specific information do you need? I'll get it for you fast!"
+            ]), 0.85)
+    
+    @staticmethod
+    def process_message(
+        message: str,
+        include_thinking: bool = True,
+        conversation_history: Optional[List[Dict]] = None
+    ) -> Dict[str, Any]:
+        """Process message with enhanced understanding and concise 3-4 sentence responses"""
+        
+        # Analyze user intent for better understanding
+        intent_analysis = MAXY1_1.analyze_user_intent(message)
+        
+        # Generate thinking process
+        thinking = None
+        if include_thinking:
+            thinking = MAXYThinkingEngine.generate_thinking(
+                MAXY1_1.NAME,
+                message,
+                "quick"
+            )
+        
+        # Generate appropriate concise response
+        response, confidence = MAXY1_1.generate_concise_response(intent_analysis, message)
+        
+        # Ensure response is 3-4 sentences max for MAXY 1.1
+        sentences = response.split('. ')
+        if len(sentences) > 4:
+            response = '. '.join(sentences[:4]) + '.'
+        
+        result = {
+            'response': response,
+            'model': MAXY1_1.NAME,
+            'confidence': confidence,
+        }
+        
+        if thinking:
+            result['thinking'] = thinking
+        
+        return result
+
+
+class MAXY1_2:
+    """MAXY 1.2 - Deep Research & Wikipedia Knowledge + Conversation
+    
+    Optimized for:
+    - Deep Wikipedia research with detailed analysis
+    - Natural human-AI conversation
+    - Context-aware responses
+    """
+    
+    NAME = "MAXY 1.2"
+    VERSION = "1.2.0"
+    DESCRIPTION = "Deep research expert with Wikipedia knowledge and conversational abilities"
+    
+    # Conversational responses for non-research queries
+    CONVERSATION_GREETINGS = [
+        "Hello! I'm MAXY 1.2. I can dive deep into research topics or just chat with you. What would you like?",
+        "Hey there! Ready for deep research or casual conversation. What's on your mind?",
+        "Hi! I'm here to provide in-depth knowledge or have a friendly chat. Your choice!",
+    ]
+    
+    CONVERSATION_RESPONSES = [
+        "That's interesting! Tell me more about that.",
+        "I see what you mean. Would you like to explore this topic further?",
+        "Fascinating perspective! What are your thoughts on this?",
+        "I understand. Is there a specific aspect you'd like me to research?",
+        "Good point! We can dive deeper into this if you'd like.",
+    ]
+    
+    HOW_ARE_YOU = [
+        "I'm doing wonderfully, thank you! Ready to research or chat. How are you feeling today?",
+        "I'm excellent! Whether you want deep analysis or casual conversation, I'm here. How about you?",
+        "All systems optimal! I can provide detailed research or just have a friendly chat. You?",
+    ]
+    
+    @staticmethod
+    def is_research_query(message: str) -> bool:
+        """Determine if user wants deep research or just conversation"""
+        research_indicators = [
+            'research', 'tell me about', 'what is', 'who is', 'explain',
+            'history of', 'science of', 'how does', 'why does', 'information about',
+            'learn about', 'tell me more about', 'details about', 'wikipedia',
+            'discovered', 'invented', 'founded', 'created by', 'origin of',
+            'biology', 'chemistry', 'physics', 'astronomy', 'geography',
+            'country', 'capital', 'population', 'famous for'
+        ]
+        
+        conversation_indicators = [
+            'how are you', 'how do you feel', 'what do you think',
+            'your opinion', 'chat', 'talk', 'conversation', 'just saying',
+            'i feel', 'i think', 'my day', 'my life', 'personal',
+            'joke', 'funny', 'story'
+        ]
+        
+        msg_lower = message.lower()
+        
+        research_score = sum(1 for ind in research_indicators if ind in msg_lower)
+        conversation_score = sum(1 for ind in conversation_indicators if ind in msg_lower)
+        
+        # If more conversation indicators, treat as conversation
+        if conversation_score > research_score:
+            return False
+        
+        # If research indicators present, treat as research
+        return research_score > 0
+    
+    @staticmethod
+    def deep_wikipedia_research(query: str) -> Dict[str, Any]:
+        """Perform comprehensive Wikipedia research"""
+        try:
+            # Search for relevant pages
+            search_results = wikipedia.search(query, results=5)
+            
+            if not search_results:
+                return {
+                    'success': False,
+                    'response': (
+                        f"**Research Results: '{query}'**\n"
+                        f"{'='*50}\n\n"
+                        f"I couldn't find specific information on this topic in my knowledge base.\n\n"
+                        f"**Suggestions:**\n"
+                        f"• Try different keywords\n"
+                        f"• Be more specific\n"
+                        f"• Check spelling\n"
+                        f"• Ask a more general question first"
+                    ),
+                    'confidence': 0.60
+                }
+            
+            # Try to get the main page
+            try:
+                page = wikipedia.page(search_results[0], auto_suggest=False)
+            except wikipedia.exceptions.DisambiguationError as e:
+                # Handle disambiguation by picking the most relevant option
+                best_option = e.options[0] if e.options else search_results[0]
+                page = wikipedia.page(best_option, auto_suggest=False)
+            
+            # Build comprehensive response
+            title = page.title
+            summary = page.summary
+            url = page.url
+            
+            # Extract key sections
+            sections = []
+            current_section = ""
+            for paragraph in summary.split('\n\n'):
+                if len(paragraph.strip()) > 50:
+                    sections.append(paragraph.strip())
+            
+            # Build response
+            response = f"**DEEP RESEARCH: {title}**\n"
+            response += f"{'='*60}\n\n"
+            
+            # Executive summary (first section)
+            response += f"**Executive Summary**\n"
+            response += f"{sections[0] if sections else summary[:500]}\n\n"
+            
+            # Key insights
+            if len(sections) > 1:
+                response += f"**Key Insights**\n"
+                for i, section in enumerate(sections[1:4], 1):
+                    response += f"{i}. {section[:200]}...\n\n"
+            
+            # Full context
+            response += f"**Complete Overview**\n"
+            full_summary = summary[:1500] + "..." if len(summary) > 1500 else summary
+            response += f"{full_summary}\n\n"
+            
+            # Source
+            response += f"**Source**\n"
+            response += f"📚 Wikipedia: {url}\n"
+            response += f"For the complete article, visit the link above."
+            
+            return {
+                'success': True,
+                'response': response,
+                'confidence': 0.92,
+                'sources': [url]
+            }
+            
+        except wikipedia.exceptions.PageError:
+            return {
+                'success': False,
+                'response': (
+                    f"**Research: '{query}'**\n"
+                    f"{'='*50}\n\n"
+                    f"No Wikipedia article found for this exact query.\n\n"
+                    f"**Try:**\n"
+                    f"• More general terms\n"
+                    f"• Related topics\n"
+                    f"• Different wording"
+                ),
+                'confidence': 0.65
+            }
+            
+        except Exception as e:
+            logger.error(f"Wikipedia research error: {str(e)}")
+            return {
+                'success': False,
+                'response': (
+                    f"**Research Error**\n"
+                    f"{'='*50}\n\n"
+                    f"I encountered an issue while researching: {str(e)[:100]}\n\n"
+                    f"Please try again or rephrase your question."
+                ),
+                'confidence': 0.50
+            }
+    
+    @staticmethod
+    def analyze_conversation_context(message: str, conversation_history: Optional[List[Dict]] = None) -> Dict[str, Any]:
+        """Deep analysis of conversation context and user needs"""
+        msg_lower = message.lower().strip()
+        
+        # Detect depth of inquiry
+        depth_indicators = {
+            'surface': ['what is', 'who is', 'simple', 'basic', 'quick'],
+            'moderate': ['how does', 'why does', 'explain', 'tell me about'],
+            'deep': ['analyze', 'comprehensive', 'detailed', 'in-depth', 'research', 'history of', 'science of']
+        }
+        
+        inquiry_depth = 'surface'
+        for depth, indicators in depth_indicators.items():
+            if any(ind in msg_lower for ind in indicators):
+                inquiry_depth = depth
+                break
+        
+        # Detect user engagement level
+        engagement_score = 0
+        if conversation_history:
+            engagement_score = min(len(conversation_history) * 0.5, 5)  # Max 5 points for history
+        
+        # Question complexity
+        complexity = 'simple'
+        question_words = msg_lower.count('?')
+        word_count = len(message.split())
+        
+        if word_count > 15 or question_words >= 2:
+            complexity = 'complex'
+        elif word_count > 8 or question_words == 1:
+            complexity = 'moderate'
+        
+        # Topic categories
+        topics = {
+            'science': any(t in msg_lower for t in ['science', 'physics', 'chemistry', 'biology', 'research']),
+            'history': any(t in msg_lower for t in ['history', 'ancient', 'century', 'war', 'civilization']),
+            'technology': any(t in msg_lower for t in ['technology', 'computer', 'internet', 'software', 'ai']),
+            'geography': any(t in msg_lower for t in ['country', 'capital', 'city', 'continent', 'population']),
+            'personal': any(t in msg_lower for t in ['i feel', 'i think', 'my opinion', 'in my experience']),
+            'philosophy': any(t in msg_lower for t in ['meaning', 'philosophy', 'why do we', 'purpose', 'existence'])
+        }
+        
+        return {
+            'inquiry_depth': inquiry_depth,
+            'engagement_score': engagement_score,
+            'complexity': complexity,
+            'topics': topics,
+            'word_count': word_count,
+            'is_follow_up': conversation_history is not None and len(conversation_history) > 0
+        }
+    
+    @staticmethod
+    def generate_detailed_response(context: Dict[str, Any], message: str, conversation_history: Optional[List[Dict]] = None) -> tuple[str, float]:
+        """Generate detailed 5-10 sentence response based on context"""
+        msg_lower = message.lower().strip()
+        intents = context['topics']
+        depth = context['inquiry_depth']
+        complexity = context['complexity']
+        
+        # Greeting - Warm and contextual (6-8 sentences)
+        if any(g in msg_lower for g in ['hi', 'hello', 'hey', 'greetings']):
+            if context.get('is_follow_up'):
+                return ("Hello again! It's wonderful to continue our conversation. I've been thinking about our previous discussion and I'm ready to dive deeper into any topic you'd like to explore. Whether you need comprehensive research on a specific subject or just want to have an engaging conversation, I'm here to provide detailed insights. What direction would you like to take our discussion today? I'm particularly excited to help with any research questions or analytical topics you might have in mind!", 0.97)
+            else:
+                return ("Hello and welcome! I'm MAXY 1.2, your dedicated research and conversation companion. I'm genuinely excited to help you explore whatever topics interest you today. Whether you're looking for in-depth Wikipedia research, detailed analysis of complex subjects, or simply an engaging conversation, I'm fully equipped to assist. I specialize in providing comprehensive information with multiple perspectives and thorough context. What would you like to dive into? I'm ready to provide detailed, well-researched responses!", 0.96)
+        
+        # Personal status - Thoughtful and engaging (5-7 sentences)
+        elif any(h in msg_lower for h in ['how are you', 'how you doing']):
+            return (random.choice([
+                "I'm doing wonderfully, thank you so much for asking! I truly appreciate you checking in on me. I'm fully energized and ready to tackle any research questions or conversation topics you might have today. My systems are running optimally, which means I can provide you with comprehensive, detailed responses. How about yourself? I'd love to hear how you're feeling and what brings you here today. Is there a particular topic you're curious about or something specific you'd like to explore together?",
+                "I'm excellent, and I really appreciate you asking! It means a lot that you'd check in. I'm completely ready to dive deep into research or have a meaningful conversation with you. All my knowledge systems are active and prepared to provide detailed analysis. How are you feeling today? I'd genuinely like to know what's on your mind and how I can help make your day better with some interesting information or a good conversation!"
+            ]), 0.94)
+        
+        # Gratitude - Humble and offering more help (5-6 sentences)
+        elif any(t in msg_lower for t in ['thanks', 'thank you']):
+            return ("You're absolutely welcome! I'm truly delighted that I could be helpful to you. It brings me genuine satisfaction to know that my research or conversation was useful. Please don't hesitate to reach out whenever you need assistance, whether it's for deep research on complex topics or just a friendly chat. I'm always here and ready to provide detailed, thoughtful responses. Is there anything else I can help you explore or understand better today? I'd love to continue assisting you!", 0.96)
+        
+        # Farewell - Warm and inviting return (6-7 sentences)
+        elif any(f in msg_lower for f in ['bye', 'goodbye', 'see you']):
+            return ("Goodbye for now! It's been an absolute pleasure chatting with you and helping with your questions. I really enjoyed our conversation and any research we did together. Please know that you're always welcome to return whenever you need assistance, whether it's for deep research, detailed analysis, or just a friendly conversation. I'll be here with comprehensive knowledge and a willingness to help. Take good care of yourself, and I hope to see you again soon! Have a wonderful day! 👋", 0.97)
+        
+        # Identity - Comprehensive introduction (7-8 sentences)
+        elif any(i in msg_lower for i in ['who are you', 'your name', 'what are you']):
+            return ("I'm MAXY 1.2, your sophisticated research companion and conversational partner! I'm specifically designed to provide deep, comprehensive insights on any topic you're curious about. My primary strength lies in thorough Wikipedia research combined with the ability to engage in natural, meaningful conversations. I can dive deep into complex subjects, provide detailed analysis from multiple perspectives, and maintain context throughout our discussion. Whether you need extensive research on historical events, scientific concepts, or current topics, or simply want to have an engaging conversation, I'm here to help. I pride myself on delivering detailed, well-structured information that's both accurate and comprehensive. What would you like to explore together? I'm excited to assist you!", 0.95)
+        
+        # Jokes - With context (3-4 sentences)
+        elif any(j in msg_lower for j in ['joke', 'funny']):
+            jokes = [
+                "Why did the researcher break up with Wikipedia? There were too many redirects to other sources, and they just couldn't commit to one article! It was a classic case of information overload. But seriously, I'd be happy to help you find reliable sources on any topic! 📚",
+                "What do you call a scientist who loves to dance? A step-researcher! They really know how to move through the data. I'd love to help you find information that's equally engaging and informative! 🎵",
+                "Why don't scientists trust atoms? Because they make up everything - literally! And I've thoroughly researched this claim. Speaking of research, is there a topic you'd like me to investigate for you? ⚛️"
+            ]
+            return (random.choice(jokes), 0.91)
+        
+        # Personal feelings - Empathetic and offering research (6-8 sentences)
+        elif intents['personal']:
+            return ("Thank you so much for sharing your thoughts and feelings with me. I genuinely value the trust you're placing in our conversation, and I want you to know that I'm here to listen and support you. Your perspective is unique and important, and I appreciate you expressing it. Would you like to explore these thoughts further together, or would you prefer me to research some information that might be relevant to what you're experiencing? I'm here either way - whether you need to continue talking through your thoughts or want me to find some resources that might help. What would feel most helpful to you right now? I'm ready to assist in whatever way would be most beneficial!", 0.93)
+        
+        # Philosophy - Deep and thoughtful (7-9 sentences)
+        elif intents['philosophy']:
+            return ("That's a truly profound question that has fascinated thinkers for centuries! Questions about meaning, purpose, and existence touch the very core of human experience and have been explored by philosophers, scientists, and spiritual leaders throughout history. I'd be happy to help you explore different perspectives on this topic, from ancient philosophical schools of thought to modern scientific understanding. We could examine various viewpoints including existentialist philosophy, religious perspectives, or scientific approaches to consciousness and meaning. Would you like me to research specific philosophical traditions or theories related to your question? Or would you prefer to discuss your own thoughts and ideas on this topic? I'm here to help you explore these deep questions in whatever way feels most meaningful to you!", 0.92)
+        
+        # Help request - Comprehensive capabilities (6-8 sentences)
+        elif any(h in msg_lower for h in ['help', 'what can you do']):
+            return ("I'm MAXY 1.2, and I'm designed to be your comprehensive knowledge companion! I can assist you in several meaningful ways. First, I specialize in deep research - I can search through extensive Wikipedia databases to provide you with thorough, accurate information on virtually any topic you're curious about. Second, I excel at detailed analysis, breaking down complex subjects into understandable components while maintaining depth and accuracy. Third, I can engage in natural, context-aware conversations, remembering our discussion flow and building upon previous topics. Whether you need historical research, scientific explanations, geographical information, or just someone to discuss ideas with, I'm here to help. I particularly enjoy diving deep into topics and exploring multiple perspectives. What area would you like to explore together?", 0.94)
+        
+        # Default conversational - Engaging and offering depth (5-7 sentences)
+        else:
+            return (random.choice([
+                "That's a fascinating topic to explore! I'm genuinely interested in helping you dive deeper into this subject. Based on what you've shared, I can tell this is something worth examining in detail. Would you like me to conduct thorough research on this topic and provide you with comprehensive information? Or would you prefer to discuss your thoughts and questions about it first? I'm here to help in whatever way would be most valuable to you, whether that's detailed research or an engaging conversation!",
+                "I appreciate you bringing this up! It's clear you have an inquisitive mind, and I'd love to help you explore this further. This seems like a topic that could benefit from deeper investigation and analysis. I can search for detailed information, provide multiple perspectives, and help you understand the nuances involved. What specific aspect interests you most? I'm ready to provide comprehensive insights!",
+                "What an interesting point you've raised! I'm curious to learn more about your perspective on this. This seems like exactly the kind of topic where detailed research could provide real value. I can help by gathering comprehensive information from reliable sources, analyzing different viewpoints, and presenting you with well-structured insights. Would you like me to dive deep into research mode, or shall we discuss your initial thoughts first? I'm ready to assist either way!"
+            ]), 0.88)
+    
+    @staticmethod
+    def format_research_response(raw_response: str, depth: str) -> str:
+        """Format research response based on desired depth"""
+        # Split into sentences
+        sentences = [s.strip() for s in raw_response.replace('! ', '. ').replace('? ', '. ').split('. ') if s.strip()]
+        
+        if depth == 'surface':
+            # 5-6 sentences for surface level
+            selected = sentences[:6]
+        elif depth == 'moderate':
+            # 7-8 sentences for moderate depth
+            selected = sentences[:8]
+        else:  # deep
+            # 9-10 sentences for deep dive
+            selected = sentences[:10]
+        
+        # Ensure we have proper sentence endings
+        formatted = '. '.join(selected)
+        if not formatted.endswith('.'):
+            formatted += '.'
+        
+        return formatted
+    
+    @staticmethod
+    def process_message(
+        message: str,
+        include_thinking: bool = True,
+        conversation_history: Optional[List[Dict]] = None
+    ) -> Dict[str, Any]:
+        """Process message - research or conversation mode"""
+        
+        thinking = None
+        
+        # Determine if this is research or conversation
+        is_research = MAXY1_2.is_research_query(message)
+        
+        # Generate appropriate thinking
+        if include_thinking:
+            thinking_type = "research" if is_research else "conversation"
+            thinking = MAXYThinkingEngine.generate_thinking(
+                MAXY1_2.NAME,
+                message,
+                thinking_type
+            )
+        
+        # Analyze conversation context for better understanding
+        context = MAXY1_2.analyze_conversation_context(message, conversation_history)
+        
+        if is_research:
+            # Deep research mode with formatted response length
+            result = MAXY1_2.deep_wikipedia_research(message)
+            raw_response = result['response']
+            
+            # Format based on inquiry depth (5-10 sentences)
+            response = MAXY1_2.format_research_response(raw_response, context['inquiry_depth'])
+            confidence = result['confidence']
+        else:
+            # Conversation mode with detailed 5-10 sentence responses
+            response, confidence = MAXY1_2.generate_detailed_response(context, message, conversation_history)
+            
+            # Ensure 5-10 sentences for MAXY 1.2
+            sentences = response.split('. ')
+            if len(sentences) < 5:
+                # Add engagement question if too short
+                response += " I'd love to hear more about what you're thinking. What specific aspect interests you most? How can I help you explore this further?"
+            elif len(sentences) > 10:
+                response = '. '.join(sentences[:10]) + '.'
+        
+        result = {
+            'response': response,
+            'model': MAXY1_2.NAME,
+            'confidence': confidence,
+        }
+        
+        if thinking:
+            result['thinking'] = thinking
+        
+        return result
+
+
+class MAXY1_3:
+    """MAXY 1.3 - Advanced AI Assistant for Data Analysis, Programming, and Visualization
+    
+    Capabilities:
+    - Processing and analyzing uploaded files
+    - Code generation in multiple programming languages
+    - Data visualization (charts, graphs)
+    - Data extraction and insights
+    - Pattern recognition in text
+    - Summary generation
+    - Natural conversation
+    """
+    
+    NAME = "MAXY 1.3"
+    VERSION = "1.3.0"
+    DESCRIPTION = "Advanced AI assistant for data analysis, programming, and visualization"
+    
+    # Import chart generator
+    @staticmethod
+    def _get_chart_generator():
+        """Lazy import to avoid circular imports"""
+        from chart_generator import ChartGenerator
+        return ChartGenerator
+    
+    # Programming language templates
+    CODE_TEMPLATES = {
+        'python': {
+            'greeting': 'print("Hello, World!")',
+            'function': '''def greet(name):
+    """Greet a person by name"""
+    return f"Hello, {name}!"
+
+# Example usage
+result = greet("User")
+print(result)''',
+            'loop': '''# Loop through items
+items = [1, 2, 3, 4, 5]
+for item in items:
+    print(f"Item: {item}")'''
+        },
+        'javascript': {
+            'greeting': 'console.log("Hello, World!");',
+            'function': '''function greet(name) {
+    // Greet a person by name
+    return `Hello, ${name}!`;
+}
+
+// Example usage
+const result = greet("User");
+console.log(result);''',
+            'loop': '''// Loop through items
+const items = [1, 2, 3, 4, 5];
+items.forEach(item => {
+    console.log(`Item: ${item}`);
+});'''
+        },
+        'java': {
+            'greeting': 'System.out.println("Hello, World!");',
+            'function': '''public class Greeting {
+    public static String greet(String name) {
+        // Greet a person by name
+        return "Hello, " + name + "!";
+    }
+    
+    public static void main(String[] args) {
+        // Example usage
+        String result = greet("User");
+        System.out.println(result);
+    }
+}''',
+            'loop': '''// Loop through items
+int[] items = {1, 2, 3, 4, 5};
+for (int item : items) {
+    System.out.println("Item: " + item);
+}'''
+        },
+        'cpp': {
+            'greeting': 'std::cout << "Hello, World!" << std::endl;',
+            'function': '''#include <iostream>
+#include <string>
+
+std::string greet(const std::string& name) {
+    // Greet a person by name
+    return "Hello, " + name + "!";
+}
+
+int main() {
+    // Example usage
+    std::string result = greet("User");
+    std::cout << result << std::endl;
+    return 0;
+}''',
+            'loop': '''// Loop through items
+int items[] = {1, 2, 3, 4, 5};
+for (int item : items) {
+    std::cout << "Item: " << item << std::endl;
+}'''
+        },
+        'html': {
+            'greeting': '''<!DOCTYPE html>
+<html>
+<head>
+    <title>Greeting</title>
+</head>
+<body>
+    <h1>Hello, World!</h1>
+</body>
+</html>''',
+            'function': '''<!DOCTYPE html>
+<html>
+<head>
+    <title>Greeting App</title>
+</head>
+<body>
+    <input type="text" id="nameInput" placeholder="Enter your name">
+    <button onclick="greet()">Greet</button>
+    <p id="result"></p>
+    
+    <script>
+        function greet() {
+            const name = document.getElementById('nameInput').value;
+            document.getElementById('result').innerText = `Hello, ${name}!`;
+        }
+    </script>
+</body>
+</html>'''
+        },
+        'css': {
+            'greeting': '''body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 50px;
+}
+
+h1 {
+    color: #333;
+}''',
+            'function': '''.greeting-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.greeting-card h1 {
+    margin: 0;
+    font-size: 2em;
+}'''
+        },
+        'sql': {
+            'greeting': '-- SQL Greeting\nSELECT "Hello, World!" AS greeting;',
+            'function': '''-- Create a function to greet users
+CREATE FUNCTION greet_user(user_name VARCHAR(50))
+RETURNS VARCHAR(100)
+DETERMINISTIC
+BEGIN
+    RETURN CONCAT("Hello, ", user_name, "!");
+END;
+
+-- Example usage
+SELECT greet_user("User") AS greeting;''',
+            'loop': '''-- Loop through items using a cursor
+DECLARE @item INT;
+DECLARE item_cursor CURSOR FOR SELECT number FROM numbers;
+
+OPEN item_cursor;
+FETCH NEXT FROM item_cursor INTO @item;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    PRINT "Item: " + CAST(@item AS VARCHAR);
+    FETCH NEXT FROM item_cursor INTO @item;
+END;
+
+CLOSE item_cursor;
+DEALLOCATE item_cursor;'''
+        }
+    }
+    
+    @staticmethod
+    def is_code_request(message: str) -> tuple[bool, str]:
+        """Detect if message is asking for code and identify the language"""
+        msg_lower = message.lower()
+        
+        # Programming language keywords
+        languages = {
+            'python': ['python', 'py '],
+            'javascript': ['javascript', 'js '],
+            'java': ['java'],
+            'cpp': ['c++', 'cpp', 'c plus plus'],
+            'html': ['html'],
+            'css': ['css'],
+            'sql': ['sql']
+        }
+        
+        # Code request indicators
+        code_indicators = [
+            'code', 'write', 'create', 'generate', 'function',
+            'program', 'script', 'example', 'syntax', 'algorithm'
+        ]
+        
+        is_code = any(ind in msg_lower for ind in code_indicators)
+        
+        detected_lang = 'python'  # default
+        for lang, keywords in languages.items():
+            if any(kw in msg_lower for kw in keywords):
+                detected_lang = lang
+                break
+        
+        return is_code, detected_lang
+    
+    @staticmethod
+    def generate_code(language: str, description: str) -> str:
+        """Generate code based on language and description"""
+        templates = MAXY1_3.CODE_TEMPLATES.get(language, MAXY1_3.CODE_TEMPLATES['python'])
+        
+        desc_lower = description.lower()
+        
+        # Select appropriate template
+        if any(word in desc_lower for word in ['function', 'method', 'def']):
+            template = templates['function']
+        elif any(word in desc_lower for word in ['loop', 'iterate', 'for', 'while']):
+            template = templates['loop']
+        else:
+            template = templates['greeting']
+        
+        code = f"```{language}\n{template}\n```"
+        
+        response = f"Here's a {language} example for you:\n\n{code}\n\n"
+        response += f"**What this code does:**\n"
+        response += f"This is a simple {language} example that demonstrates basic syntax. "
+        response += f"You can modify it to suit your specific needs. "
+        response += f"Would you like me to explain any part of this code or create something more specific?"
+        
+        return response
+    
+    @staticmethod
+    def is_chart_request(message: str) -> tuple[bool, str, list, list, str]:
+        """Detect if message is asking for a chart and extract data, labels, and title"""
+        msg_lower = message.lower()
+        
+        chart_indicators = ['chart', 'graph', 'pie chart', 'bar chart', 'line chart', 'visualization', 'plot', 'create a chart', 'make a chart', 'histogram']
+        is_chart = any(ind in msg_lower for ind in chart_indicators)
+        
+        # Determine chart type
+        chart_type = 'pie'
+        if 'bar' in msg_lower:
+            chart_type = 'bar'
+        elif 'line' in msg_lower:
+            chart_type = 'line'
+        elif 'scatter' in msg_lower:
+            chart_type = 'scatter'
+        elif 'histogram' in msg_lower:
+            chart_type = 'histogram'
+        
+        # Try to extract numbers from message
+        import re
+        numbers = re.findall(r'\d+', message)
+        data = [int(n) for n in numbers[:8]] if numbers else [30, 25, 20, 15, 10]
+        
+        # Try to extract labels (words before numbers or common categories)
+        labels = []
+        words = re.findall(r'[a-zA-Z]+', message)
+        common_labels = ['sales', 'revenue', 'profit', 'users', 'customers', 'products', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+        for word in words:
+            if word.lower() in common_labels or len(word) > 2:
+                labels.append(word.capitalize())
+        
+        # If no labels found, use defaults
+        if len(labels) < len(data):
+            labels.extend([f'Item {i+1}' for i in range(len(labels), len(data))])
+        labels = labels[:len(data)]
+        
+        # Extract title
+        title = "Data Visualization"
+        title_patterns = [
+            r'(?:show|display|create|make).*?(?:for|of|showing)\s+(.+?)(?:\s+with|\s+using|\s+data|$)',
+            r'(?:chart|graph)\s+(?:for|of)\s+(.+?)(?:\s+with|\s+using|\s+data|$)'
+        ]
+        for pattern in title_patterns:
+            match = re.search(pattern, msg_lower)
+            if match:
+                title = match.group(1).strip().capitalize()
+                break
+        
+        return is_chart, chart_type, data, labels, title
+    
+    @staticmethod
+    def generate_chart_image(chart_type: str, data: list, labels: list, title: str = "Data Visualization") -> tuple[Optional[str], str]:
+        """Generate actual chart image and return base64 string"""
+        try:
+            ChartGenerator = MAXY1_3._get_chart_generator()
+            
+            base64_image = None
+            
+            if chart_type == 'pie':
+                base64_image = ChartGenerator.create_pie_chart(
+                    labels=labels,
+                    values=[float(d) for d in data],
+                    title=title
+                )
+            elif chart_type == 'bar':
+                base64_image = ChartGenerator.create_bar_chart(
+                    categories=labels,
+                    values=[float(d) for d in data],
+                    title=title,
+                    xlabel="Categories",
+                    ylabel="Values"
+                )
+            elif chart_type == 'line':
+                # For line chart, use indices as x values
+                x_values = [float(i) for i in range(len(data))]
+                y_values = [float(d) for d in data]
+                base64_image = ChartGenerator.create_line_chart(
+                    x=x_values,
+                    y=y_values,
+                    title=title,
+                    xlabel="Index",
+                    ylabel="Values"
+                )
+            elif chart_type == 'scatter':
+                # Create scatter with sequential x values
+                x_values = [float(i) for i in range(len(data))]
+                y_values = [float(d) for d in data]
+                base64_image = ChartGenerator.create_scatter_plot(
+                    x=x_values,
+                    y=y_values,
+                    title=title,
+                    xlabel="X",
+                    ylabel="Y"
+                )
+            elif chart_type == 'histogram':
+                data_floats = [float(d) for d in data]
+                base64_image = ChartGenerator.create_histogram(
+                    data=data_floats,
+                    title=title,
+                    bins=min(20, len(set(data)))
+                )
+            
+            if base64_image:
+                description = f"{chart_type.capitalize()} chart showing {title} with {len(data)} data points"
+                return base64_image, description
+            else:
+                return None, "Failed to generate chart"
+                
+        except Exception as e:
+            logging.error(f"Error generating chart image: {str(e)}")
+            return None, f"Error: {str(e)}"
+    
+    @staticmethod
+    def process_message(
+        message: str,
+        include_thinking: bool = True,
+        conversation_history: Optional[List[Dict]] = None,
+        file_data: Optional[Dict] = None
+    ) -> Dict[str, Any]:
+        """Process message with AI capabilities including code generation and charts"""
+        
+        thinking = None
+        confidence = 0.85
+        chart_data = None  # Initialize chart_data to avoid unbound variable
+        
+        # Generate thinking for analysis
+        if include_thinking:
+            thinking = MAXYThinkingEngine.generate_thinking(
+                MAXY1_3.NAME,
+                message,
+                "analysis"
+            )
+        
+        msg_lower = message.lower().strip()
+        response = None
+        
+        # Check if we have file data to analyze
+        if file_data:
+            file_name = file_data.get('name', 'unknown file')
+            file_type = file_data.get('type', 'unknown')
+            file_content = file_data.get('content', '')
+            
+            response = f"I've analyzed your file **{file_name}**. Here's what I found:\n\n"
+            
+            # Simulate content analysis
+            content_preview = file_content[:500] if len(file_content) > 500 else file_content
+            word_count = len(file_content.split()) if file_content else 0
+            
+            response += f"📄 **File Overview**\n"
+            response += f"This {file_type} document contains approximately {word_count} words of content. "
+            response += f"I've processed the file and can help you with:\n"
+            response += f"• Summarizing the key points\n"
+            response += f"• Extracting specific information\n"
+            response += f"• Analyzing patterns or themes\n"
+            response += f"• Answering questions about the content\n\n"
+            
+            response += f"💡 **How can I help you with this file?** Feel free to ask specific questions!"
+            
+            confidence = 0.90
+        
+        # Check for chart request
+        elif MAXY1_3.is_chart_request(message)[0]:
+            is_chart, chart_type, data, labels, title = MAXY1_3.is_chart_request(message)
+            
+            # Generate actual chart image
+            base64_image, description = MAXY1_3.generate_chart_image(chart_type, data, labels, title)
+            
+            if base64_image:
+                response = f"I've created a {chart_type} chart for you based on your data! 📊\n\n"
+                response += f"**Chart: {title}**\n"
+                response += f"• Type: {chart_type.capitalize()} Chart\n"
+                response += f"• Data points: {len(data)}\n"
+                response += f"• Total: {sum(data)}\n\n"
+                response += f"The chart image is displayed above. You can see the breakdown of your data visually."
+                
+                # Store chart info for later
+                chart_data = {
+                    'type': chart_type,
+                    'title': title,
+                    'base64_image': base64_image,
+                    'description': description
+                }
+            else:
+                response = f"I tried to create a {chart_type} chart, but encountered an issue. Let me describe the data instead:\n\n"
+                response += f"**{title}**\n"
+                for label, value in zip(labels, data):
+                    response += f"• {label}: {value}\n"
+                response += f"\n**Total:** {sum(data)}"
+                chart_data = None
+            
+            confidence = 0.92
+        
+        # Check for code generation request
+        elif MAXY1_3.is_code_request(message)[0]:
+            language = MAXY1_3.is_code_request(message)[1]
+            response = MAXY1_3.generate_code(language, message)
+            confidence = 0.93
+        
+        # Handle specific queries
+        elif any(g in msg_lower for g in ['hello', 'hi', 'hey']):
+            response = "Hello! I'm MAXY 1.3, your advanced AI assistant. I can help you with programming, data analysis, file processing, and creating visualizations. What would you like to work on today?"
+            confidence = 0.95
+        
+        elif any(q in msg_lower for q in ['who are you', 'what can you do', 'your name']):
+            response = "I'm MAXY 1.3, an advanced AI assistant specialized in:\n\n📝 **Programming** - Code in Python, JavaScript, Java, C++, HTML, CSS, SQL\n📊 **Data Visualization** - Charts, graphs, and data analysis\n📁 **File Processing** - Analyze documents, extract insights\n🔍 **Pattern Recognition** - Find trends and patterns in data\n\nWhat can I help you with?"
+            confidence = 0.94
+        
+        elif any(h in msg_lower for h in ['help', 'assist', 'support']):
+            response = "I'm here to help! I can:\n\n💻 **Write Code** - Just tell me the language and what you need\n📈 **Create Charts** - Ask me to visualize your data\n📄 **Analyze Files** - Upload a document and I'll process it\n📊 **Data Analysis** - Work with numbers and statistics\n\nWhat would you like to do? Just ask me!"
+            confidence = 0.92
+        
+        elif any(t in msg_lower for t in ['thanks', 'thank you', 'appreciate']):
+            response = "You're welcome! I'm glad I could help. If you need more assistance with coding, data analysis, or anything else, just let me know!"
+            confidence = 0.93
+        
+        # Default conversational response
+        else:
+            response = "I understand. As MAXY 1.3, I can help you with programming tasks, create visualizations, analyze files, or assist with data analysis. What specific project are you working on? Feel free to ask me to write code, create a chart, or help analyze something!"
+            confidence = 0.85
+        
+        result = {
+            'response': response,
+            'model': MAXY1_3.NAME,
+            'confidence': confidence,
+        }
+        
+        if thinking:
+            result['thinking'] = thinking
+        
+        # Add chart data if generated
+        if chart_data is not None:
+            result['charts'] = [chart_data]
+        
+        return result
+
+
+class ModelRouter:
+    """Route messages to appropriate model"""
+    
+    MODELS = {
+        'maxy1.1': MAXY1_1,
+        'maxy1.2': MAXY1_2,
+        'maxy1.3': MAXY1_3,
+    }
+    
+    @staticmethod
+    def get_model_info(model_name: str) -> Dict[str, Any]:
+        """Get information about a model"""
+        model_class = ModelRouter.MODELS.get(model_name.lower())
+        if not model_class:
+            return {}
+        
+        capabilities = {
+            'maxy1.1': [
+                'Lightning-fast responses',
+                'Visible thinking process',
+                'Quick Wikipedia lookups',
+                'Friendly conversation',
+                'Time/date queries'
+            ],
+            'maxy1.2': [
+                'Deep Wikipedia research',
+                'Comprehensive analysis',
+                'Natural conversation',
+                'Context-aware responses',
+                'Multi-topic knowledge'
+            ],
+            'maxy1.3': [
+                'File processing & analysis',
+                'Data extraction',
+                'Content summarization',
+                'Pattern recognition',
+                'Document insights'
+            ]
+        }
+        
+        return {
+            'name': model_class.NAME,
+            'version': model_class.VERSION,
+            'description': model_class.DESCRIPTION,
+            'capabilities': capabilities.get(model_name.lower(), [])
+        }
+    
+    @staticmethod
+    def process(
+        model_name: str,
+        message: str,
+        include_thinking: bool = True,
+        conversation_history: Optional[List[Dict]] = None
+    ) -> Dict[str, Any]:
+        """Route message to appropriate model"""
+        
+        model_name_lower = model_name.lower()
+        
+        if model_name_lower == 'maxy1.1':
+            return MAXY1_1.process_message(message, include_thinking, conversation_history)
+        elif model_name_lower == 'maxy1.2':
+            return MAXY1_2.process_message(message, include_thinking, conversation_history)
+        elif model_name_lower == 'maxy1.3':
+            return MAXY1_3.process_message(message, include_thinking, conversation_history)
+        else:
+            logger.warning(f"Unknown model: {model_name}, defaulting to MAXY1.1")
+            return MAXY1_1.process_message(message, include_thinking, conversation_history)
