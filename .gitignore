@@ -21,6 +21,7 @@ Desktop.ini
 # Logs
 *.log
 logs/
+*.db
 nul
 backend/nul
 
