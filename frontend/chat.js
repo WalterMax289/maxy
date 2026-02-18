@@ -1481,8 +1481,14 @@ mobileSidebarToggle.addEventListener('click', (e) => {
 // Desktop sidebar toggle
 sidebarToggleDesktop.addEventListener('click', (e) => {
   e.stopPropagation();
-  sidebar.classList.toggle('collapsed');
+  const isCollapsed = sidebar.classList.toggle('collapsed');
+  localStorage.setItem('maxySidebarCollapsed', isCollapsed);
 });
+
+// Load sidebar preference on init
+if (localStorage.getItem('maxySidebarCollapsed') === 'true') {
+  sidebar.classList.add('collapsed');
+}
 
 // Close sidebar when clicking backdrop
 sidebarBackdrop.addEventListener('click', () => {
@@ -1539,6 +1545,47 @@ if (userProfileBtn && userMenu) {
       userProfileBtn.setAttribute('aria-expanded', 'false');
     });
   });
+}
+
+// User Profile Management
+function loadUserProfile() {
+  const profile = JSON.parse(localStorage.getItem('maxyUser')) || {};
+  const session = JSON.parse(localStorage.getItem('maxySession')) || {};
+
+  const name = profile.name || session.name || 'Guest User';
+  const email = profile.email || session.email || '';
+  const avatar = profile.avatar || null;
+
+  // Update header avatar
+  const profileAvatar = document.querySelector('.profile-avatar');
+  if (profileAvatar) {
+    if (avatar) {
+      profileAvatar.innerHTML = `<img src="${avatar}" alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+      profileAvatar.style.background = 'none';
+    } else {
+      profileAvatar.textContent = '👤';
+      profileAvatar.style.background = 'rgba(255, 255, 255, 0.1)';
+    }
+  }
+
+  // Update header title/welcome if needed
+  if (welcome) {
+    const welcomeTitle = welcome.querySelector('h1');
+    if (welcomeTitle) {
+      welcomeTitle.textContent = `Welcome back, ${name.split(' ')[0]}!`;
+    }
+  }
+}
+
+// Listen for profile updates from profile.html
+if (typeof BroadcastChannel !== 'undefined') {
+  const bc = new BroadcastChannel('maxy_profile_updates');
+  bc.onmessage = (event) => {
+    if (event.data.type === 'profile_updated') {
+      console.log('Profile update received:', event.data.userData);
+      loadUserProfile();
+    }
+  };
 }
 
 // Header Profile Button - Now redirects to profile.html directly (no dropdown needed)

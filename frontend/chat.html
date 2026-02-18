@@ -15,6 +15,12 @@
       <a href="index.html">
         <img src="assets/maxy12.gif" alt="MAXY Logo" class="logo-circle">
       </a>
+      <!-- Desktop Sidebar Toggle moved inside sidebar -->
+      <button id="sidebarToggleDesktop" class="sidebar-toggle-desktop" aria-label="Toggle sidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
     </div>
     <div class="search-bar">
       ⌕ <input type="text" placeholder="Search Ctrl+K">
@@ -33,13 +39,6 @@
     <span class="hamburger-line"></span>
   </button>
 
-  <!-- Desktop Sidebar Toggle -->
-  <button id="sidebarToggleDesktop" class="sidebar-toggle-desktop" aria-label="Toggle sidebar">
-    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="15 18 9 12 15 6"></polyline>
-    </svg>
-  </button>
-
   <!-- Sidebar Backdrop -->
   <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
 
@@ -56,6 +55,28 @@
     <div class="chat-header">
       <div class="chat-header-title"></div>
       <div class="chat-header-actions">
+        <!-- Credits display - Now in header -->
+        <div id="creditsDisplay" class="credits-display header-credits">
+          <span class="credits-icon">💎</span>
+          <span id="creditsText" class="credits-count">30</span>
+
+          <div class="credits-hover-info">
+            <div class="credits-info-item">
+              <span class="label">Credits Used</span>
+              <span id="creditsUsed" class="value">0</span>
+            </div>
+            <div class="credits-info-item">
+              <span class="label">Total Limit</span>
+              <span id="creditsTotal" class="value">30</span>
+            </div>
+            <div class="credits-info-divider"></div>
+            <div class="credits-info-item refresh-timer">
+              <span class="label">Refreshes in</span>
+              <span id="creditsCountdown" class="value">00:00:00</span>
+            </div>
+          </div>
+        </div>
+
         <a href="index.html" title="Go to Home" class="nav-icon-link">
           <img src="assets/home.png" alt="Home" class="nav-home-icon">
         </a>
@@ -185,27 +206,6 @@
       style="display: block; width: 12px; height: 12px; border-radius: 50%; background: #f59e0b; box-shadow: 0 0 10px #f59e0b; transition: all 0.3s ease;"></span>
   </div>
 
-  <!-- Credits display - Minimal & Hoverable -->
-  <div id="creditsDisplay" class="credits-display">
-    <span class="credits-icon">💎</span>
-    <span id="creditsText" class="credits-count">30</span>
-
-    <div class="credits-hover-info">
-      <div class="credits-info-item">
-        <span class="label">Credits Used</span>
-        <span id="creditsUsed" class="value">0</span>
-      </div>
-      <div class="credits-info-item">
-        <span class="label">Total Limit</span>
-        <span id="creditsTotal" class="value">30</span>
-      </div>
-      <div class="credits-info-divider"></div>
-      <div class="credits-info-item refresh-timer">
-        <span class="label">Refreshes in</span>
-        <span id="creditsCountdown" class="value">00:00:00</span>
-      </div>
-    </div>
-  </div>
 
   <!-- Credits exhausted modal -->
   <div id="creditsModal"
