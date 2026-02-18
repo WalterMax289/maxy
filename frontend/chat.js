@@ -590,7 +590,7 @@ function renderRecents() {
 
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'recent-item-delete';
-    deleteBtn.innerHTML = '×';
+    deleteBtn.innerHTML = '<img src="assets/close.png" alt="Delete" class="delete-icon-small">';
     deleteBtn.title = 'Delete chat';
     deleteBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -630,7 +630,7 @@ function createMessageActions(text, role, messageId) {
 
   // Copy button
   const copyBtn = document.createElement('button');
-  copyBtn.innerHTML = '📋';
+  copyBtn.innerHTML = '<img src="assets/copy.png" alt="Copy" class="message-action-icon">';
   copyBtn.title = 'Copy message';
   copyBtn.style.cssText = `
     background: rgba(255,255,255,0.1);
@@ -663,7 +663,7 @@ function createMessageActions(text, role, messageId) {
   if (role === 'ai') {
     // Like button
     const likeBtn = document.createElement('button');
-    likeBtn.innerHTML = '👍';
+    likeBtn.innerHTML = '<img src="assets/like.png" alt="Like" class="message-action-icon">';
     likeBtn.title = 'Good response';
     likeBtn.style.cssText = copyBtn.style.cssText;
     likeBtn.addEventListener('click', (e) => {
@@ -685,7 +685,7 @@ function createMessageActions(text, role, messageId) {
 
     // Dislike button
     const dislikeBtn = document.createElement('button');
-    dislikeBtn.innerHTML = '👎';
+    dislikeBtn.innerHTML = '<img src="assets/dislike.png" alt="Dislike" class="message-action-icon">';
     dislikeBtn.title = 'Bad response';
     dislikeBtn.style.cssText = copyBtn.style.cssText;
     dislikeBtn.addEventListener('click', (e) => {
@@ -707,7 +707,7 @@ function createMessageActions(text, role, messageId) {
 
     // Regenerate button
     const regenBtn = document.createElement('button');
-    regenBtn.innerHTML = '🔄';
+    regenBtn.innerHTML = '<img src="assets/upload.png" alt="Regenerate" class="message-action-icon regen-icon">';
     regenBtn.title = 'Regenerate response';
     regenBtn.style.cssText = copyBtn.style.cssText;
     regenBtn.addEventListener('click', (e) => {
@@ -726,7 +726,7 @@ function createMessageActions(text, role, messageId) {
   } else {
     // Edit button for user messages
     const editBtn = document.createElement('button');
-    editBtn.innerHTML = '✏️';
+    editBtn.innerHTML = '<img src="assets/edit.png" alt="Edit" class="message-action-icon">';
     editBtn.title = 'Edit message';
     editBtn.style.cssText = copyBtn.style.cssText;
     editBtn.addEventListener('click', (e) => {
