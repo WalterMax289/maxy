@@ -1093,6 +1093,14 @@
             // Handle Try MAXY Now button - check auth status
             async function handleTryMaxyClick(e) {
                 e.preventDefault();
+
+                // Show warning if Supabase is missing
+                if (typeof SUPABASE_URL === 'undefined') {
+                    console.error('❌ MAXY Configuration Error: SUPABASE_URL is missing. Please check your Vercel Environment Variables.');
+                    showAuthToast('Configuration error. Please try again later or contact support.', 'error');
+                    return;
+                }
+
                 const loggedIn = await isLoggedIn();
                 if (loggedIn) {
                     window.location.href = 'chat.html';

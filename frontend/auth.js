@@ -4,10 +4,17 @@
  */
 
 // Supabase client initialization (Variables loaded from config.js)
-const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
-
-if (!supabase) {
-    console.error('Supabase SDK not loaded properly. Ensure index.html includes the Supabase CDN.');
+// Use typeof checks to prevent ReferenceError if config.js is missing in production
+let supabase = null;
+try {
+    if (typeof SUPABASE_URL !== 'undefined' && typeof SUPABASE_ANON_KEY !== 'undefined' && window.supabase) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('✅ Supabase initialized successfully');
+    } else {
+        console.warn('⚠️ Supabase credentials or SDK missing. Authentication features will be disabled.');
+    }
+} catch (e) {
+    console.error('❌ Error initializing Supabase:', e);
 }
 
 // Check if user is logged in
