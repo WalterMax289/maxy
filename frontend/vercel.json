@@ -3,15 +3,15 @@
     "rewrites": [
         {
             "source": "/api/:path*",
-            "destination": "https://YOUR-BACKEND-URL-HERE.onrender.com/api/:path*"
+            "destination": "https://maxy-backend.onrender.com/api/:path*"
         },
         {
             "source": "/health",
-            "destination": "https://YOUR-BACKEND-URL-HERE.onrender.com/health"
+            "destination": "https://maxy-backend.onrender.com/health"
         },
         {
             "source": "/credits",
-            "destination": "https://YOUR-BACKEND-URL-HERE.onrender.com/credits"
+            "destination": "https://maxy-backend.onrender.com/credits"
         }
     ]
 }

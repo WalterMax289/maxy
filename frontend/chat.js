@@ -17,7 +17,7 @@ if (!userId) {
 // Example: const BACKEND_URL = 'https://your-backend-name.vercel.app';
 // Auto-detect: if served by backend (port 8000 or same origin), use relative URLs
 // Otherwise default to localhost:8000 for development
-const PRODUCTION_BACKEND_URL = ''; // <-- SET YOUR DEPLOYED BACKEND URL HERE (e.g., 'https://maxy-api.vercel.app');
+const PRODUCTION_BACKEND_URL = 'https://maxy-backend.onrender.com'; // <-- SET YOUR DEPLOYED BACKEND URL HERE (e.g., 'https://maxy-api.vercel.app');
 
 // Auto-detect backend URL based on current location
 function detectBackendUrl() {
@@ -55,7 +55,7 @@ let creditsCheckInterval = null;
 // API Base URL for production deployment
 const API_BASE_URL = window.location.hostname === 'localhost'
   ? (BACKEND_URL || 'http://localhost:8000')
-  : 'https://your-backend-name.onrender.com';  // <-- UPDATE THIS WITH YOUR RENDER BACKEND URL
+  : BACKEND_URL;  // <-- UPDATE THIS WITH YOUR RENDER BACKEND URL
 
 // Check if user is authenticated (has active session in localStorage)
 function isAuthenticated() {
