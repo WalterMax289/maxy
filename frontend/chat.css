@@ -659,16 +659,18 @@ body {
 }
 
 .maxy-title {
+  margin: 0;
   font-size: 100px;
-  font-weight: 700;
+  font-weight: bold;
+  text-transform: uppercase;
+  line-height: 1;
   letter-spacing: 10px;
-  white-space: nowrap;
-  background: linear-gradient(135deg, #fff 0%, #444 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  text-shadow: 0 0 30px rgba(255, 255, 255, 0.3),
+    0 4px 20px rgba(0, 0, 0, 0.8);
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.2);
   font-family: 'Thürkle', sans-serif;
+  white-space: nowrap;
 }
 
 /* Messages */
