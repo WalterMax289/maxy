@@ -188,7 +188,7 @@ function updateConnectionStatus(status, message) {
     dot.style.background = '#f59e0b'; // Orange/Yellow
     dot.style.boxShadow = '0 0 10px #f59e0b';
     if (statusContainer) {
-      statusContainer.title = 'Connecting...';
+      statusContainer.title = 'Waking up MAXY (please wait up to 50s)...';
     }
   }
 }
@@ -196,7 +196,8 @@ function updateConnectionStatus(status, message) {
 async function checkBackendConnection() {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    // Increase timeout to 10s to allow for Render cold starts
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     // Use relative URL if BACKEND_URL is empty (when frontend is served by backend)
     // Try health endpoint first, then fallback to root API endpoint
