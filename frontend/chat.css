@@ -1250,26 +1250,41 @@ textarea::placeholder {
 }
 
 /* ================= PREMIUM NAVIGATION BUTTONS ================= */
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  position: relative;
+  z-index: 10;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+}
+
 .chat-header-actions {
   display: flex;
   gap: 12px;
+  margin-left: auto;
+  /* Force to right side */
 }
 
 .nav-btn-premium {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 16px 6px 6px;
+  justify-content: center;
+  padding: 6px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 30px;
+  border-radius: 50%;
   color: var(--text);
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 14px;
   backdrop-filter: blur(12px);
   position: relative;
   overflow: hidden;
+  width: 44px;
+  height: 44px;
 }
 
 .nav-btn-premium::before {
