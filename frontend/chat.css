@@ -271,6 +271,24 @@ button:hover .regen-icon {
   opacity: 1;
 }
 
+/* --- Model Selector Icons --- */
+.model-icon-img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  border-radius: 4px;
+  transition: transform 0.2s ease;
+}
+
+.maxy-trigger .model-icon-img {
+  width: 18px;
+  height: 18px;
+}
+
+.model-option:hover .model-icon-img {
+  transform: scale(1.15);
+}
+
 .menu-item:hover,
 .menu-item.active {
   background: var(--card-bg);

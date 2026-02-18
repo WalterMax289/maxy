@@ -1270,6 +1270,17 @@ function syncModelUI() {
       maxyVersion.textContent = version;
     }
 
+    // Update trigger icon to match selected model
+    const triggerIcon = document.getElementById('triggerModelIcon');
+    if (triggerIcon) {
+      const modelIconMap = {
+        'maxy1.1': 'assets/model_1.1.png',
+        'maxy1.2': 'assets/model_1.2.png',
+        'maxy1.3': 'assets/model_1.3.png'
+      };
+      triggerIcon.src = modelIconMap[currentModel] || 'assets/model_1.1.png';
+    }
+
     // Add visual feedback
     selectedOption.style.transform = 'translateX(10px)';
     setTimeout(() => {
