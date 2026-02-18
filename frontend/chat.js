@@ -1501,6 +1501,30 @@ if (localStorage.getItem('maxySidebarCollapsed') === 'true') {
   sidebar.classList.add('collapsed');
 }
 
+// Expand sidebar when clicking search bar while collapsed
+const searchBar = document.querySelector('.search-bar');
+if (searchBar) {
+  searchBar.addEventListener('click', () => {
+    if (sidebar.classList.contains('collapsed')) {
+      sidebar.classList.remove('collapsed');
+      localStorage.setItem('maxySidebarCollapsed', 'false');
+      // Focus the search input after expanding
+      setTimeout(() => {
+        const searchInput = searchBar.querySelector('input');
+        if (searchInput) searchInput.focus();
+      }, 350);
+    }
+  });
+}
+
+// Expand sidebar when clicking new chat while collapsed
+newChatBtn.addEventListener('click', () => {
+  if (sidebar.classList.contains('collapsed')) {
+    sidebar.classList.remove('collapsed');
+    localStorage.setItem('maxySidebarCollapsed', 'false');
+  }
+});
+
 // Close sidebar when clicking backdrop
 sidebarBackdrop.addEventListener('click', () => {
   sidebar.classList.remove('open');

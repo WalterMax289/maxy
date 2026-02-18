@@ -64,20 +64,20 @@ body {
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  padding: 24px 16px;
+  padding: 16px;
   gap: 8px;
   overflow-y: auto;
+  overflow-x: hidden;
   z-index: 1001;
   flex-shrink: 0;
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
 
 .sidebar.collapsed {
-  width: 80px;
-  padding: 0;
-  overflow: hidden;
-  border-right: none;
+  width: 72px;
+  padding: 16px 10px;
 }
 
 /* Sidebar Scrollbar */
@@ -101,47 +101,29 @@ body {
 /* Desktop Sidebar Toggle */
 .sidebar-toggle-desktop {
   display: flex;
-  position: fixed;
-  top: 16px;
-  left: 296px;
-  z-index: 99;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: white;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 8px;
   cursor: pointer;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
-  opacity: 0;
-  pointer-events: none;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
 }
 
 .sidebar-toggle-desktop:hover {
-  background: rgba(40, 40, 40, 0.9);
-  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.12);
+  transform: scale(1.08);
 }
 
 .sidebar-toggle-desktop svg {
   width: 16px;
   height: 16px;
   stroke: var(--text);
-  transition: transform 0.3s ease;
-}
-
-.sidebar.collapsed+.sidebar-toggle-desktop {
-  left: 16px;
-}
-
-.sidebar.collapsed .sidebar-toggle-desktop {
-  position: absolute;
-  right: -16px;
-  top: 32px;
-  background: var(--sidebar-bg);
-  border-radius: 50%;
-  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.3);
+  transition: transform 0.35s ease;
 }
 
 .sidebar.collapsed .sidebar-toggle-desktop svg {
@@ -152,29 +134,37 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 32px;
-  padding: 0 8px;
+  margin-bottom: 20px;
+  padding: 4px 0;
+  min-height: 48px;
+}
+
+.sidebar.collapsed .logo-container {
+  justify-content: center;
+  margin-bottom: 12px;
 }
 
 .logo-circle {
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   object-fit: cover;
   background: #000;
   cursor: pointer;
   transition: transform 0.3s ease;
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
 }
 
 .logo-circle:hover {
   transform: scale(1.1) rotate(-5deg);
 }
 
-.sidebar.collapsed .logo-circle {
-  margin: 0 auto;
+.sidebar.collapsed .sidebar-toggle-desktop {
+  display: none;
 }
 
+/* Search Bar */
 .search-bar {
   display: flex;
   align-items: center;
@@ -182,16 +172,19 @@ body {
   background: rgba(255, 255, 255, 0.05);
   padding: 10px 16px;
   border-radius: 12px;
-  margin-bottom: 16px;
-  transition: opacity 0.3s ease;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
   color: var(--text-muted);
+  cursor: text;
 }
 
 .search-icon-sidebar {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   object-fit: contain;
   opacity: 0.6;
+  flex-shrink: 0;
+  cursor: pointer;
 }
 
 .search-bar:focus-within .search-icon-sidebar {
@@ -204,18 +197,32 @@ body {
   outline: none;
   color: var(--text);
   flex: 1;
+  min-width: 0;
 }
 
-.sidebar.collapsed .search-bar span,
-.sidebar.collapsed .search-bar input,
-.sidebar.collapsed .menu-item,
-.sidebar.collapsed .recents-heading {
+/* --- Collapsed: hide text, show only icons --- */
+.sidebar.collapsed .search-bar input {
   display: none;
 }
 
 .sidebar.collapsed .search-bar {
-  background: none;
   justify-content: center;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.sidebar.collapsed .menu-item span {
+  display: none;
+}
+
+.sidebar.collapsed .menu-item {
+  justify-content: center;
+  padding: 10px;
+}
+
+.sidebar.collapsed .recents-heading,
+.sidebar.collapsed #recentsList {
+  display: none;
 }
 
 .menu-item {
