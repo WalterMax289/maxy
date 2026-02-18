@@ -121,6 +121,10 @@
         }
 
         /* Different animations for each icon */
+        header nav a[href="#"]:hover img.nav-icon {
+            animation: pulse 1s infinite;
+        }
+
         header nav a[href="#about"]:hover img.nav-icon {
             animation: pulse 1s infinite;
         }
@@ -837,6 +841,10 @@
         <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">☰</button>
         <nav>
             <ul>
+                <li><a href="#">
+                        <img src="assets/home.png" class="nav-icon" alt="Home icon">
+                        Home
+                    </a></li>
                 <li><a href="#about">
                         <img src="assets/about.png" class="nav-icon" alt="About icon">
                         About
@@ -1083,6 +1091,16 @@
             });
 
             // Handle Try MAXY Now button - check auth status
+            async function handleTryMaxyClick(e) {
+                e.preventDefault();
+                const loggedIn = await isLoggedIn();
+                if (loggedIn) {
+                    window.location.href = 'chat.html';
+                } else {
+                    openAuthModal('signup');
+                }
+            }
+
             const tryMaxyBtn = document.getElementById('tryMaxyBtn');
             if (tryMaxyBtn) {
                 tryMaxyBtn.addEventListener('click', handleTryMaxyClick);

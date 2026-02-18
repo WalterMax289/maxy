@@ -56,6 +56,12 @@
     <div class="chat-header">
       <div class="chat-header-title"></div>
       <div class="chat-header-actions">
+        <button class="profile-btn-header" onclick="window.location.href='index.html'"
+          style="margin-right: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);"
+          title="Go to Home">
+          <span>🏠</span>
+          <span class="profile-name">Home</span>
+        </button>
         <button class="profile-btn-header" id="profileBtnHeader" aria-label="User Profile" title="Go to Profile"
           onclick="window.location.href='profile.html'">
           <div class="profile-avatar">👤</div>
@@ -194,6 +200,7 @@
   </div>
 
   <!-- Auth Check - Must be logged in to access chat -->
+  <script src="config.js"></script>
   <script src="auth.js"></script>
   <script>
     // Auth check disabled by user request
