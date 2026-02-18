@@ -1610,6 +1610,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Proactive check when user focuses on message input
+  if (textarea) {
+    textarea.addEventListener('focus', () => {
+      if (!isBackendConnected) {
+        console.log('Proactively checking connection on input focus...');
+        checkBackendConnection();
+      }
+    });
+  }
+
   // Check credits on load with a slight delay to ensure backend is ready
   setTimeout(() => {
     checkCredits();
