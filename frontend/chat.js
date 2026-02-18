@@ -369,17 +369,14 @@ function loadUserProfile() {
   if (avatarEl) {
     if (userData.avatar) {
       console.log('Using custom avatar');
-      // User has custom avatar
-      avatarEl.innerHTML = `<img src="${userData.avatar}" alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
-    } else if (userData.email) {
-      console.log('Using email initial');
-      // Use first letter of email
-      const firstLetter = userData.email.charAt(0).toUpperCase();
-      avatarEl.textContent = firstLetter;
+      // User has custom avatar - Ensure it fills the container perfectly
+      avatarEl.innerHTML = `<img src="${userData.avatar}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
     } else {
-      console.log('Using default avatar');
-      // Default emoji avatar
-      avatarEl.textContent = '👤';
+      console.log('Using fallback avatar');
+      // Use initials or default 👤
+      const email = userData.email || 'Guest';
+      const firstLetter = email.charAt(0).toUpperCase();
+      avatarEl.textContent = firstLetter === 'G' && !userData.email ? '👤' : firstLetter;
     }
   }
 }
