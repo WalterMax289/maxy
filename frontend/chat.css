@@ -1249,87 +1249,61 @@ textarea::placeholder {
   }
 }
 
-/* ================= PREMIUM NAVIGATION BUTTONS ================= */
+/* ================= PREMIUM NAVIGATION REFINE ================= */
 .chat-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
+  padding: 20px 40px;
   position: relative;
   z-index: 10;
-  max-width: 900px;
   width: 100%;
-  margin: 0 auto;
 }
 
 .chat-header-actions {
   display: flex;
-  gap: 12px;
+  gap: 24px;
   margin-left: auto;
-  /* Force to right side */
 }
 
 .nav-btn-premium {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
+  padding: 0;
+  background: none;
+  border: none;
   color: var(--text);
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(12px);
   position: relative;
   overflow: hidden;
-  width: 44px;
-  height: 44px;
-}
-
-.nav-btn-premium::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.6s ease;
+  width: 36px;
+  height: 36px;
 }
 
 .nav-btn-premium:hover {
-  background: rgba(255, 255, 255, 0.12);
-  transform: scale(1.05) translateY(-1px);
-  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.nav-btn-premium:hover::before {
-  left: 100%;
-}
-
-.nav-btn-premium:active {
-  transform: scale(0.98);
+  transform: scale(1.15) translateY(-2px);
 }
 
 .nav-icon-container {
-  width: 32px;
-  height: 32px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .nav-btn-premium:hover .nav-icon-container {
-  transform: rotate(-10deg);
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.25);
 }
 
 .nav-icon-img {
@@ -1339,22 +1313,22 @@ textarea::placeholder {
 }
 
 .profile-avatar {
-  font-size: 16px;
+  font-size: 20px;
 }
 
-.profile-name {
-  font-weight: 600;
-  letter-spacing: 0.5px;
+.nav-btn-premium::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s ease;
 }
 
-@media (max-width: 768px) {
-  .nav-btn-premium .profile-name {
-    display: none;
-  }
-
-  .nav-btn-premium {
-    padding: 4px;
-  }
+.nav-btn-premium:hover::after {
+  left: 100%;
 }
 
 .profile-menu-header {
