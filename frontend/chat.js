@@ -306,26 +306,33 @@ async function checkCredits() {
 function updateCreditsDisplay() {
   const creditsDisplay = document.getElementById('creditsDisplay');
   const creditsText = document.getElementById('creditsText');
+  const creditsUsed = document.getElementById('creditsUsed');
+  const creditsTotal = document.getElementById('creditsTotal');
 
   if (!userCredits.enabled) {
-    hideCreditsDisplay();
+    if (creditsDisplay) creditsDisplay.style.display = 'none';
     return;
   }
 
-  creditsDisplay.style.display = 'flex';
+  if (creditsDisplay) creditsDisplay.style.display = 'flex';
 
-  if (userCredits.credits_remaining === 0) {
-    creditsText.textContent = `Out of credits!`;
-    creditsText.style.color = '#ff6b6b';
-    creditsDisplay.style.background = 'linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(185, 28, 28, 0.9))';
-  } else if (userCredits.credits_remaining <= 5) {
-    creditsText.textContent = `${userCredits.credits_remaining}/${userCredits.max_credits} messages left`;
-    creditsText.style.color = '#ffd93d';
-    creditsDisplay.style.background = 'linear-gradient(135deg, rgba(245, 158, 11, 0.9), rgba(217, 119, 6, 0.9))';
-  } else {
-    creditsText.textContent = `${userCredits.credits_remaining}/${userCredits.max_credits} messages`;
-    creditsText.style.color = '#fff';
-    creditsDisplay.style.background = 'linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9))';
+  // Update main counter
+  if (creditsText) {
+    creditsText.textContent = userCredits.credits_remaining;
+    if (userCredits.credits_remaining <= 5) {
+      creditsText.style.color = '#ffd93d';
+    } else {
+      creditsText.style.color = '#fff';
+    }
+  }
+
+  // Update hover info
+  if (creditsUsed) creditsUsed.textContent = userCredits.max_credits - userCredits.credits_remaining;
+  if (creditsTotal) creditsTotal.textContent = userCredits.max_credits;
+
+  // Start countdown if not already running
+  if (userCredits.next_refresh && !creditsCheckInterval) {
+    startCreditsCountdown();
   }
 }
 
@@ -457,16 +464,7 @@ function startCreditsCountdown() {
   creditsCheckInterval = setInterval(updateCountdown, 1000);
 }
 
-// Click credits display to refresh
-document.addEventListener('DOMContentLoaded', () => {
-  const creditsDisplay = document.getElementById('creditsDisplay');
-  if (creditsDisplay) {
-    creditsDisplay.addEventListener('click', () => {
-      checkCredits();
-      showToast('Credits refreshed!');
-    });
-  }
-});
+// Credits click listener removed - logic handled by hover and auto-refresh
 
 function saveChats() {
   localStorage.setItem('maxyChats', JSON.stringify(chats));
@@ -1646,90 +1644,4 @@ window.addEventListener('beforeunload', () => {
 // Initial scroll to bottom update
 updateScrollButton();
 
-// Add CSS for enhanced animations
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes messageSlideIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px) scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-  
-  .message {
-    animation: messageSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  /* Connection status dot pulse animation */
-  @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.7; transform: scale(1.1); }
-  }
-  
-  .status-dot {
-    animation: pulse 2s ease-in-out infinite;
-  }
-  
-  .scroll-to-bottom {
-    position: fixed;
-    bottom: 100px;
-    right: 30px;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: rgba(30, 30, 30, 0.9);
-    border: 1px solid rgba(255,255,255,0.1);
-    color: white;
-    font-size: 20px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: all 0.3s ease;
-    z-index: 100;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  }
-  
-  .scroll-to-bottom.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  
-  .scroll-to-bottom:hover {
-    background: rgba(50, 50, 50, 0.95);
-    transform: translateY(-2px);
-  }
-  
-  /* Credits display styles */
-  .credits-display {
-    transition: all 0.3s ease;
-  }
-  
-  .credits-display:hover {
-    background: rgba(0,0,0,0.9) !important;
-    transform: scale(1.05);
-  }
-  
-  /* Credits modal animation */
-  @keyframes modalFadeIn {
-    from {
-      opacity: 0;
-      transform: scale(0.9);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-  
-  #creditsModal > div {
-    animation: modalFadeIn 0.3s ease;
-  }
-`;
-document.head.appendChild(style);
+// Legcay styles removed - moved to chat.css

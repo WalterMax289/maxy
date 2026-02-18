@@ -174,13 +174,26 @@
       style="display: block; width: 12px; height: 12px; border-radius: 50%; background: #f59e0b; box-shadow: 0 0 10px #f59e0b; transition: all 0.3s ease;"></span>
   </div>
 
-  <!-- Credits display - Made more prominent -->
-  <div id="creditsDisplay" class="credits-display"
-    style="position: fixed; bottom: 20px; left: 20px; display: none; align-items: center; gap: 10px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9)); padding: 12px 20px; border-radius: 30px; color: white; font-size: 14px; z-index: 1000; cursor: pointer; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); border: 1px solid rgba(255,255,255,0.2); font-weight: 600;"
-    title="Click to refresh credits">
-    <span style="font-size: 18px;">💎</span>
-    <span id="creditsText">Loading...</span>
-    <span style="font-size: 11px; opacity: 0.8; margin-left: 4px;">(click to refresh)</span>
+  <!-- Credits display - Minimal & Hoverable -->
+  <div id="creditsDisplay" class="credits-display">
+    <span class="credits-icon">💎</span>
+    <span id="creditsText" class="credits-count">30</span>
+
+    <div class="credits-hover-info">
+      <div class="credits-info-item">
+        <span class="label">Credits Used</span>
+        <span id="creditsUsed" class="value">0</span>
+      </div>
+      <div class="credits-info-item">
+        <span class="label">Total Limit</span>
+        <span id="creditsTotal" class="value">30</span>
+      </div>
+      <div class="credits-info-divider"></div>
+      <div class="credits-info-item refresh-timer">
+        <span class="label">Refreshes in</span>
+        <span id="creditsCountdown" class="value">00:00:00</span>
+      </div>
+    </div>
   </div>
 
   <!-- Credits exhausted modal -->
