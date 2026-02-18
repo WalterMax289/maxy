@@ -5,10 +5,10 @@
 
 // Supabase client initialization (Variables loaded from config.js)
 // Use typeof checks to prevent ReferenceError if config.js is missing in production
-let supabase = null;
+let supabaseClient = null;
 try {
     if (typeof SUPABASE_URL !== 'undefined' && typeof SUPABASE_ANON_KEY !== 'undefined' && window.supabase) {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         console.log('✅ Supabase initialized successfully');
     } else {
         console.warn('⚠️ Supabase credentials or SDK missing. Authentication features will be disabled.');
@@ -19,15 +19,15 @@ try {
 
 // Check if user is logged in
 async function isLoggedIn() {
-    if (!supabase) return false;
-    const { data: { session } } = await supabase.auth.getSession();
+    if (!supabaseClient) return false;
+    const { data: { session } } = await supabaseClient.auth.getSession();
     return !!session;
 }
 
 // Get current user data
 async function getCurrentUser() {
-    if (!supabase) return null;
-    const { data: { user } } = await supabase.auth.getUser();
+    if (!supabaseClient) return null;
+    const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return null;
 
     return {
@@ -40,9 +40,9 @@ async function getCurrentUser() {
 
 // Register new user
 async function registerUser(name, email, password) {
-    if (!supabase) return { success: false, message: 'Supabase not initialized' };
+    if (!supabaseClient) return { success: false, message: 'Supabase not initialized' };
 
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await supabaseClient.auth.signUp({
         email: email,
         password: password,
         options: {
@@ -69,9 +69,9 @@ async function registerUser(name, email, password) {
 
 // Login user
 async function loginUser(email, password) {
-    if (!supabase) return { success: false, message: 'Supabase not initialized' };
+    if (!supabaseClient) return { success: false, message: 'Supabase not initialized' };
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
         email: email,
         password: password
     });
@@ -107,8 +107,8 @@ function updateLocalState(user) {
 
 // Logout user
 async function logoutUser() {
-    if (supabase) {
-        await supabase.auth.signOut();
+    if (supabaseClient) {
+        await supabaseClient.auth.signOut();
     }
     localStorage.removeItem('maxySession');
     localStorage.removeItem('maxyUser');
@@ -273,12 +273,12 @@ function showAuthToast(message, type = 'info') {
 // Initial check when auth.js loads
 (async () => {
     const loggedIn = await isLoggedIn();
-    if (loggedIn) {
+    if (loggedIn && supabaseClient) {
         const user = await getCurrentUser();
         // Since getCurrentUser returns our simplified object, we need to pass a "user-like" object to updateLocalState
         // or just call updateLocalState with the raw user from Supabase if we had it.
         // Actually, let's just use the session data if available.
-        const { data: { user: sbUser } } = await supabase.auth.getUser();
+        const { data: { user: sbUser } } = await supabaseClient.auth.getUser();
         if (sbUser) updateLocalState(sbUser);
     }
 })();
