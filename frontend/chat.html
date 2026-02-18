@@ -56,16 +56,18 @@
     <div class="chat-header">
       <div class="chat-header-title"></div>
       <div class="chat-header-actions">
-        <button class="profile-btn-header" onclick="window.location.href='index.html'"
-          style="margin-right: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);"
-          title="Go to Home">
-          <span>🏠</span>
+        <button class="nav-btn-premium" onclick="window.location.href='index.html'" title="Go to Home">
+          <div class="nav-icon-container">
+            <img src="assets/home.png" alt="Home" class="nav-icon-img">
+          </div>
           <span class="profile-name">Home</span>
         </button>
-        <button class="profile-btn-header" id="profileBtnHeader" aria-label="User Profile" title="Go to Profile"
+        <button class="nav-btn-premium" id="profileBtnHeader" aria-label="User Profile" title="Go to Profile"
           onclick="window.location.href='profile.html'">
-          <div class="profile-avatar">👤</div>
-          <span class="profile-name">Guest</span>
+          <div class="nav-icon-container">
+            <div class="profile-avatar">👤</div>
+          </div>
+          <span class="profile-name">Profile</span>
         </button>
       </div>
     </div>
