@@ -147,9 +147,9 @@ class MAXY1_1:
                 return None
             
             page = wikipedia.page(search_results[0], auto_suggest=False)
-            summary = page.summary[:400] + "..." if len(page.summary) > 400 else page.summary
-            
-            return f"**Quick Fact:** {summary}\n\n_Source: Wikipedia_"
+            # Remove source attribution as requested
+            summary = page.summary[:500]
+            return summary
         except:
             return None
     
@@ -253,16 +253,19 @@ class MAXY1_1:
         elif intents['simple_task']:
             return ("Got it! I'm on it. What would you like me to do with this? Just let me know the next step!", 0.88)
         
-        # Knowledge query - Quick facts (3-4 sentences max)
-        elif intents['knowledge']:
+        # Knowledge query - Quick facts (2-3 sentences max)
+        elif intents['knowledge'] or MAXY1_1.should_use_wikipedia(message):
             wiki_result = MAXY1_1.quick_wikipedia_lookup(message)
             if wiki_result:
-                # Truncate to 3-4 sentences
-                sentences = wiki_result.split('. ')[:4]
-                concise = '. '.join(sentences) + ('.' if not sentences[-1].endswith('.') else '')
+                # Strictly 2-3 sentences as requested
+                raw_sentences = [s.strip() for s in wiki_result.split('. ') if s.strip()]
+                sentences = raw_sentences[:3] # Ensure at most 3 sentences
+                concise = '. '.join(sentences)
+                if not concise.endswith('.'):
+                    concise += '.'
                 return (concise, 0.90)
             else:
-                return ("That's an interesting question! I'd need to look that up to give you the best answer. Could you provide a bit more context or detail?", 0.82)
+                return ("I'd love to help with that! Let me dig into my data banks. What specifically would you like to know about it?", 0.82)
         
         # Help request - Quick capabilities (3-4 sentences)
         elif intents['help']:
@@ -329,10 +332,12 @@ class MAXY1_1:
             response = "I'm listening! Go on." 
             confidence = 0.99
         
-        # Ensure response is 3-4 sentences max for MAXY 1.1
-        sentences = response.split('. ')
-        if len(sentences) > 4:
-            response = '. '.join(sentences[:4]) + '.'
+        # Ensure response is 2-3 sentences max for MAXY 1.1
+        sentences = [s.strip() for s in response.split('. ') if s.strip()]
+        if len(sentences) > 3:
+            response = '. '.join(sentences[:3])
+            if not response.endswith('.'):
+                response += '.'
         
         result = {
             'response': response,
