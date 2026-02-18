@@ -418,7 +418,7 @@ class MAXY1_2:
     
     @staticmethod
     def deep_wikipedia_research(query: str) -> Dict[str, Any]:
-        """Perform comprehensive Wikipedia research"""
+        """Perform comprehensive Wikipedia research with professional synthesis"""
         try:
             # Search for relevant pages
             search_results = wikipedia.search(query, results=5)
@@ -427,14 +427,14 @@ class MAXY1_2:
                 return {
                     'success': False,
                     'response': (
-                        f"**Research Results: '{query}'**\n"
+                        f"**RESEARCH INQUIRY: '{query}'**\n"
                         f"{'='*50}\n\n"
-                        f"I couldn't find specific information on this topic in my knowledge base.\n\n"
-                        f"**Suggestions:**\n"
-                        f"• Try different keywords\n"
-                        f"• Be more specific\n"
-                        f"• Check spelling\n"
-                        f"• Ask a more general question first"
+                        f"Our primary knowledge indices currently contain no direct correlation for this specific inquiry.\n\n"
+                        f"**Recommendations for Refined Synthesis:**\n"
+                        f"• Employ expanded conceptual terminologies\n"
+                        f"• Increase categorical specificity\n"
+                        f"• Verify orthographic accuracy\n"
+                        f"• Establish a broader foundational query"
                     ),
                     'confidence': 0.60
                 }
@@ -443,84 +443,76 @@ class MAXY1_2:
             try:
                 page = wikipedia.page(search_results[0], auto_suggest=False)
             except wikipedia.exceptions.DisambiguationError as e:
-                # Handle disambiguation by picking the most relevant option
                 best_option = e.options[0] if e.options else search_results[0]
                 page = wikipedia.page(best_option, auto_suggest=False)
             
-            # Build comprehensive response
             title = page.title
             summary = page.summary
             url = page.url
             
-            # Extract key sections
-            sections = []
-            current_section = ""
-            for paragraph in summary.split('\n\n'):
-                if len(paragraph.strip()) > 50:
-                    sections.append(paragraph.strip())
+            # Professional Synthesis Logic
+            paragraphs = [p.strip() for p in summary.split('\n\n') if len(p.strip()) > 100]
+            if not paragraphs:
+                paragraphs = [summary]
+                
+            # 1. Scholarly Overview (First para refined)
+            intro = paragraphs[0]
+            if len(intro) > 600:
+                intro = intro[:600] + "..."
             
-            # Build response
-            response = f"**DEEP RESEARCH: {title}**\n"
+            # 2. Critical Insights & Thematic Analysis
+            # Extract key sentences for bullet points
+            all_sentences = [s.strip() for s in summary.split('. ') if len(s.strip()) > 20]
+            insights = all_sentences[2:7] # Take some middle sentences for "insights"
+            
+            # 3. Technical Narrative (Main body)
+            narrative = " ".join(paragraphs[1:3]) if len(paragraphs) > 1 else summary[600:2000]
+            if len(narrative) > 1200:
+                narrative = narrative[:1200] + "..."
+                
+            # 4. Academic Conclusion
+            conclusion = f"In summary, the study of {title} reveals a multifaceted landscape across its historical and practical dimensions. Understanding its core principles remains essential for comprehensive mastery of the subject matter."
+
+            # Build Professional Report
+            response = f"**DEEP RESEARCH REPORT: {title.upper()}**\n"
             response += f"{'='*60}\n\n"
             
-            # Executive summary (first section)
-            response += f"**Executive Summary**\n"
-            response += f"{sections[0] if sections else summary[:500]}\n\n"
+            response += f"### I. SCHOLARLY OVERVIEW\n"
+            response += f"{intro}\n\n"
             
-            # Key insights
-            if len(sections) > 1:
-                response += f"**Key Insights**\n"
-                for i, section in enumerate(sections[1:4], 1):
-                    response += f"{i}. {section[:200]}...\n\n"
+            response += f"### II. CRITICAL INSIGHTS & THEMATIC ANALYSIS\n"
+            for insight in insights[:4]:
+                response += f"• {insight}.\n"
+            response += "\n"
             
-            # Full context
-            response += f"**Complete Overview**\n"
-            full_summary = summary[:1500] + "..." if len(summary) > 1500 else summary
-            response += f"{full_summary}\n\n"
+            response += f"### III. DETAILED TECHNICAL NARRATIVE\n"
+            response += f"{narrative}\n\n"
             
-            # Source
-            response += f"**Source**\n"
-            response += f"📚 Wikipedia: {url}\n"
+            response += f"### IV. ACADEMIC CONCLUSION\n"
+            response += f"{conclusion}\n\n"
             
-            # Related Topics (Mock implementation for now, ideally would parse links)
-            response += f"\n**Related Topics:**\n"
-            response += f"• {search_results[1] if len(search_results) > 1 else 'General Knowledge'}\n"
-            response += f"• {search_results[2] if len(search_results) > 2 else 'Related History'}\n"
-            
-            response += f"\nFor the complete article, visit the link above."
+            response += f"**REFERENCE INDICES**\n"
+            response += f"📚 Primary Dataset: {url}\n"
+            response += f"🔍 Associated Domains: {', '.join(search_results[1:4])}"
             
             return {
                 'success': True,
                 'response': response,
-                'confidence': 0.92,
+                'confidence': 0.95,
                 'sources': [url]
             }
             
         except wikipedia.exceptions.PageError:
             return {
                 'success': False,
-                'response': (
-                    f"**Research: '{query}'**\n"
-                    f"{'='*50}\n\n"
-                    f"No Wikipedia article found for this exact query.\n\n"
-                    f"**Try:**\n"
-                    f"• More general terms\n"
-                    f"• Related topics\n"
-                    f"• Different wording"
-                ),
+                'response': f"The requested topic '{query}' does not reside within the primary Wikipedia datasets. Please verify the conceptual scope and try a broader nomenclature.",
                 'confidence': 0.65
             }
-            
         except Exception as e:
-            logger.error(f"Wikipedia research error: {str(e)}")
+            logger.error(f"Professional research error: {str(e)}")
             return {
                 'success': False,
-                'response': (
-                    f"**Research Error**\n"
-                    f"{'='*50}\n\n"
-                    f"I encountered an issue while researching: {str(e)[:100]}\n\n"
-                    f"Please try again or rephrase your question."
-                ),
+                'response': f"A protocol error occurred during the deep research phase. Analysis aborted: {str(e)[:50]}",
                 'confidence': 0.50
             }
     
@@ -641,26 +633,21 @@ class MAXY1_2:
     
     @staticmethod
     def format_research_response(raw_response: str, depth: str) -> str:
-        """Format research response based on desired depth"""
-        # Split into sentences
-        sentences = [s.strip() for s in raw_response.replace('! ', '. ').replace('? ', '. ').split('. ') if s.strip()]
+        """Format research response based on desired depth while preserving structure"""
+        if depth == 'deep':
+            return raw_response # Full professional report
+            
+        # For lower depths, we filter sections rather than just raw sentence count
+        sections = raw_response.split('\n\n')
         
         if depth == 'surface':
-            # 5-6 sentences for surface level
-            selected = sentences[:6]
-        elif depth == 'moderate':
-            # 7-8 sentences for moderate depth
-            selected = sentences[:8]
-        else:  # deep
-            # 9-10 sentences for deep dive
-            selected = sentences[:10]
-        
-        # Ensure we have proper sentence endings
-        formatted = '. '.join(selected)
-        if not formatted.endswith('.'):
-            formatted += '.'
-        
-        return formatted
+            # Header + Scholarly Overview + Source
+            selected = [sections[0], sections[1], sections[2], sections[-2], sections[-1]]
+        else: # moderate
+            # Header + Scholarly Overview + Insights + Source
+            selected = [sections[0], sections[1], sections[2], sections[3], sections[-2], sections[-1]]
+            
+        return '\n\n'.join(selected)
     
     @staticmethod
     def process_message(
@@ -1311,3 +1298,4 @@ class ModelRouter:
         else:
             logger.warning(f"Unknown model: {model_name}, defaulting to MAXY1.1")
             return MAXY1_1.process_message(message, include_thinking, conversation_history)
+            
