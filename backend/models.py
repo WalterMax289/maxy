@@ -5,10 +5,12 @@ Enhanced models with distinct personalities and capabilities
 
 import random
 import logging
-from typing import List, Dict, Any, Optional
+import re
+from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
 import wikipedia
 from data_analyzer import AdvancedAnalyzer
+from code_composer import CodeComposer
 
 logger = logging.getLogger(__name__)
 
@@ -1064,19 +1066,37 @@ DEALLOCATE item_cursor;'''
             return None, f"Error: {str(e)}"
     
     @staticmethod
+    def is_website_request(message: str) -> tuple[bool, str]:
+        """Detect if user wants to build a website and what type"""
+        msg_lower = message.lower()
+        website_indicators = ['build', 'create', 'make', 'website', 'web site', 'page', 'landing', 'portfolio']
+        
+        is_website = ('website' in msg_lower or 'web site' in msg_lower or 'page' in msg_lower) and \
+                     any(ind in msg_lower for ind in ['build', 'create', 'make', 'design', 'setup'])
+        
+        type = 'general'
+        if 'portfolio' in msg_lower:
+            type = 'portfolio'
+        elif 'landing' in msg_lower:
+            type = 'landing'
+        elif 'business' in msg_lower:
+            type = 'business'
+            
+        return is_website, type
+
+    @staticmethod
     def process_message(
         message: str,
         include_thinking: bool = True,
         conversation_history: Optional[List[Dict]] = None,
         file_data: Optional[Dict] = None
     ) -> Dict[str, Any]:
-        """Process message with AI capabilities including code generation and charts"""
+        """Process message with AI capabilities including dynamic code and website generation"""
         
         thinking = None
         confidence = 0.85
-        chart_data = None  # Initialize chart_data to avoid unbound variable
+        chart_data = None
         
-        # Generate thinking for analysis
         if include_thinking:
             thinking = MAXYThinkingEngine.generate_thinking(
                 MAXY1_3.NAME,
@@ -1087,129 +1107,123 @@ DEALLOCATE item_cursor;'''
         msg_lower = message.lower().strip()
         response = None
         
-        # Detect numeric data for analysis
-        import re
-        numbers = re.findall(r'-?\d+\.?\d*', message)
-        
-
-        # Check prior to file_data if we have direct analysis request
-        if len(numbers) >= 3 and any(x in msg_lower for x in ['analyze', 'stats', 'statistics', 'mean', 'average', 'data']):
-            try:
-                data_points = [float(n) for n in numbers]
-                analysis = AdvancedAnalyzer.generate_comprehensive_analysis(data_points)
-                
-                if 'error' not in analysis:
-                    response = f"### 📊 Statistical Analysis\n\n"
-                    response += f"I analyzed the **{len(data_points)} data points** you provided.\n\n"
-                    
-                    response += f"**Central Tendency:**\n"
-                    response += f"- **Mean:** {analysis['central_tendency']['mean']}\n"
-                    response += f"- **Median:** {analysis['central_tendency']['median']}\n"
-                    if analysis['central_tendency']['mode']:
-                        response += f"- **Mode:** {analysis['central_tendency']['mode']}\n"
-                        
-                    response += f"\n**Dispersion:**\n"
-                    response += f"- **Std Dev:** {analysis['dispersion']['std_dev']}\n"
-                    response += f"- **Range:** {analysis['dispersion']['range']['min']} to {analysis['dispersion']['range']['max']}\n"
-                    
-                    if analysis['trends']['trend'] != 'insufficient_data':
-                        response += f"\n**Trend Analysis:**\n"
-                        response += f"- **Direction:** {analysis['trends']['trend'].title()}\n"
-                        response += f"- **Strength:** {analysis['trends']['strength'].title()}\n"
-                        
-                    outliers = analysis['outliers']['count']
-                    if outliers > 0:
-                         response += f"\n**⚠️ Outliers Detected:** {outliers} potential outliers found.\n"
-
-                    confidence = 0.95
-                else:
-                    response = f"I tried to analyze the numbers, but encountered an error: {analysis['error']}"
-            except Exception as e:
-                logger.error(f"Error in quick analysis: {e}")
-
-        # Check if we have file data to analyze
-        elif file_data:
-            file_name = file_data.get('name', 'unknown file')
-            file_type = file_data.get('type', 'unknown')
-            file_content = file_data.get('content', '')
-            
-            response = f"I've analyzed your file **{file_name}**. Here's what I found:\n\n"
-            
-            # Simulate content analysis
-            content_preview = file_content[:500] if len(file_content) > 500 else file_content
-            word_count = len(file_content.split()) if file_content else 0
-            
-            response += f"📄 **File Overview**\n"
-            response += f"This {file_type} document contains approximately {word_count} words of content. "
-            response += f"I've processed the file and can help you with:\n"
-            response += f"• Summarizing the key points\n"
-            response += f"• Extracting specific information\n"
-            response += f"• Analyzing patterns or themes\n"
-            response += f"• Answering questions about the content\n\n"
-            
-            response += f"💡 **How can I help you with this file?** Feel free to ask specific questions!"
-            
-            confidence = 0.90
-        
-        # Check for chart request
-        elif MAXY1_3.is_chart_request(message)[0]:
-            is_chart, chart_type, data, labels, title = MAXY1_3.is_chart_request(message)
-            
-            # Generate actual chart image
-            base64_image, description = MAXY1_3.generate_chart_image(chart_type, data, labels, title)
-            
-            if base64_image:
-                response = f"I've created a {chart_type} chart for you based on your data! 📊\n\n"
-                response += f"**Chart: {title}**\n"
-                response += f"• Type: {chart_type.capitalize()} Chart\n"
-                response += f"• Data points: {len(data)}\n"
-                response += f"• Total: {sum(data)}\n\n"
-                response += f"The chart image is displayed above. You can see the breakdown of your data visually."
-                
-                # Store chart info for later
-                chart_data = {
-                    'type': chart_type,
-                    'title': title,
-                    'base64_image': base64_image,
-                    'description': description
-                }
+        # 1. Check for Website Building Request (NEW Logic)
+        is_website, web_type = MAXY1_3.is_website_request(message)
+        if is_website:
+            if web_type == 'portfolio':
+                site = CodeComposer.build_portfolio()
+                type_name = "Portfolio Website"
             else:
-                response = f"I tried to create a {chart_type} chart, but encountered an issue. Let me describe the data instead:\n\n"
-                response += f"**{title}**\n"
-                for label, value in zip(labels, data):
-                    response += f"• {label}: {value}\n"
-                response += f"\n**Total:** {sum(data)}"
-                chart_data = None
+                site = CodeComposer.build_website(title="Project MAXY Site")
+                type_name = "Landing Page"
+                
+            response = f"### 🏗️ MAXY Website Builder\n\n"
+            response += f"I've generated a clean, responsive **{type_name}** structure for you! "
+            response += f"I've used modern HTML5, CSS Flexbox/Grid, and added some smooth interactivity with JavaScript.\n\n"
             
-            confidence = 0.92
-        
-        # Check for code generation request
-        elif MAXY1_3.is_code_request(message)[0]:
+            response += f"#### 📄 HTML Structure\n```html\n{site['html'][:1000]}...\n```\n\n"
+            response += f"#### 🎨 CSS Styles\n```css\n{site['css'][:500]}...\n```\n\n"
+            response += f"#### ⚡ JavaScript Logic\n```javascript\n{site['js']}\n```\n\n"
+            
+            response += f"**How to use this:**\n"
+            response += f"1. Save the HTML as `index.html`.\n"
+            response += f"2. Save the CSS as `style.css`.\n"
+            response += f"3. Save the JS as `script.js`.\n"
+            response += f"4. Open `index.html` in your browser to see your new site!"
+            
+            confidence = 0.95
+            
+        # 2. Check for numeric data analysis
+        elif len(re.findall(r'-?\d+\.?\d*', message)) >= 3 and any(x in msg_lower for x in ['analyze', 'stats', 'statistics', 'mean', 'data']):
+             # ... existing analysis logic ...
+             pass # (handled below by keeping original if no match)
+
+        # 3. Check for chart request
+        if not response and MAXY1_3.is_chart_request(message)[0]:
+            # ... existing chart logic ...
+            pass
+
+        # 4. Check for code generation request (Upgraded)
+        if not response and MAXY1_3.is_code_request(message)[0]:
             language = MAXY1_3.is_code_request(message)[1]
             response = MAXY1_3.generate_code(language, message)
             confidence = 0.93
-        
-        # Handle specific queries
-        elif any(g in msg_lower for g in ['hello', 'hi', 'hey']):
-            response = "Hello! I'm MAXY 1.3, your advanced AI assistant. I can help you with programming, data analysis, file processing, and creating visualizations. What would you like to work on today?"
-            confidence = 0.95
-        
-        elif any(q in msg_lower for q in ['who are you', 'what can you do', 'your name']):
-            response = "I'm MAXY 1.3, an advanced AI assistant specialized in:\n\n📝 **Programming** - Code in Python, JavaScript, Java, C++, HTML, CSS, SQL\n📊 **Data Visualization** - Charts, graphs, and data analysis\n📁 **File Processing** - Analyze documents, extract insights\n🔍 **Pattern Recognition** - Find trends and patterns in data\n\nWhat can I help you with?"
-            confidence = 0.94
-        
-        elif any(h in msg_lower for h in ['help', 'assist', 'support']):
-            response = "I'm here to help! I can:\n\n💻 **Write Code** - Just tell me the language and what you need\n📈 **Create Charts** - Ask me to visualize your data\n📄 **Analyze Files** - Upload a document and I'll process it\n📊 **Data Analysis** - Work with numbers and statistics\n\nWhat would you like to do? Just ask me!"
-            confidence = 0.92
-        
-        elif any(t in msg_lower for t in ['thanks', 'thank you', 'appreciate']):
-            response = "You're welcome! I'm glad I could help. If you need more assistance with coding, data analysis, or anything else, just let me know!"
-            confidence = 0.93
-        
-        # Default conversational response
-        else:
-            response = "I understand. As MAXY 1.3, I can help you with programming tasks, create visualizations, analyze files, or assist with data analysis. What specific project are you working on? Feel free to ask me to write code, create a chart, or help analyze something!"
-            confidence = 0.85
+
+        # Fallback to original logic if no response generated yet
+        if not response:
+            # Detect numeric data for analysis
+            numbers = re.findall(r'-?\d+\.?\d*', message)
+            
+            if len(numbers) >= 3 and any(x in msg_lower for x in ['analyze', 'stats', 'statistics', 'mean', 'average', 'data']):
+                try:
+                    data_points = [float(n) for n in numbers]
+                    analysis = AdvancedAnalyzer.generate_comprehensive_analysis(data_points)
+                    
+                    if 'error' not in analysis:
+                        response = f"### 📊 Statistical Analysis\n\n"
+                        response += f"I analyzed your **{len(data_points)} data points**. "
+                        
+                        # Better integration of insights
+                        insights = AdvancedAnalyzer.generate_insights(analysis)
+                        response += f"{insights[0]} " if insights else ""
+                        
+                        response += f"\n\n**Findings:**\n"
+                        response += f"- **Average (Mean):** {analysis['central_tendency']['mean']}\n"
+                        response += f"- **Midpoint (Median):** {analysis['central_tendency']['median']}\n"
+                        response += f"- **Variation:** Standard deviation of {analysis['dispersion']['std_dev']}\n"
+                        
+                        if analysis['trends']['trend'] != 'insufficient_data':
+                            response += f"- **Trend:** Data shows a {analysis['trends']['strength']} {analysis['trends']['trend']} direction.\n"
+                            
+                        confidence = 0.95
+                    else:
+                        response = f"I tried to analyze the numbers, but encountered an error: {analysis['error']}"
+                except Exception as e:
+                    logger.error(f"Error in quick analysis: {e}")
+
+            # Check if we have file data to analyze
+            elif file_data:
+                file_name = file_data.get('name', 'unknown file')
+                file_type = file_data.get('type', 'unknown')
+                file_content = file_data.get('content', '')
+                
+                response = f"I've analyzed your file **{file_name}**. Here's what I found:\n\n"
+                
+                content_preview = file_content[:500] if len(file_content) > 500 else file_content
+                word_count = len(file_content.split()) if file_content else 0
+                
+                response += f"📄 **File Overview**\n"
+                response += f"This {file_type} document contains approximately {word_count} words of content. "
+                response += f"I've processed the file and can help you with summarizing points, pattern recognition, or extracting specifics."
+                confidence = 0.90
+            
+            # Check for chart request (if not handled above)
+            elif MAXY1_3.is_chart_request(message)[0]:
+                is_chart, chart_type, data, labels, title = MAXY1_3.is_chart_request(message)
+                base64_image, description = MAXY1_3.generate_chart_image(chart_type, data, labels, title)
+                
+                if base64_image:
+                    response = f"I've created a {chart_type} chart for you based on your data! 📊\n\n"
+                    response += f"**{title}** breakdown shows {len(data)} distinct data points total. "
+                    response += f"The visual representation above should make the distribution clear."
+                    chart_data = {'type': chart_type, 'title': title, 'base64_image': base64_image, 'description': description}
+                else:
+                    response = f"I tried to create your {chart_type} chart, but there was a rendering issue. "
+                    response += f"The total for your data ({title}) is {sum(data)}."
+                confidence = 0.92
+
+            # Basic responses
+            elif any(g in msg_lower for g in ['hello', 'hi', 'hey']):
+                response = "Hello! I'm MAXY 1.3, your advanced AI assistant. I can help you build websites, write code, analyze data, and create visualizations. What are we building today?"
+                confidence = 0.95
+            
+            elif any(q in msg_lower for q in ['who are you', 'what can you do']):
+                response = "I'm MAXY 1.3, upgraded with a **Dynamic Code Engine**! I can:\n\n🚀 **Build Websites** - Ask me to 'build a landing page' or 'create a portfolio'\n💻 **Programming** - Write complex scripts in Python, JS, and more\n📊 **Data Insights** - Analyze numbers and generate visual charts\n📁 **File Intelligence** - Process and extract data from your uploads"
+                confidence = 0.96
+            
+            else:
+                response = "I'm ready to help with your project! As MAXY 1.3, I can build web structures, write custom code, or perform deep data analysis. What's the next step for us?"
+                confidence = 0.85
         
         result = {
             'response': response,
@@ -1219,11 +1233,9 @@ DEALLOCATE item_cursor;'''
         
         if thinking:
             result['thinking'] = thinking
-        
-        # Add chart data if generated
-        if chart_data is not None:
+        if chart_data:
             result['charts'] = [chart_data]
-        
+            
         return result
 
 
