@@ -2,6 +2,7 @@
   font-family: 'Thürkle';
   src: url('assets/thurkle.regular.ttf');
 }
+
 :root {
   --bg: #000;
   --sidebar-bg: #0f0f0f;
@@ -15,11 +16,14 @@
   --danger: #e74c3c;
   --accent: #6f6f6f;
 }
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
+
 body {
   font-family: 'Caviar Dreams', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: var(--bg);
@@ -28,6 +32,7 @@ body {
   height: 100vh;
   overflow: hidden;
 }
+
 /* ================= SIDEBAR ================= */
 .sidebar {
   width: 280px;
@@ -53,13 +58,16 @@ body {
 .sidebar::-webkit-scrollbar {
   width: 6px;
 }
+
 .sidebar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .sidebar::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
 }
+
 .sidebar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
@@ -97,18 +105,20 @@ body {
   transition: transform 0.3s ease;
 }
 
-.sidebar.collapsed + .sidebar-toggle-desktop {
+.sidebar.collapsed+.sidebar-toggle-desktop {
   left: 16px;
 }
 
-.sidebar.collapsed + .sidebar-toggle-desktop svg {
+.sidebar.collapsed+.sidebar-toggle-desktop svg {
   transform: rotate(180deg);
 }
+
 .logo-container {
   display: flex;
   justify-content: center;
   margin: 20px 0 24px;
 }
+
 .logo-circle {
   width: 48px;
   height: 48px;
@@ -117,11 +127,13 @@ body {
   background: #000;
   cursor: pointer;
   transition: transform 0.3s ease;
-  box-shadow: 0 0 12px rgba(255,255,255,0.3);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
 }
+
 .logo-circle:hover {
   transform: scale(1.1) rotate(-5deg);
 }
+
 .search-bar {
   background: var(--card-bg);
   border-radius: 24px;
@@ -131,6 +143,7 @@ body {
   margin-bottom: 24px;
   color: var(--text-muted);
 }
+
 .search-bar input {
   background: none;
   border: none;
@@ -138,15 +151,18 @@ body {
   color: var(--text);
   flex: 1;
 }
+
 .menu-item {
   padding: 10px 12px;
   border-radius: 12px;
   cursor: pointer;
 }
+
 .menu-item:hover,
 .menu-item.active {
   background: var(--card-bg);
 }
+
 .recents-heading {
   font-size: 14px;
   color: var(--text-muted);
@@ -155,6 +171,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 1px;
 }
+
 .recent-item {
   padding: 12px;
   border-radius: 12px;
@@ -173,6 +190,7 @@ body {
     opacity: 0;
     transform: translateX(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -223,6 +241,7 @@ body {
   color: #e74c3c;
   transform: scale(1.1);
 }
+
 /* ================= MAIN CHAT ================= */
 .main {
   flex: 1;
@@ -231,6 +250,7 @@ body {
   overflow: hidden;
   position: relative;
 }
+
 /* Background with strong fallback */
 .chat-bg-video {
   position: absolute;
@@ -239,20 +259,23 @@ body {
   overflow: hidden;
   background: linear-gradient(135deg, #0a0a1a, #000000, #1a0033);
 }
+
 .chat-bg-video video {
   width: 100%;
   height: 100%;
   object-fit: cover;
   opacity: 1;
 }
+
 .chat-bg-video::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.55);
+  background: rgba(0, 0, 0, 0.55);
 }
+
 /* Content above background */
-.main > *:not(.chat-bg-video) {
+.main>*:not(.chat-bg-video) {
   position: relative;
   z-index: 1;
 }
@@ -326,7 +349,7 @@ body {
   visibility: hidden;
   transform: translateY(10px);
   transition: all 0.3s ease;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
   z-index: 100;
 }
 
@@ -408,7 +431,7 @@ body {
 }
 
 .maxy-trigger-version {
-  background: rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.15);
   padding: 1px 6px;
   border-radius: 10px;
   font-size: 11px;
@@ -429,7 +452,7 @@ body {
   visibility: hidden;
   transform: translateY(10px);
   transition: all 0.3s ease;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
   z-index: 100;
 }
 
@@ -518,7 +541,7 @@ body {
   height: 44px;
   border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -573,6 +596,7 @@ body {
   display: block;
   opacity: 1;
 }
+
 /* Centered chat area */
 .chat-content {
   flex: 1;
@@ -609,16 +633,18 @@ body {
 .welcome.hidden {
   display: none;
 }
+
 .maxy-title {
   font-size: 100px;
   font-weight: 700;
   letter-spacing: 10px;
   white-space: nowrap;
   text-shadow: 0 0 30px rgba(255, 255, 255, 0.3),
-               0 4px 20px rgba(0, 0, 0, 0.8);
+    0 4px 20px rgba(0, 0, 0, 0.8);
   -webkit-text-stroke: 1px rgba(255, 255, 255, 0.2);
   font-family: 'Thürkle', sans-serif;
 }
+
 /* Messages */
 .messages {
   display: none;
@@ -639,17 +665,21 @@ body {
 .messages::-webkit-scrollbar {
   width: 8px;
 }
+
 .messages::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 4px;
 }
+
 .messages::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 4px;
 }
+
 .messages::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
 .message {
   max-width: 80%;
   padding: 16px 24px;
@@ -657,19 +687,22 @@ body {
   font-size: 16px;
   line-height: 1.6;
   word-wrap: break-word;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   animation: fadeInUp 0.3s ease;
 }
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
+
 .message {
   max-width: 80%;
   padding: 16px 24px;
@@ -677,7 +710,7 @@ body {
   font-size: 15px;
   line-height: 1.6;
   word-wrap: break-word;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   animation: fadeInUp 0.3s ease;
   position: relative;
 }
@@ -688,26 +721,31 @@ body {
   color: #fff;
   border-bottom-right-radius: 6px;
 }
+
 .message.ai {
   align-self: flex-start;
   background: var(--ai-bg);
   color: var(--ai-text);
   border-bottom-left-radius: 6px;
 }
+
 .message.file-upload {
   background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
   border: 1px solid rgba(111, 111, 111, 0.3);
   font-size: 14px;
 }
+
 .message img {
   border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease;
   cursor: pointer;
 }
+
 .message img:hover {
   transform: scale(1.02);
 }
+
 /* Typing indicator */
 .typing-indicator-container {
   align-self: flex-start;
@@ -716,7 +754,7 @@ body {
   padding: 16px 24px;
   border-radius: 20px;
   border-bottom-left-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .typing-indicator {
@@ -732,13 +770,27 @@ body {
   animation: typing 1.4s infinite;
 }
 
-.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
 
 @keyframes typing {
-  0%, 60%, 100% { transform: translateY(0); }
-  30% { transform: translateY(-10px); }
+
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+
+  30% {
+    transform: translateY(-10px);
+  }
 }
+
 /* Input */
 .input-container {
   max-width: 900px;
@@ -750,10 +802,11 @@ body {
   display: flex;
   gap: 16px;
   align-items: flex-end;
-  box-shadow: 0 6px 25px rgba(0,0,0,0.4);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
   flex-shrink: 0;
   transition: all 0.3s ease;
 }
+
 textarea {
   flex: 1;
   background: none;
@@ -768,9 +821,11 @@ textarea {
   font-family: inherit;
   line-height: 1.5;
 }
+
 textarea::placeholder {
   color: var(--text-muted);
 }
+
 /* Send button */
 .send-btn {
   background: linear-gradient(135deg, #747474 0%, #828282 100%);
@@ -787,13 +842,16 @@ textarea::placeholder {
   transition: transform 0.2s, box-shadow 0.2s;
   flex-shrink: 0;
 }
+
 .send-btn:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 15px rgba(101, 101, 101, 0.4);
 }
+
 .send-btn:active {
   transform: scale(0.95);
 }
+
 /* File Upload Styles */
 .input-wrapper {
   flex: 1;
@@ -801,6 +859,7 @@ textarea::placeholder {
   flex-direction: column;
   gap: 8px;
 }
+
 #fileIndicator {
   display: none;
   align-items: center;
@@ -812,13 +871,23 @@ textarea::placeholder {
   border: 1px solid rgba(255, 255, 255, 0.1);
   animation: slideDown 0.3s ease;
 }
+
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 #fileIcon {
   font-size: 16px;
 }
+
 #fileName {
   flex: 1;
   white-space: nowrap;
@@ -826,6 +895,7 @@ textarea::placeholder {
   text-overflow: ellipsis;
   color: var(--text);
 }
+
 #clearFileBtn {
   background: rgba(231, 76, 60, 0.2);
   border: none;
@@ -837,10 +907,12 @@ textarea::placeholder {
   transition: all 0.2s ease;
   line-height: 1;
 }
+
 #clearFileBtn:hover {
   background: rgba(231, 76, 60, 0.4);
   transform: scale(1.1);
 }
+
 .upload-btn {
   font-size: 24px;
   cursor: pointer;
@@ -850,17 +922,28 @@ textarea::placeholder {
   flex-shrink: 0;
   transition: all 0.2s ease;
 }
+
 .upload-btn:hover {
   transform: scale(1.1);
 }
+
 .upload-btn.file-attached {
   color: #6f6f6f;
   animation: pulse 2s infinite;
 }
+
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
+
 .upload-submenu {
   position: absolute;
   bottom: 70px;
@@ -868,15 +951,17 @@ textarea::placeholder {
   background: var(--card-bg);
   border-radius: 16px;
   padding: 12px 0;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
   display: none;
   flex-direction: column;
   min-width: 180px;
   z-index: 10;
 }
+
 .upload-submenu.open {
   display: flex;
 }
+
 .upload-submenu button {
   padding: 12px 20px;
   background: none;
@@ -886,20 +971,23 @@ textarea::placeholder {
   cursor: pointer;
   font-size: 16px;
 }
+
 .upload-submenu button:hover {
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.1);
 }
+
 /* Drag and Drop */
 .input-container.drag-over {
   background: rgba(111, 111, 111, 0.2);
   border: 2px dashed rgba(111, 111, 111, 0.5);
   transform: scale(1.02);
 }
+
 /* Delete Confirmation Modal */
 #deleteModal {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.8);
+  background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
   display: none;
   align-items: center;
@@ -913,6 +1001,7 @@ textarea::placeholder {
   display: flex;
   opacity: 1;
 }
+
 #deleteModal .modal-content {
   background: var(--card-bg);
   padding: 30px;
@@ -920,17 +1009,20 @@ textarea::placeholder {
   text-align: center;
   max-width: 400px;
   width: 90%;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
+
 #deleteModal p {
   font-size: 18px;
   margin-bottom: 30px;
 }
+
 #deleteModal .modal-buttons {
   display: flex;
   gap: 20px;
   justify-content: center;
 }
+
 #deleteModal button {
   padding: 12px 30px;
   border-radius: 50px;
@@ -938,22 +1030,27 @@ textarea::placeholder {
   cursor: pointer;
   min-width: 100px;
 }
+
 #deleteModal #cancelDelete {
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   color: var(--text);
 }
+
 #deleteModal #cancelDelete:hover {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
 }
+
 #deleteModal #confirmDelete {
   background: var(--danger);
   border: none;
   color: #fff;
 }
+
 #deleteModal #confirmDelete:hover {
   background: #c0392b;
 }
+
 /* Desktop sidebar toggle visibility */
 @media (min-width: 769px) {
   .sidebar-toggle-desktop {
@@ -967,12 +1064,12 @@ textarea::placeholder {
   .sidebar {
     width: 260px;
   }
-  
+
   .sidebar-toggle-desktop {
     left: 276px;
   }
-  
-  .sidebar.collapsed + .sidebar-toggle-desktop {
+
+  .sidebar.collapsed+.sidebar-toggle-desktop {
     left: 16px;
   }
 }
@@ -982,7 +1079,7 @@ textarea::placeholder {
   .mobile-sidebar-toggle {
     display: flex;
   }
-  
+
   .sidebar {
     position: fixed;
     left: 0;
@@ -993,130 +1090,145 @@ textarea::placeholder {
     box-shadow: none;
     padding: 20px 16px;
   }
-  
+
   .sidebar.open {
     transform: translateX(0);
-    box-shadow: 4px 0 30px rgba(0,0,0,0.6);
+    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.6);
   }
-  
+
   .sidebar .logo-container {
     margin-top: 60px;
     margin-bottom: 20px;
   }
-  
+
   .sidebar .logo-circle {
     width: 44px;
     height: 44px;
   }
-  
+
   .sidebar .search-bar {
     margin-bottom: 16px;
   }
-  
+
   .sidebar .recents-heading {
     margin-top: 16px;
   }
-  
+
   .maxy-selector {
     position: relative;
     top: auto;
     right: auto;
   }
-  
+
   .maxy-trigger {
     padding: 5px 10px;
     font-size: 12px;
   }
-  
+
   .maxy-trigger-icon {
     width: 18px;
     height: 18px;
   }
-  
+
   .maxy-trigger-version {
     font-size: 10px;
     padding: 1px 4px;
   }
-  
+
   .chat-content {
-    padding: 70px 15px 15px;
+    padding: 60px 10px 10px;
     max-width: 100%;
   }
-  
+
   .welcome {
     flex-direction: column;
-    gap: 25px;
-    padding: 20px;
+    gap: 20px;
+    padding: 10px;
+    justify-content: flex-start;
+    margin-top: 20px;
   }
-  
+
   .maxy-title {
-    font-size: 48px;
-    letter-spacing: 4px;
+    font-size: 40px;
+    letter-spacing: 3px;
   }
-  
+
   .message {
-    max-width: 90%;
-    padding: 14px 18px;
-    font-size: 15px;
+    max-width: 95%;
+    padding: 12px 16px;
+    font-size: 14px;
+    margin-bottom: 8px;
   }
-  
+
   .input-container {
     max-width: 100%;
-    margin: 0 10px 15px;
-    padding: 10px 14px;
-    gap: 10px;
-    border-radius: 24px;
-  }
-  
-  .maxy-menu {
-    width: 220px;
-    right: -50px;
-  }
-}
-
-/* Small mobile adjustments */
-@media (max-width: 480px) {
-  .sidebar {
-    width: 85vw;
-    max-width: 300px;
-  }
-  
-  .mobile-sidebar-toggle {
-    top: 12px;
-    left: 12px;
-    width: 40px;
-    height: 40px;
-  }
-  
-  .chat-content {
-    padding: 60px 12px 12px;
-  }
-  
-  .maxy-title {
-    font-size: 36px;
-    letter-spacing: 2px;
-  }
-  
-  .input-container {
-    margin: 0 8px 12px;
-    padding: 10px 12px;
+    margin: 0 8px 10px;
+    padding: 8px 12px;
     gap: 8px;
     border-radius: 20px;
   }
-  
+
+  .maxy-menu {
+    width: calc(100vw - 40px);
+    max-width: 280px;
+    right: 0;
+    left: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 85vw;
+    max-width: 280px;
+  }
+
+  .mobile-sidebar-toggle {
+    top: 10px;
+    left: 10px;
+    width: 38px;
+    height: 38px;
+    gap: 4px;
+  }
+
+  .hamburger-line {
+    width: 18px;
+  }
+
+  .chat-content {
+    padding: 55px 8px 8px;
+  }
+
+  .maxy-title {
+    font-size: 32px;
+    letter-spacing: 2px;
+  }
+
+  .input-container {
+    margin: 0 6px 10px;
+    padding: 8px 10px;
+    gap: 6px;
+    border-radius: 18px;
+  }
+
   .upload-btn {
-    font-size: 20px;
-    padding-bottom: 6px;
+    font-size: 18px;
+    padding-bottom: 4px;
   }
-  
+
   .send-btn {
-    width: 36px;
-    height: 36px;
-    font-size: 16px;
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
   }
-  
+
   textarea {
-    font-size: 15px;
+    font-size: 14px;
+  }
+
+  .messages {
+    padding: 10px;
+    gap: 15px;
+    max-height: calc(100vh - 160px);
   }
 }
 
@@ -1187,7 +1299,7 @@ textarea::placeholder {
   visibility: hidden;
   transform: translateY(-10px);
   transition: all 0.3s ease;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
   z-index: 1000;
 }
 
@@ -1218,18 +1330,36 @@ textarea::placeholder {
   margin: 8px 0;
 }
 
-/* Mobile adjustments for header profile */
 @media (max-width: 768px) {
   .chat-header {
-    padding: 12px 16px;
-    padding-left: 60px;
+    padding: 10px 12px;
+    padding-left: 56px;
+    min-height: 56px;
   }
-  
+
   .profile-btn-header {
-    padding: 6px 12px;
+    padding: 4px 10px;
+    gap: 6px;
   }
-  
+
+  .profile-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+
   .profile-name {
+    display: none;
+  }
+
+  .chat-bg-video video {
+    /* Ensure background video doesn't break layout on mobile */
+    height: 100%;
+    width: 100%;
+  }
+
+  /* Adjust model selector version text on mobile */
+  .maxy-trigger-version {
     display: none;
   }
 }

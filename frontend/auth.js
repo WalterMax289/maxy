@@ -1,230 +1,111 @@
 /**
- * MAXY Authentication System
- * Handles user registration, login, and session management
- * Stores user data securely with encryption
+ * MAXY Authentication System - Supabase Integration
+ * Handles user registration, login, and session management using Supabase
  */
 
-// Simple hash function for password encryption (not for production use)
-function hashPassword(password) {
-    let hash = 0;
-    for (let i = 0; i < password.length; i++) {
-        const char = password.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash;
-    }
-    // Add salt and make it reversible only with the salt
-    const salt = 'MaxySecretSalt2026';
-    let saltedHash = '';
-    for (let i = 0; i < password.length; i++) {
-        saltedHash += String.fromCharCode(password.charCodeAt(i) ^ salt.charCodeAt(i % salt.length));
-    }
-    return btoa(saltedHash); // Base64 encode
-}
+// Supabase client initialization (Variables loaded from config.js)
+const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-// Decrypt password (for admin access only)
-function decryptPassword(encryptedPass) {
-    try {
-        const decoded = atob(encryptedPass);
-        const salt = 'MaxySecretSalt2026';
-        let decrypted = '';
-        for (let i = 0; i < decoded.length; i++) {
-            decrypted += String.fromCharCode(decoded.charCodeAt(i) ^ salt.charCodeAt(i % salt.length));
-        }
-        return decrypted;
-    } catch (e) {
-        return '[Encrypted]';
-    }
+if (!supabase) {
+    console.error('Supabase SDK not loaded properly. Ensure index.html includes the Supabase CDN.');
 }
 
 // Check if user is logged in
-function isLoggedIn() {
-    const session = localStorage.getItem('maxySession');
-    if (!session) return false;
-
-    try {
-        const sessionData = JSON.parse(session);
-        // Check if session is still valid (24 hours)
-        const now = new Date().getTime();
-        const sessionAge = now - sessionData.timestamp;
-        const maxAge = 24 * 60 * 60 * 1000; // 24 hours
-
-        if (sessionAge > maxAge) {
-            localStorage.removeItem('maxySession');
-            return false;
-        }
-        return true;
-    } catch (e) {
-        return false;
-    }
+async function isLoggedIn() {
+    if (!supabase) return false;
+    const { data: { session } } = await supabase.auth.getSession();
+    return !!session;
 }
 
 // Get current user data
-function getCurrentUser() {
-    const session = localStorage.getItem('maxySession');
-    if (!session) return null;
+async function getCurrentUser() {
+    if (!supabase) return null;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
 
-    try {
-        return JSON.parse(session);
-    } catch (e) {
-        return null;
-    }
+    return {
+        id: user.id,
+        name: user.user_metadata.full_name || user.email.split('@')[0],
+        email: user.email,
+        createdAt: user.created_at
+    };
 }
 
 // Register new user
-function registerUser(name, email, password) {
-    // Get existing users
-    let users = JSON.parse(localStorage.getItem('maxyUsers')) || [];
+async function registerUser(name, email, password) {
+    if (!supabase) return { success: false, message: 'Supabase not initialized' };
 
-    // Check if email already exists
-    if (users.find(u => u.email === email)) {
-        return { success: false, message: 'Email already registered' };
+    const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+            data: {
+                full_name: name,
+                join_date: new Date().toISOString()
+            }
+        }
+    });
+
+    if (error) {
+        return { success: false, message: error.message };
     }
 
-    // Create new user
-    const newUser = {
-        id: 'user_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9),
-        name: name,
-        email: email,
-        password: hashPassword(password),
-        createdAt: new Date().toISOString(),
-        lastLogin: new Date().toISOString()
-    };
-
-    // Add to users list
-    users.push(newUser);
-    localStorage.setItem('maxyUsers', JSON.stringify(users));
-
-    // Create session
-    const session = {
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-        timestamp: new Date().getTime()
-    };
-    localStorage.setItem('maxySession', JSON.stringify(session));
-
-    // Save user data to text file format
-    saveUserToFile(newUser);
-
-    return { success: true, message: 'Registration successful' };
+    // Success - user might need to verify email depending on Supabase settings
+    if (data.user && data.session) {
+        // Logged in immediately
+        updateLocalState(data.user);
+        return { success: true, message: 'Registration successful' };
+    } else {
+        return { success: true, message: 'Registration successful! Please check your email for verification.' };
+    }
 }
 
 // Login user
-function loginUser(email, password) {
-    // Get users
-    let users = JSON.parse(localStorage.getItem('maxyUsers')) || [];
+async function loginUser(email, password) {
+    if (!supabase) return { success: false, message: 'Supabase not initialized' };
 
-    // Find user by email
-    const user = users.find(u => u.email === email);
-    if (!user) {
-        return { success: false, message: 'Invalid email or password' };
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+    });
+
+    if (error) {
+        return { success: false, message: error.message };
     }
 
-    // Verify password
-    if (user.password !== hashPassword(password)) {
-        return { success: false, message: 'Invalid email or password' };
-    }
-
-    // Update last login
-    user.lastLogin = new Date().toISOString();
-    localStorage.setItem('maxyUsers', JSON.stringify(users));
-
-    // Create session
-    const session = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        timestamp: new Date().getTime()
-    };
-    localStorage.setItem('maxySession', JSON.stringify(session));
-
-    // Also save to profile data for compatibility
-    localStorage.setItem('maxyUser', JSON.stringify({
-        name: user.name,
-        email: user.email
-    }));
-
+    updateLocalState(data.user);
     return { success: true, message: 'Login successful' };
 }
 
+// Update local state for compatibility with chat.js
+function updateLocalState(user) {
+    if (!user) return;
+
+    const userData = {
+        id: user.id,
+        name: user.user_metadata.full_name || user.email.split('@')[0],
+        email: user.email,
+        timestamp: new Date().getTime()
+    };
+
+    localStorage.setItem('maxySession', JSON.stringify(userData));
+    localStorage.setItem('maxyUser', JSON.stringify({
+        name: userData.name,
+        email: userData.email
+    }));
+
+    // Synchronize userId with chat.js persistent ID
+    localStorage.setItem('maxyUserId', user.id);
+}
+
 // Logout user
-function logoutUser() {
+async function logoutUser() {
+    if (supabase) {
+        await supabase.auth.signOut();
+    }
     localStorage.removeItem('maxySession');
     localStorage.removeItem('maxyUser');
-}
-
-// Save user data to text file (downloadable)
-function saveUserToFile(user) {
-    const date = new Date().toLocaleString();
-    const fileContent = `
-========================================
-MAXY USER REGISTRATION
-========================================
-Name: ${user.name}
-Email: ${user.email}
-Password (Encrypted): ${user.password}
-Registration Date: ${date}
-User ID: ${user.id}
-========================================
-`;
-
-    // Store in localStorage for accumulation
-    let allUserData = localStorage.getItem('maxyUserDataFile') || '';
-    allUserData += fileContent;
-    localStorage.setItem('maxyUserDataFile', allUserData);
-
-    // Create downloadable file
-    downloadUserDataFile();
-}
-
-// Download user data as text file
-function downloadUserDataFile() {
-    const userData = localStorage.getItem('maxyUserDataFile') || '';
-    if (!userData) return;
-
-    const blob = new Blob([userData], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'login_details_users.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
-// Export all users data (for admin)
-function exportAllUsersData() {
-    const users = JSON.parse(localStorage.getItem('maxyUsers')) || [];
-    let exportContent = 'MAXY CHAT - ALL USERS DATA\n';
-    exportContent += 'Generated: ' + new Date().toLocaleString() + '\n';
-    exportContent += '========================================\n\n';
-
-    users.forEach((user, index) => {
-        exportContent += `USER #${index + 1}\n`;
-        exportContent += '----------------------------------------\n';
-        exportContent += `Name: ${user.name}\n`;
-        exportContent += `Email: ${user.email}\n`;
-        exportContent += `Password (Encrypted): ${user.password}\n`;
-        exportContent += `Registered: ${new Date(user.createdAt).toLocaleString()}\n`;
-        exportContent += `Last Login: ${new Date(user.lastLogin).toLocaleString()}\n`;
-        exportContent += `User ID: ${user.id}\n`;
-        exportContent += '----------------------------------------\n\n';
-    });
-
-    exportContent += '========================================\n';
-    exportContent += 'END OF REPORT\n';
-    exportContent += '========================================\n';
-
-    const blob = new Blob([exportContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'login_details_users.txt';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    localStorage.removeItem('maxyUserId'); // Allow chat.js to generate a new one if needed or just keep it cleared
 }
 
 // Modal-based authentication handlers
@@ -262,7 +143,7 @@ function closeAuthModal() {
 }
 
 // Handle signup from modal
-function handleModalSignup() {
+async function handleModalSignup() {
     const nameInput = document.getElementById('signupName');
     const emailInput = document.getElementById('signupEmail');
     const passwordInput = document.getElementById('signupPassword');
@@ -273,7 +154,6 @@ function handleModalSignup() {
     const email = emailInput.value.trim();
     const password = passwordInput.value;
 
-    // Validation
     if (!name || !email || !password) {
         showAuthToast('Please fill in all fields', 'error');
         return;
@@ -284,29 +164,28 @@ function handleModalSignup() {
         return;
     }
 
-    if (!email.includes('@') || !email.includes('.')) {
-        showAuthToast('Please enter a valid email', 'error');
-        return;
-    }
-
     // Register user
-    const result = registerUser(name, email, password);
+    showAuthToast('Creating account...', 'info');
+    const result = await registerUser(name, email, password);
 
     if (result.success) {
-        showAuthToast('Account created! Welcome to MAXY!', 'success');
-        closeAuthModal();
-
-        // Redirect to chat after a delay
-        setTimeout(() => {
-            window.location.href = 'chat.html';
-        }, 1500);
+        showAuthToast(result.message, 'success');
+        if (result.message.includes('check your email')) {
+            // Wait a bit then close
+            setTimeout(closeAuthModal, 3000);
+        } else {
+            closeAuthModal();
+            setTimeout(() => {
+                window.location.href = 'chat.html';
+            }, 1500);
+        }
     } else {
         showAuthToast(result.message, 'error');
     }
 }
 
 // Handle login from modal
-function handleModalLogin() {
+async function handleModalLogin() {
     const emailInput = document.getElementById('loginEmail');
     const passwordInput = document.getElementById('loginPassword');
     const rememberCheckbox = document.getElementById('rememberEmail');
@@ -322,7 +201,6 @@ function handleModalLogin() {
         return;
     }
 
-    // Save or remove remembered email
     if (rememberEmail) {
         localStorage.setItem('maxyRememberedEmail', email);
     } else {
@@ -330,13 +208,12 @@ function handleModalLogin() {
     }
 
     // Login user
-    const result = loginUser(email, password);
+    showAuthToast('Logging in...', 'info');
+    const result = await loginUser(email, password);
 
     if (result.success) {
         showAuthToast('Welcome back!', 'success');
         closeAuthModal();
-
-        // Redirect to chat after a delay
         setTimeout(() => {
             window.location.href = 'chat.html';
         }, 1000);
@@ -345,36 +222,17 @@ function handleModalLogin() {
     }
 }
 
-// Check auth and handle "Try MAXY Now" button
-function handleTryMaxyClick(event) {
-    if (!isLoggedIn()) {
-        event.preventDefault();
-        // Check if user has ever signed up
-        const users = JSON.parse(localStorage.getItem('maxyUsers')) || [];
-        if (users.length === 0) {
-            // No users exist, show signup modal
-            openAuthModal('signup');
-        } else {
-            // Users exist, show login modal
-            openAuthModal('login');
-        }
-        return false;
-    }
-    // User is logged in, allow access
-    return true;
-}
-
-// Protect page - redirect if not logged in (for chat.html)
-function requireAuth() {
-    if (!isLoggedIn()) {
-        // Redirect to landing page with login modal
+// Redirect if not logged in
+async function requireAuth() {
+    const loggedIn = await isLoggedIn();
+    if (!loggedIn) {
         window.location.href = 'index.html?auth=required';
         return false;
     }
     return true;
 }
 
-// Show toast notification
+// Toast notification
 function showAuthToast(message, type = 'info') {
     const existingToast = document.querySelector('.auth-toast');
     if (existingToast) existingToast.remove();
@@ -405,7 +263,20 @@ function showAuthToast(message, type = 'info') {
     }, 3000);
 }
 
-// Add CSS animation
+// Initial check when auth.js loads
+(async () => {
+    const loggedIn = await isLoggedIn();
+    if (loggedIn) {
+        const user = await getCurrentUser();
+        // Since getCurrentUser returns our simplified object, we need to pass a "user-like" object to updateLocalState
+        // or just call updateLocalState with the raw user from Supabase if we had it.
+        // Actually, let's just use the session data if available.
+        const { data: { user: sbUser } } = await supabase.auth.getUser();
+        if (sbUser) updateLocalState(sbUser);
+    }
+})();
+
+// CSS Animations
 const authStyle = document.createElement('style');
 authStyle.textContent = `
     @keyframes slideDown {

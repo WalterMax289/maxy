@@ -57,19 +57,29 @@ const API_BASE_URL = window.location.hostname === 'localhost'
   ? (BACKEND_URL || 'http://localhost:8000')
   : 'https://your-backend-name.onrender.com';  // <-- UPDATE THIS WITH YOUR RENDER BACKEND URL
 
-// Check if user is authenticated (has valid userId)
+// Check if user is authenticated (has active session in localStorage)
 function isAuthenticated() {
-  const storedUserId = localStorage.getItem('maxyUserId');
-  return storedUserId && storedUserId.startsWith('user_');
+  const session = localStorage.getItem('maxySession');
+  if (!session) return false;
+
+  try {
+    const sessionData = JSON.parse(session);
+    // userId is synchronized with Supabase UUID in auth.js
+    userId = localStorage.getItem('maxyUserId');
+    return !!sessionData.id && !!userId;
+  } catch (e) {
+    return false;
+  }
 }
 
 // Redirect to landing page if not authenticated
 function checkAuthAndRedirect() {
   // Only check on chat page
-  if (window.location.pathname === '/chat' || window.location.pathname.includes('chat.html')) {
+  const isChatPage = window.location.pathname.includes('chat.html') || window.location.pathname === '/chat';
+  if (isChatPage) {
     if (!isAuthenticated()) {
       // Redirect to landing page
-      window.location.href = '/';
+      window.location.href = 'index.html?auth=required';
       return false;
     }
   }

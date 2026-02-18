@@ -1,0 +1,4 @@
+// MAXY Supabase Configuration - TEMPLATE
+// Copy this file to config.js and fill in your actual keys
+const SUPABASE_URL = '';
+const SUPABASE_ANON_KEY = '';

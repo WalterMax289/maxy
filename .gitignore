@@ -9,6 +9,7 @@ venv/
 node_modules/
 dist/
 .npm/
+frontend/config.js
 
 # IDE
 .vscode/

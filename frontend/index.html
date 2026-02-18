@@ -254,8 +254,8 @@
 
             header,
             footer {
-                background: rgba(0, 0, 0, 0.9);
-                padding: 15px 20px;
+                background: rgba(0, 0, 0, 0.95);
+                padding: 12px 24px;
             }
 
             header .logo-circle {
@@ -284,10 +284,9 @@
                 top: 0;
                 left: 0;
                 width: 100%;
-                height: 100vh;
                 height: 100dvh;
-                background: rgba(0, 0, 0, 0.95);
-                backdrop-filter: blur(20px);
+                background: rgba(0, 0, 0, 0.98);
+                backdrop-filter: blur(25px);
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
@@ -306,13 +305,14 @@
             header nav ul {
                 flex-direction: column;
                 align-items: center;
-                gap: 30px;
+                gap: 25px;
                 padding: 0;
             }
 
             header nav a {
-                font-size: 24px;
-                padding: 15px 30px;
+                font-size: 26px;
+                font-weight: 600;
+                padding: 12px 30px;
                 border-radius: 12px;
                 transition: all 0.3s ease;
             }
@@ -323,22 +323,25 @@
             }
 
             .overlay {
-                padding: 100px 20px 80px;
+                padding: 110px 24px 80px;
+                gap: 20px;
             }
 
             .overlay h2 {
-                font-size: 56px;
-                letter-spacing: 6px;
+                font-size: 52px;
+                letter-spacing: 5px;
             }
 
             .overlay .description {
-                font-size: 16px;
+                font-size: 17px;
                 max-width: 100%;
+                line-height: 1.5;
             }
 
             .try-button {
-                font-size: 24px;
-                padding: 16px 40px;
+                font-size: 22px;
+                padding: 14px 36px;
+                letter-spacing: 2px;
             }
 
             .mouse-scroll {
@@ -558,8 +561,8 @@
             font-weight: 600;
             background: linear-gradient(135deg, #fff 0%, #aaa 100%);
             -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
             background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .box p {
@@ -608,7 +611,7 @@
 
         @media (max-width: 480px) {
             header {
-                padding: 12px 16px;
+                padding: 10px 16px;
             }
 
             header .logo-circle {
@@ -625,79 +628,89 @@
             footer {
                 padding: 12px 16px;
                 flex-direction: column;
-                gap: 8px;
+                gap: 6px;
                 text-align: center;
                 font-size: 12px;
+                position: relative;
+                /* Avoid overlapping content on very small screens */
+                background: rgba(0, 0, 0, 0.9);
             }
 
             footer a {
-                margin: 0 10px;
+                margin: 4px 10px;
             }
 
             .overlay {
-                padding: 90px 16px 60px;
-                gap: 20px;
+                padding: 90px 16px 40px;
+                gap: 15px;
+                justify-content: flex-start;
+                min-height: calc(100vh - 60px);
             }
 
             .overlay h2 {
-                font-size: 42px;
-                letter-spacing: 4px;
+                font-size: 36px;
+                letter-spacing: 3px;
+                margin-top: 20px;
             }
 
             .overlay .description {
-                font-size: 15px;
+                font-size: 14px;
                 line-height: 1.5;
+                margin-bottom: 10px;
             }
 
             .overlay .description p {
-                margin-bottom: 12px;
+                margin-bottom: 10px;
             }
 
             .try-button {
-                font-size: 20px;
-                padding: 14px 32px;
+                font-size: 18px;
+                padding: 12px 28px;
                 border-width: 2px;
+                letter-spacing: 2px;
             }
 
             #about,
             #contact,
             #faq {
-                padding: 80px 16px 60px;
+                padding: 70px 16px 40px;
+                min-height: auto;
+                /* Allow content to dictate height on mobile */
             }
 
             #about h2,
             #contact h2,
             #faq h2 {
-                font-size: 32px;
-                letter-spacing: 3px;
-                margin-bottom: 40px;
+                font-size: 28px;
+                letter-spacing: 2px;
+                margin-bottom: 30px;
             }
 
             .box {
                 padding: 24px 20px;
                 min-width: unset;
                 width: 100%;
+                margin-bottom: 15px;
             }
 
             .box h3 {
-                font-size: 22px;
+                font-size: 20px;
+                margin-bottom: 12px;
             }
 
             .box p {
                 font-size: 14px;
+                line-height: 1.4;
             }
 
             .modal-content {
-                padding: 24px 20px;
-                margin: 16px;
+                padding: 24px 16px;
+                width: 92%;
             }
 
             .auth-form h3 {
-                font-size: 24px;
-            }
-
-            .modal-content {
-                width: calc(100% - 32px);
+                font-size: 22px;
+                margin-bottom: 20px;
             }
         }
 
@@ -982,6 +995,12 @@
             <a href="#contact">Contact</a>
         </div>
     </footer>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Config -->
+    <script src="config.js"></script>
 
     <!-- Auth System -->
     <script src="auth.js"></script>
