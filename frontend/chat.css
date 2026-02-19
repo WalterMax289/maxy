@@ -746,6 +746,8 @@ button:hover .regen-icon {
   padding: 80px 20px 20px;
   overflow: hidden;
   height: 100%;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Chat container layout */
@@ -942,7 +944,7 @@ button:hover .regen-icon {
 .input-container {
   max-width: 900px;
   width: 100%;
-  margin: 0 auto 0;
+  margin: 0 auto 20px;
   background: var(--card-bg);
   border-radius: 24px;
   border: 1px solid var(--border);
@@ -956,21 +958,43 @@ button:hover .regen-icon {
   flex-shrink: 0;
 }
 
-/* Chat Footer */
-.chat-footer {
-  text-align: center;
-  padding: 8px 20px 12px;
-  flex-shrink: 0;
-  max-width: 900px;
+/* Main Footer - similar to landing page */
+.main-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
   width: 100%;
-  margin: 0 auto;
+  padding: 15px 40px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  z-index: 30;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  box-sizing: border-box;
 }
 
-.footer-text {
-  font-size: 11px;
-  color: var(--text-muted);
-  opacity: 0.5;
-  letter-spacing: 0.5px;
+.footer-left {
+  flex-shrink: 0;
+}
+
+.footer-right {
+  display: flex;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.main-footer a {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.main-footer a:hover {
+  color: #fff;
+  text-decoration: underline;
 }
 
 .input-container:focus-within {
@@ -1360,13 +1384,14 @@ textarea::placeholder {
   }
 
   .chat-content {
-    padding: 56px 0 0;
+    padding: 56px 0 60px;
     max-width: 100%;
     width: 100%;
     margin: 0;
     height: 100%;
     height: 100dvh;
     overflow: hidden;
+    justify-content: flex-start;
   }
 
   .welcome {
@@ -1385,8 +1410,8 @@ textarea::placeholder {
   }
 
   .messages {
-    max-height: calc(100vh - 180px);
-    max-height: calc(100dvh - 180px);
+    max-height: calc(100vh - 200px);
+    max-height: calc(100dvh - 200px);
     padding: 12px 10px 30px;
     gap: 14px;
   }
@@ -1400,19 +1425,28 @@ textarea::placeholder {
 
   .input-container {
     max-width: calc(100% - 20px);
-    margin: 0 10px 0;
+    margin: 0 10px 70px;
     padding: 8px 12px;
     gap: 8px;
     border-radius: 20px;
     width: auto;
   }
 
-  .chat-footer {
-    padding: 6px 10px 10px;
+  .main-footer {
+    padding: 12px 16px;
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+    font-size: 12px;
+    background: rgba(0, 0, 0, 0.95);
   }
 
-  .footer-text {
-    font-size: 10px;
+  .footer-right {
+    gap: 15px;
+  }
+
+  .main-footer a {
+    margin: 0 5px;
   }
 
   .maxy-menu {
@@ -1420,6 +1454,28 @@ textarea::placeholder {
     max-width: 280px;
     right: 0;
     left: auto;
+  }
+
+  /* Mobile credits dropdown adjustments */
+  .credits-display {
+    padding: 6px 12px;
+    margin-right: 8px;
+  }
+
+  .credits-icon-img {
+    width: 16px;
+    height: 16px;
+  }
+
+  .credits-count {
+    font-size: 13px;
+  }
+
+  .credits-hover-info {
+    left: auto;
+    right: 0;
+    width: 200px;
+    padding: 12px;
   }
 }
 
@@ -1442,7 +1498,7 @@ textarea::placeholder {
   }
 
   .chat-content {
-    padding: 50px 0 0;
+    padding: 50px 0 50px;
   }
 
   .maxy-title {
@@ -1453,23 +1509,24 @@ textarea::placeholder {
   .messages {
     padding: 10px 8px 24px;
     gap: 12px;
-    max-height: calc(100vh - 170px);
-    max-height: calc(100dvh - 170px);
+    max-height: calc(100vh - 180px);
+    max-height: calc(100dvh - 180px);
   }
 
   .input-container {
-    margin: 0 6px 0;
+    margin: 0 6px 60px;
     padding: 8px 10px;
     gap: 6px;
     border-radius: 18px;
   }
 
-  .chat-footer {
-    padding: 4px 8px 8px;
+  .main-footer {
+    padding: 10px 12px;
+    font-size: 11px;
   }
 
-  .footer-text {
-    font-size: 9px;
+  .footer-right {
+    gap: 10px;
   }
 
   .upload-btn {
@@ -1486,6 +1543,11 @@ textarea::placeholder {
   textarea {
     font-size: 14px;
   }
+
+  .credits-hover-info {
+    width: 180px;
+    padding: 10px;
+  }
 }
 
 /* Specific optimizations for Redmi 9 Power (393px) and similar devices */
@@ -1501,6 +1563,7 @@ textarea::placeholder {
   .input-container {
     padding: 8px 8px;
     gap: 5px;
+    margin: 0 5px 55px;
   }
 
   .welcome {
@@ -1517,7 +1580,37 @@ textarea::placeholder {
   }
   
   .chat-header-actions {
-    gap: 12px;
+    gap: 8px;
+  }
+
+  .main-footer {
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+
+  .credits-display {
+    padding: 5px 10px;
+    margin-right: 6px;
+  }
+
+  .credits-icon-img {
+    width: 14px;
+    height: 14px;
+  }
+
+  .credits-count {
+    font-size: 12px;
+  }
+
+  .credits-hover-info {
+    width: 160px;
+    padding: 8px;
+    font-size: 11px;
+  }
+
+  .credits-info-item .label,
+  .credits-info-item .value {
+    font-size: 11px;
   }
 }
 
@@ -1759,10 +1852,13 @@ textarea::placeholder {
   pointer-events: none;
 }
 
-.credits-display:hover .credits-hover-info {
+.credits-display:hover .credits-hover-info,
+.credits-display:focus-within .credits-hover-info,
+.credits-hover-info:hover {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
+  pointer-events: auto;
 }
 
 .credits-info-item {
