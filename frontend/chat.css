@@ -1488,6 +1488,39 @@ textarea::placeholder {
   }
 }
 
+/* Specific optimizations for Redmi 9 Power (393px) and similar devices */
+@media (max-width: 412px) {
+  .maxy-trigger-text {
+    display: none; /* Hide "MAXY" text to save space */
+  }
+
+  .maxy-trigger {
+    padding: 5px 8px;
+  }
+
+  .input-container {
+    padding: 8px 8px;
+    gap: 5px;
+  }
+
+  .welcome {
+    padding: 20px 10px;
+  }
+
+  .maxy-title {
+    font-size: 28px;
+  }
+  
+  /* Ensure header actions don't overlap title space */
+  .chat-header {
+    padding-right: 16px; 
+  }
+  
+  .chat-header-actions {
+    gap: 12px;
+  }
+}
+
 /* ================= PREMIUM NAVIGATION REFINE ================= */
 .chat-header {
   display: flex;

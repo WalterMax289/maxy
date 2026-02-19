@@ -11,6 +11,7 @@ class SlangManager:
         if cls._instance is None:
             cls._instance = super(SlangManager, cls).__new__(cls)
             cls._instance.slangs = []
+            cls._instance.enabled = False  # Default to False as requested
             cls._instance.load_slangs()
         return cls._instance
     
@@ -47,14 +48,27 @@ class SlangManager:
             # Fallback slangs if file read fails
             self.slangs = ["Maga", "Machaa", "Guru", "Boss", "Sakkath"]
 
+    def set_enabled(self, enabled: bool):
+        """Enable or disable slang injection"""
+        self.enabled = enabled
+        status = "enabled" if enabled else "disabled"
+        print(f"SlangManager {status}")
+        return f"Slangs have been {status}."
+
     def get_random_slang(self):
         """Get a random slang word"""
+        if not self.enabled:
+            return "friend"
+            
         if not self.slangs:
             return "Maga"
         return random.choice(self.slangs)
 
     def enhance_text(self, text, model_name="MAXY"):
         """Randomly inject slang into text"""
+        if not self.enabled:
+            return text
+            
         # 30% chance to start with a slang
         if random.random() < 0.3:
             slang = self.get_random_slang()
@@ -71,6 +85,15 @@ class SlangManager:
 
     def get_greeting(self):
         """Get a slang-infused greeting"""
+        if not self.enabled:
+            return random.choice([
+                "Hello, what's up?",
+                "Namaste!",
+                "Hey there, how are you?",
+                "Hello, welcome!",
+                "Hi, let's chat."
+            ])
+            
         slang = self.get_random_slang()
         greetings = [
             f"Yen {slang}, what's up?",

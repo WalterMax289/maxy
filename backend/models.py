@@ -130,8 +130,8 @@ class MAXY1_1:
         "Why did the scarecrow win an award? He was outstanding in his field!",
         "What do you call a fake noodle? An impasta! 🍝",
         "Why don't eggs tell jokes? They'd crack each other up!",
-        "Lo maga, why did the tomato turn red? Because it saw the salad dressing! 😂",
-        "Guru, parallel lines have so much in common but they’ll never meet. Sad scene no? 😅"
+        f"Lo {slang_manager.get_random_slang()}, why did the tomato turn red? Because it saw the salad dressing! 😂",
+        f"{slang_manager.get_random_slang()}, parallel lines have so much in common but they’ll never meet. Sad scene no? 😅"
     ]
     
     @staticmethod
@@ -264,7 +264,7 @@ class MAXY1_1:
             return (random.choice([
                 f"You're very welcome! Happy I could help quickly, {slang_manager.get_random_slang()}. Let me know if you need anything else! 😊",
                 "Anytime! That's what I'm here for. Feel free to ask more questions anytime!",
-                f"Glad I could assist, maga! Don't hesitate to reach out if you need more quick answers!"
+                f"Glad I could assist, {slang_manager.get_random_slang()}! Don't hesitate to reach out if you need more quick answers!"
             ]), 0.96)
         
         # Personal status - Friendly reciprocation (3 sentences)
@@ -1451,6 +1451,24 @@ class ModelRouter:
     ) -> Dict[str, Any]:
         """Route message to appropriate model"""
         
+        # Check for slang toggle commands
+        msg_lower = message.lower().strip().strip('!.')
+        if msg_lower in ["enable slangs", "activate slangs", "turn on slangs", "enable slang", "activate slang"]:
+            response_text = slang_manager.set_enabled(True)
+            return {
+                'response': f"{response_text} {slang_manager.get_random_slang()}! I'm ready to chat with some local flavor.",
+                'model': 'System',
+                'confidence': 1.0
+            }
+        
+        if msg_lower in ["disable slangs", "stop slangs", "turn off slangs", "disable slang", "no slangs"]:
+            response_text = slang_manager.set_enabled(False)
+            return {
+                'response': f"{response_text} I will keep the conversation formal and standard from now on.",
+                'model': 'System',
+                'confidence': 1.0
+            }
+
         model_name_lower = model_name.lower()
         
         if model_name_lower == 'maxy1.1':
