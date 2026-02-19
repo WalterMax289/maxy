@@ -26,6 +26,8 @@ plotly>=5.18.0
 # Web & Research
 requests>=2.31.0
 wikipedia>=1.4.0
+ddgs>=9.10.0
+yfinance>=0.2.36
 
 # Utilities
 python-multipart>=0.0.6

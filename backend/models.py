@@ -11,6 +11,13 @@ from datetime import datetime
 import wikipedia
 from data_analyzer import AdvancedAnalyzer
 from code_composer import CodeComposer
+from slang_manager import SlangManager
+import requests
+from ddgs import DDGS
+import yfinance as yf
+
+# Initialize Slang Manager
+slang_manager = SlangManager()
 
 logger = logging.getLogger(__name__)
 
@@ -123,6 +130,8 @@ class MAXY1_1:
         "Why did the scarecrow win an award? He was outstanding in his field!",
         "What do you call a fake noodle? An impasta! 🍝",
         "Why don't eggs tell jokes? They'd crack each other up!",
+        "Lo maga, why did the tomato turn red? Because it saw the salad dressing! 😂",
+        "Guru, parallel lines have so much in common but they’ll never meet. Sad scene no? 😅"
     ]
     
     @staticmethod
@@ -151,6 +160,46 @@ class MAXY1_1:
             summary = page.summary[:500]
             return summary
         except:
+            return None
+
+    @staticmethod
+    def get_weather(city: str) -> Optional[str]:
+        """Fetch weather data from OpenMeteo"""
+        try:
+            # 1. Geocoding
+            geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&language=en&format=json"
+            geo_res = requests.get(geo_url).json()
+            
+            if not geo_res.get('results'):
+                return None
+                
+            lat = geo_res['results'][0]['latitude']
+            lon = geo_res['results'][0]['longitude']
+            name = geo_res['results'][0]['name']
+            country = geo_res['results'][0]['country']
+            
+            # 2. Weather
+            weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto"
+            w_res = requests.get(weather_url).json()
+            
+            current = w_res.get('current', {})
+            temp = current.get('temperature_2m')
+            humidity = current.get('relative_humidity_2m')
+            wind = current.get('wind_speed_10m')
+            
+            # Weather codes
+            codes = {
+                0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
+                45: "Foggy", 48: "Depositing rime fog", 51: "Light drizzle", 53: "Drizzle",
+                55: "Heavy drizzle", 61: "Slight rain", 63: "Moderate rain", 65: "Heavy rain",
+                71: "Slight snow", 73: "Moderate snow", 75: "Heavy snow", 95: "Thunderstorm"
+            }
+            condition = codes.get(current.get('weather_code'), "Variable")
+            
+            return f"{condition} in {name}, {country}. Temp: {temp}°C, Humidity: {humidity}%, Wind: {wind} km/h."
+            
+        except Exception as e:
+            logger.error(f"Weather error: {e}")
             return None
     
     @staticmethod
@@ -198,9 +247,9 @@ class MAXY1_1:
         # Greeting - Friendly and welcoming (3-4 sentences)
         if intents['greeting']:
             if intent_analysis.get('is_new_user', False):
-                return ("Hey there! Welcome! I'm MAXY 1.1, your quick AI assistant. I'm here to help with fast answers and friendly chat. What can I do for you today?", 0.98)
+                return (f"Hey {slang_manager.get_random_slang()}! Welcome! I'm MAXY 1.1, your quick AI assistant. I'm here to help with fast answers and friendly chat. What can I do for you today?", 0.98)
             else:
-                return (f"Hey! Great to see you again! Ready when you are. What's on your mind today?", 0.97)
+                return (f"Hey {slang_manager.get_random_slang()}! Great to see you again! Ready when you are. What's on your mind today?", 0.97)
         
         # Farewell - Warm goodbye (2-3 sentences)
         elif intents['farewell']:
@@ -213,9 +262,9 @@ class MAXY1_1:
         # Gratitude - Humble and helpful (2-3 sentences)
         elif intents['gratitude']:
             return (random.choice([
-                "You're very welcome! Happy I could help quickly. Let me know if you need anything else! 😊",
+                f"You're very welcome! Happy I could help quickly, {slang_manager.get_random_slang()}. Let me know if you need anything else! 😊",
                 "Anytime! That's what I'm here for. Feel free to ask more questions anytime!",
-                "Glad I could assist! Don't hesitate to reach out if you need more quick answers!"
+                f"Glad I could assist, maga! Don't hesitate to reach out if you need more quick answers!"
             ]), 0.96)
         
         # Personal status - Friendly reciprocation (3 sentences)
@@ -247,7 +296,26 @@ class MAXY1_1:
         
         # Weather - Informative but brief (3 sentences)
         elif intents['weather']:
-            return ("I don't have real-time weather data, but I can help you find weather information! You might want to check a weather app or website for current conditions. Is there something else I can help you with?", 0.85)
+            # Extract potential city name (simple heuristic)
+            words = message.split()
+            city = None
+            if 'in' in words:
+                idx = words.index('in')
+                if idx + 1 < len(words):
+                    city = words[idx + 1].strip('?.!')
+            
+            # If no "in", try to take the last word if it looks like a city
+            if not city and len(words) > 0:
+                 potential = words[-1].strip('?.!')
+                 if potential.istitle() and potential.lower() not in ['weather', 'today', 'now']:
+                     city = potential
+
+            if city:
+                weather_info = MAXY1_1.get_weather(city)
+                if weather_info:
+                    return (f"{weather_info} 🌤️ Need anything else?", 0.95)
+            
+            return ("I can check the weather if you tell me which city! Just ask 'weather in London' for example. 🌍", 0.90)
         
         # Simple task acknowledgment (2-3 sentences)
         elif intents['simple_task']:
@@ -338,6 +406,10 @@ class MAXY1_1:
             response = '. '.join(sentences[:3])
             if not response.endswith('.'):
                 response += '.'
+        
+        # Inject slang (chance based) for standard interactions
+        if not intent_analysis.get('is_new_user', False) and intent_analysis['intents']['greeting'] == False: # Don't double slang greeting
+             response = slang_manager.enhance_text(response)
         
         result = {
             'response': response,
@@ -515,6 +587,36 @@ class MAXY1_2:
                 'response': f"A protocol error occurred during the deep research phase. Analysis aborted: {str(e)[:50]}",
                 'confidence': 0.50
             }
+
+    @staticmethod
+    def perform_web_search(query: str) -> Dict[str, Any]:
+        """Perform broader web search using DuckDuckGo"""
+        try:
+            with DDGS() as ddgs:
+                results = list(ddgs.text(query, max_results=3))
+            
+            if not results:
+                return {'success': False, 'response': "No web results found.", 'confidence': 0.5}
+
+            response = f"**WEB SEARCH REPORT: {query.upper()}**\n\n"
+            for i, res in enumerate(results, 1):
+                response += f"**{i}. {res['title']}**\n"
+                response += f"{res['body']}\n"
+                response += f"🔗 {res['href']}\n\n"
+            
+            response += "**Synthesis:**\n"
+            response += "The web search results indicate a variety of perspectives. "
+            response += "This data complements traditional knowledge bases."
+
+            return {
+                'success': True,
+                'response': response,
+                'confidence': 0.90,
+                'sources': [r['href'] for r in results]
+            }
+        except Exception as e:
+            logger.error(f"Web search error: {e}")
+            return {'success': False, 'response': f"Web search failed: {e}", 'confidence': 0.5}
     
     @staticmethod
     def analyze_conversation_context(message: str, conversation_history: Optional[List[Dict]] = None) -> Dict[str, Any]:
@@ -579,9 +681,9 @@ class MAXY1_2:
         # Greeting - Warm and contextual (6-8 sentences)
         if any(g in msg_lower for g in ['hi', 'hello', 'hey', 'greetings']):
             if context.get('is_follow_up'):
-                return ("Hello again! It's wonderful to continue our conversation. I've been thinking about our previous discussion and I'm ready to dive deeper into any topic you'd like to explore. Whether you need comprehensive research on a specific subject or just want to have an engaging conversation, I'm here to provide detailed insights. What direction would you like to take our discussion today? I'm particularly excited to help with any research questions or analytical topics you might have in mind!", 0.97)
+                return (f"Hello again {slang_manager.get_random_slang()}! It's wonderful to continue our conversation. I've been thinking about our previous discussion and I'm ready to dive deeper into any topic you'd like to explore. Whether you need comprehensive research on a specific subject or just want to have an engaging conversation, I'm here to provide detailed insights. What direction would you like to take our discussion today? I'm particularly excited to help with any research questions or analytical topics you might have in mind!", 0.97)
             else:
-                return ("Hello and welcome! I'm MAXY 1.2, your dedicated research and conversation companion. I'm genuinely excited to help you explore whatever topics interest you today. Whether you're looking for in-depth Wikipedia research, detailed analysis of complex subjects, or simply an engaging conversation, I'm fully equipped to assist. I specialize in providing comprehensive information with multiple perspectives and thorough context. What would you like to dive into? I'm ready to provide detailed, well-researched responses!", 0.96)
+                return (f"Namaskara! I'm MAXY 1.2, your dedicated research and conversation companion. I'm genuinely excited to help you explore whatever topics interest you today. Whether you're looking for in-depth Wikipedia research, detailed analysis of complex subjects, or simply an engaging conversation, I'm fully equipped to assist. I specialize in providing comprehensive information with multiple perspectives and thorough context. What would you like to dive into, {slang_manager.get_random_slang()}? I'm ready to provide detailed, well-researched responses!", 0.96)
         
         # Personal status - Thoughtful and engaging (5-7 sentences)
         elif any(h in msg_lower for h in ['how are you', 'how you doing']):
@@ -677,6 +779,13 @@ class MAXY1_2:
         if is_research:
             # Deep research mode with formatted response length
             result = MAXY1_2.deep_wikipedia_research(message)
+            
+            # Fallback to Web Search if Wikipedia fails
+            if not result['success'] or "does not reside" in result['response']:
+                 web_result = MAXY1_2.perform_web_search(message)
+                 if web_result['success']:
+                     result = web_result
+
             raw_response = result['response']
             
             # Format based on inquiry depth (5-10 sentences)
@@ -693,6 +802,10 @@ class MAXY1_2:
                 response += " I'd love to hear more about what you're thinking. What specific aspect interests you most? How can I help you explore this further?"
             elif len(sentences) > 10:
                 response = '. '.join(sentences[:10]) + '.'
+            
+            # Inject slang mostly for conversational parts if not deep research
+            if not is_research:
+                 response = slang_manager.enhance_text(response)
         
         result = {
             'response': response,
@@ -1054,8 +1167,43 @@ DEALLOCATE item_cursor;'''
                 return None, "Failed to generate chart"
                 
         except Exception as e:
-            logging.error(f"Error generating chart image: {str(e)}")
             return None, f"Error: {str(e)}"
+
+    @staticmethod
+    def analyze_stock(ticker: str) -> Optional[str]:
+        """Analyze stock data using yfinance"""
+        try:
+            stock = yf.Ticker(ticker)
+            info = stock.info
+            
+            # Current price
+            current_price = info.get('currentPrice') or info.get('regularMarketPrice')
+            previous_close = info.get('previousClose')
+            
+            if not current_price:
+                return None
+                
+            change = current_price - previous_close if previous_close else 0
+            change_percent = (change / previous_close) * 100 if previous_close else 0
+            
+            response = f"### 📈 Stock Analysis: {info.get('longName', ticker.upper())}\n\n"
+            response += f"**Current Price:** ${current_price:,.2f}\n"
+            response += f"**Change:** {change:+.2f} ({change_percent:+.2f}%)\n"
+            response += f"**Market Cap:** ${info.get('marketCap', 0):,.0f}\n"
+            response += f"**52 Week Range:** ${info.get('fiftyTwoWeekLow', 0):,.2f} - ${info.get('fiftyTwoWeekHigh', 0):,.2f}\n\n"
+            
+            response += f"**Business Summary:**\n"
+            summary = info.get('longBusinessSummary', 'No summary available.')
+            response += f"{summary[:400]}...\n\n"
+            
+            # Recommendation
+            rec = info.get('recommendationKey', 'none').replace('_', ' ').title()
+            response += f"**Analyst Recommendation:** {rec}"
+            
+            return response
+        except Exception as e:
+            logger.error(f"Stock analysis error: {e}")
+            return None
     
     @staticmethod
     def is_website_request(message: str) -> tuple[bool, str]:
@@ -1141,6 +1289,16 @@ DEALLOCATE item_cursor;'''
             response = MAXY1_3.generate_code(language, message)
             confidence = 0.93
 
+        # 5. Check for Stock Analysis (NEW Logic)
+        if not response:
+            stock_match = re.search(r'\b(stock|price|ticker)\s+(?:of\s+)?([A-Z]{1,5})\b', message.upper())
+            if stock_match:
+                ticker = stock_match.group(2)
+                stock_analysis = MAXY1_3.analyze_stock(ticker)
+                if stock_analysis:
+                    response = stock_analysis
+                    confidence = 0.95
+
         # Fallback to original logic if no response generated yet
         if not response:
             # Detect numeric data for analysis
@@ -1206,7 +1364,8 @@ DEALLOCATE item_cursor;'''
 
             # Basic responses
             elif any(g in msg_lower for g in ['hello', 'hi', 'hey']):
-                response = "Hello! I'm MAXY 1.3, your advanced AI assistant. I can help you build websites, write code, analyze data, and create visualizations. What are we building today?"
+                slang = slang_manager.get_random_slang()
+                response = f"Hello {slang}! I'm MAXY 1.3, your advanced AI assistant. I can help you build websites, write code, analyze data, and create visualizations. What are we building today?"
                 confidence = 0.95
             
             elif any(q in msg_lower for q in ['who are you', 'what can you do']):
@@ -1214,8 +1373,13 @@ DEALLOCATE item_cursor;'''
                 confidence = 0.96
             
             else:
-                response = "I'm ready to help with your project! As MAXY 1.3, I can build web structures, write custom code, or perform deep data analysis. What's the next step for us?"
+                slang = slang_manager.get_random_slang()
+                response = f"I'm ready to help with your project, {slang}! As MAXY 1.3, I can build web structures, write custom code, or perform deep data analysis. What's the next step for us?"
                 confidence = 0.85
+        
+        # Inject slang for 1.3 (Code/Analysis) - make it sound like a tech bro?
+        if response and "statistical analysis" not in response.lower() and "generated" not in response.lower():
+             response = slang_manager.enhance_text(response)
         
         result = {
             'response': response,
