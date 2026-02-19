@@ -58,6 +58,28 @@
     <div class="chat-header">
       <div class="chat-header-title"></div>
       <div class="chat-header-actions">
+        <!-- Credits display - Now in header -->
+        <div id="creditsDisplay" class="credits-display header-credits">
+          <img src="assets/credits.png" alt="Credits" class="credits-icon-img">
+          <span id="creditsText" class="credits-count">30</span>
+
+          <div class="credits-hover-info">
+            <div class="credits-info-item">
+              <span class="label">Credits Used</span>
+              <span id="creditsUsed" class="value">0</span>
+            </div>
+            <div class="credits-info-item">
+              <span class="label">Total Limit</span>
+              <span id="creditsTotal" class="value">30</span>
+            </div>
+            <div class="credits-info-divider"></div>
+            <div class="credits-info-item refresh-timer">
+              <span class="label">Refreshes in</span>
+              <span id="creditsCountdown" class="value">00:00:00</span>
+            </div>
+          </div>
+        </div>
+
         <a href="index.html" title="Go to Home" class="nav-icon-link">
           <img src="assets/home.png" alt="Home" class="nav-home-icon">
         </a>
