@@ -1832,10 +1832,10 @@ textarea::placeholder {
   letter-spacing: 0.5px;
 }
 
-/* Hover Info Box */
+/* Hover Info Box - Positioned below the button */
 .credits-hover-info {
   position: absolute;
-  bottom: calc(100% + 15px);
+  top: calc(100% + 15px);
   left: 0;
   width: 220px;
   background: rgba(10, 10, 10, 0.95);
@@ -1846,7 +1846,7 @@ textarea::placeholder {
   padding: 16px;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(10px);
+  transform: translateY(-10px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
   pointer-events: none;
