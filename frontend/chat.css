@@ -73,6 +73,8 @@ body {
   transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
     padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .sidebar.collapsed {
@@ -98,30 +100,34 @@ body {
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* Desktop Sidebar Toggle */
+/* Desktop Sidebar Toggle - Positioned at bottom */
 .sidebar-toggle-desktop {
   display: flex;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: white;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   cursor: pointer;
   align-items: center;
   justify-content: center;
-  transition: all 0.25s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
+  margin-top: auto;
+  align-self: flex-end;
+  margin-bottom: 8px;
 }
 
 .sidebar-toggle-desktop:hover {
   background: rgba(255, 255, 255, 0.12);
-  transform: scale(1.08);
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .sidebar-toggle-desktop svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   stroke: var(--text);
   transition: transform 0.35s ease;
 }
@@ -130,10 +136,14 @@ body {
   transform: rotate(180deg);
 }
 
+.sidebar.collapsed .sidebar-toggle-desktop {
+  align-self: center;
+}
+
 .logo-container {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   margin-bottom: 20px;
   padding: 4px 0;
   min-height: 48px;
@@ -158,10 +168,6 @@ body {
 
 .logo-circle:hover {
   transform: scale(1.1) rotate(-5deg);
-}
-
-.sidebar.collapsed .sidebar-toggle-desktop {
-  display: none;
 }
 
 /* Search Bar */
@@ -1302,19 +1308,14 @@ textarea::placeholder {
     width: 260px;
   }
 
-  .sidebar-toggle-desktop {
-    left: 276px;
-  }
-
-  .sidebar.collapsed+.sidebar-toggle-desktop {
-    left: 16px;
-  }
-}
-
 /* Mobile adjustments */
 @media (max-width: 768px) {
   .mobile-sidebar-toggle {
     display: flex;
+  }
+
+  .sidebar-toggle-desktop {
+    display: none;
   }
 
   .sidebar {
