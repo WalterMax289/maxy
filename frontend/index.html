@@ -677,34 +677,80 @@
             #about,
             #contact,
             #faq {
-                padding: 70px 16px 40px;
+                padding: 80px 16px 60px;
                 min-height: auto;
-                /* Allow content to dictate height on mobile */
+                justify-content: flex-start;
+                gap: 20px;
             }
 
             #about h2,
             #contact h2,
             #faq h2 {
-                font-size: 28px;
+                font-size: 24px;
                 letter-spacing: 2px;
-                margin-bottom: 30px;
+                margin-bottom: 20px;
+                line-height: 1.2;
             }
 
-            .box {
-                padding: 24px 20px;
-                min-width: unset;
+            /* Mobile box container - full width stacked layout */
+            #about .boxes-container,
+            #contact .boxes-container,
+            #faq .boxes-container {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
                 width: 100%;
-                margin-bottom: 15px;
+                max-width: 100%;
+                padding: 0;
             }
 
-            .box h3 {
-                font-size: 20px;
+            /* Mobile box styling */
+            #about .box,
+            #contact .box,
+            #faq .box {
+                width: 100%;
+                max-width: 100%;
+                padding: 20px 16px;
+                margin: 0;
+                border-radius: 16px;
+                min-height: auto;
+            }
+
+            #about .box h3,
+            #contact .box h3,
+            #faq .box h3 {
+                font-size: 18px;
                 margin-bottom: 12px;
+                line-height: 1.3;
             }
 
-            .box p {
+            #about .box p,
+            #contact .box p,
+            #faq .box p {
                 font-size: 14px;
-                line-height: 1.4;
+                line-height: 1.6;
+                margin: 8px 0;
+            }
+
+            /* FAQ section specific - 2x2 grid on mobile */
+            #faq .boxes-container {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+
+            #faq .box {
+                padding: 16px 12px;
+            }
+
+            #faq .box h3 {
+                font-size: 15px;
+                margin-bottom: 8px;
+            }
+
+            #faq .box p {
+                font-size: 13px;
+                line-height: 1.5;
             }
 
             .modal-content {
