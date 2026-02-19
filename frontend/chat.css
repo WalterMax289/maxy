@@ -793,11 +793,13 @@ button:hover .regen-icon {
   flex-direction: column;
   gap: 20px;
   padding: 20px;
+  padding-bottom: 40px;
   overflow-y: auto;
   overflow-x: hidden;
   flex: 1;
   scroll-behavior: smooth;
-  max-height: calc(100vh - 200px);
+  max-height: calc(100vh - 220px);
+  max-height: calc(100dvh - 220px);
 }
 
 .messages.active {
@@ -940,7 +942,7 @@ button:hover .regen-icon {
 .input-container {
   max-width: 900px;
   width: 100%;
-  margin: 0 auto 20px;
+  margin: 0 auto 0;
   background: var(--card-bg);
   border-radius: 24px;
   border: 1px solid var(--border);
@@ -952,6 +954,23 @@ button:hover .regen-icon {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
   transition: all 0.3s ease;
   flex-shrink: 0;
+}
+
+/* Chat Footer */
+.chat-footer {
+  text-align: center;
+  padding: 8px 20px 12px;
+  flex-shrink: 0;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.footer-text {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.5;
+  letter-spacing: 0.5px;
 }
 
 .input-container:focus-within {
@@ -1341,11 +1360,13 @@ textarea::placeholder {
   }
 
   .chat-content {
-    padding: 60px 0 10px;
-    /* Reduced side padding to 0 */
+    padding: 56px 0 0;
     max-width: 100%;
     width: 100%;
     margin: 0;
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
   }
 
   .welcome {
@@ -1363,20 +1384,35 @@ textarea::placeholder {
     letter-spacing: 3px;
   }
 
+  .messages {
+    max-height: calc(100vh - 180px);
+    max-height: calc(100dvh - 180px);
+    padding: 12px 10px 30px;
+    gap: 14px;
+  }
+
   .message {
     max-width: 90%;
     padding: 12px 16px;
     font-size: 14px;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
 
   .input-container {
     max-width: calc(100% - 20px);
-    margin: 0 10px 10px;
+    margin: 0 10px 0;
     padding: 8px 12px;
     gap: 8px;
     border-radius: 20px;
     width: auto;
+  }
+
+  .chat-footer {
+    padding: 6px 10px 10px;
+  }
+
+  .footer-text {
+    font-size: 10px;
   }
 
   .maxy-menu {
@@ -1406,7 +1442,7 @@ textarea::placeholder {
   }
 
   .chat-content {
-    padding: 55px 8px 8px;
+    padding: 50px 0 0;
   }
 
   .maxy-title {
@@ -1414,11 +1450,26 @@ textarea::placeholder {
     letter-spacing: 2px;
   }
 
+  .messages {
+    padding: 10px 8px 24px;
+    gap: 12px;
+    max-height: calc(100vh - 170px);
+    max-height: calc(100dvh - 170px);
+  }
+
   .input-container {
-    margin: 0 6px 10px;
+    margin: 0 6px 0;
     padding: 8px 10px;
     gap: 6px;
     border-radius: 18px;
+  }
+
+  .chat-footer {
+    padding: 4px 8px 8px;
+  }
+
+  .footer-text {
+    font-size: 9px;
   }
 
   .upload-btn {
@@ -1434,12 +1485,6 @@ textarea::placeholder {
 
   textarea {
     font-size: 14px;
-  }
-
-  .messages {
-    padding: 10px;
-    gap: 15px;
-    max-height: calc(100vh - 160px);
   }
 }
 
