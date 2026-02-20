@@ -319,6 +319,16 @@ class MAXY1_1:
         
         # Simple task acknowledgment (2-3 sentences)
         elif intents['simple_task']:
+            # First try to see if it's a topic we can look up
+            wiki_result = MAXY1_1.quick_wikipedia_lookup(message)
+            if wiki_result:
+                raw_sentences = [s.strip() for s in wiki_result.split('. ') if s.strip()]
+                sentences = raw_sentences[:3]
+                concise = '. '.join(sentences)
+                if not concise.endswith('.'):
+                    concise += '.'
+                return (concise, 0.90)
+                
             return ("Got it! I'm on it. What would you like me to do with this? Just let me know the next step!", 0.88)
         
         # Knowledge query - Quick facts (2-3 sentences max)
