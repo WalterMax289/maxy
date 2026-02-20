@@ -149,30 +149,49 @@ class MAXY1_1:
     
     @staticmethod
     def quick_wikipedia_lookup(query: str) -> Optional[str]:
-        """Quick Wikipedia lookup for maxy1.1 with DDG fallback"""
+        """Quick Wikipedia lookup for maxy1.1 with DDG fallback and smart synthesis"""
         try:
             # 1. Try Wikipedia first
-            search_results = wikipedia.search(query, results=1)
+            # If query is very short (1-2 words), try searching directly but also try "what is X" if fails
+            search_query = query
+            
+            # Search
+            search_results = wikipedia.search(search_query, results=3)
+            
             if search_results:
-                page = wikipedia.page(search_results[0], auto_suggest=False)
-                summary = page.summary[:500]
+                # Try to get the first result
+                try:
+                    page = wikipedia.page(search_results[0], auto_suggest=False)
+                except wikipedia.exceptions.DisambiguationError as e:
+                    # Pick first option
+                    page = wikipedia.page(e.options[0], auto_suggest=False)
+                except wikipedia.exceptions.PageError:
+                    # Try second result if first fails
+                    if len(search_results) > 1:
+                        page = wikipedia.page(search_results[1], auto_suggest=False)
+                    else:
+                        raise Exception("Page not found")
+                        
+                summary = page.summary[:800] # Get more content for better synthesis
                 return summary
             
-            # 2. Fallback to DuckDuckGo
+            # 2. Fallback to DuckDuckGo with "What is" prefix for better definition results
             with DDGS() as ddgs:
-                 # Use ddgs.text() and get the first result
-                 results = list(ddgs.text(query, max_results=1))
+                 ddg_query = query if len(query.split()) > 3 else f"what is {query}"
+                 results = list(ddgs.text(ddg_query, max_results=2))
                  if results:
-                     return results[0]['body']
+                     # Combine title and body for better context
+                     return f"{results[0]['title']}: {results[0]['body']}"
             
             return None
         except Exception as e:
             # If Wikipedia fails, also try DDG
             try:
                 with DDGS() as ddgs:
-                    results = list(ddgs.text(query, max_results=1))
+                    ddg_query = query if len(query.split()) > 3 else f"what is {query}"
+                    results = list(ddgs.text(ddg_query, max_results=2))
                     if results:
-                        return results[0]['body']
+                        return f"{results[0]['title']}: {results[0]['body']}"
             except:
                 pass
             return None
@@ -336,30 +355,41 @@ class MAXY1_1:
         elif intents['knowledge'] or MAXY1_1.should_use_wikipedia(message):
             wiki_result = MAXY1_1.quick_wikipedia_lookup(message)
             if wiki_result:
-                # Strictly 2-3 sentences as requested
+                # Allow 4-5 sentences for "Gemini-like" fluency
                 raw_sentences = [s.strip() for s in wiki_result.split('. ') if s.strip()]
-                sentences = raw_sentences[:3] # Ensure at most 3 sentences
-                concise = '. '.join(sentences)
-                if not concise.endswith('.'):
-                    concise += '.'
-                return (concise, 0.90)
-            else:
-                # If lookup fails, fall back to a generic but helpful response
-                return ("I tried to look that up but couldn't find a quick answer. I'd love to help though! Could you be more specific about what you'd like to know?", 0.82)
-
-        # Simple task acknowledgment (2-3 sentences)
-        elif intents['simple_task']:
-            # First try to see if it's a topic we can look up (double check)
-            wiki_result = MAXY1_1.quick_wikipedia_lookup(message)
-            if wiki_result:
-                raw_sentences = [s.strip() for s in wiki_result.split('. ') if s.strip()]
-                sentences = raw_sentences[:3]
-                concise = '. '.join(sentences)
-                if not concise.endswith('.'):
-                    concise += '.'
-                return (concise, 0.90)
                 
-            return ("Got it! I'm on it. What would you like me to do with this? Just let me know the next step!", 0.88)
+                # Smart filtering: remove very short "sentences" that might be artifacts
+                clean_sentences = [s for s in raw_sentences if len(s) > 10]
+                
+                # Take up to 5 sentences
+                sentences = clean_sentences[:5] 
+                concise = '. '.join(sentences)
+                if not concise.endswith('.'):
+                    concise += '.'
+                    
+                # If too short, add a follow up
+                if len(concise) < 100:
+                    concise += " Would you like to know more about its history or specific details?"
+                    
+                return (concise, 0.92)
+            else:
+                return ("I looked into that but couldn't find a precise match in my immediate database. Could you provide a bit more context or rephrase your question? I'm eager to help!", 0.82)
+
+        # Simple task - Check for single word/short "tasks" that are actually topics
+        elif intents['simple_task']:
+            # If message is very short (1-3 words), treat as potential query FIRST
+            if len(message.split()) <= 3:
+                 wiki_result = MAXY1_1.quick_wikipedia_lookup(message)
+                 if wiki_result:
+                    raw_sentences = [s.strip() for s in wiki_result.split('. ') if s.strip()]
+                    clean_sentences = [s for s in raw_sentences if len(s) > 10]
+                    sentences = clean_sentences[:5]
+                    concise = '. '.join(sentences)
+                    if not concise.endswith('.'):
+                        concise += '.'
+                    return (concise, 0.92)
+
+            return ("I understand! I'm ready to proceed. What specific action would you like me to take with this information?", 0.88)
         
         # Help request - Quick capabilities (3-4 sentences)
         elif intents['help']:
@@ -1050,8 +1080,9 @@ DEALLOCATE item_cursor;'''
         
         # Code request indicators
         code_indicators = [
-            'code', 'write', 'create', 'generate', 'function',
-            'program', 'script', 'example', 'syntax', 'algorithm'
+            'code', 'write', 'create', 'generate', 'function', 'how to',
+            'program', 'script', 'example', 'syntax', 'algorithm', 'implement',
+            'snippet', 'coding', 'develop', 'setup', 'server', 'logic'
         ]
         
         is_code = any(ind in msg_lower for ind in code_indicators)
@@ -1065,13 +1096,38 @@ DEALLOCATE item_cursor;'''
         return is_code, detected_lang
     
     @staticmethod
+    def search_real_code(language: str, query: str) -> Optional[str]:
+        """Search the web for real code snippets"""
+        try:
+            with DDGS() as ddgs:
+                search_query = f"{language} code for {query}"
+                results = list(ddgs.text(search_query, max_results=3))
+                
+                if results:
+                    return CodeComposer.synthesize_code_from_search(results, language)
+            return None
+        except Exception as e:
+            logger.error(f"Error searching for code: {e}")
+            return None
+
+    @staticmethod
     def generate_code(language: str, description: str) -> str:
-        """Generate code based on language and description"""
-        templates = MAXY1_3.CODE_TEMPLATES.get(language, MAXY1_3.CODE_TEMPLATES['python'])
+        """Generate code based on language and description using real search"""
+        # Try real code search first
+        real_code = MAXY1_3.search_real_code(language, description)
         
+        if real_code:
+            response = f"I've searched the web and found this {language} implementation for you! 💻\n\n"
+            response += f"{real_code}\n\n"
+            response += f"**Analysis:** I've synthesized this code based on current best practices and search results. "
+            response += f"Please verify the syntax as it's dynamically generated. "
+            response += f"Would you like me to explain how this works or adjust the implementation?"
+            return response
+            
+        # Fallback to template if search fails
+        templates = MAXY1_3.CODE_TEMPLATES.get(language, MAXY1_3.CODE_TEMPLATES['python'])
         desc_lower = description.lower()
         
-        # Select appropriate template
         if any(word in desc_lower for word in ['function', 'method', 'def']):
             template = templates['function']
         elif any(word in desc_lower for word in ['loop', 'iterate', 'for', 'while']):
@@ -1081,11 +1137,8 @@ DEALLOCATE item_cursor;'''
         
         code = f"```{language}\n{template}\n```"
         
-        response = f"Here's a {language} example for you:\n\n{code}\n\n"
-        response += f"**What this code does:**\n"
-        response += f"This is a simple {language} example that demonstrates basic syntax. "
-        response += f"You can modify it to suit your specific needs. "
-        response += f"Would you like me to explain any part of this code or create something more specific?"
+        response = f"I couldn't find a specific snippet on the web, so here's a standard {language} template for that:\n\n{code}\n\n"
+        response += f"This is a baseline example. I can try searching again if you provide more specific requirements! 🚀"
         
         return response
     
@@ -1282,33 +1335,42 @@ DEALLOCATE item_cursor;'''
         msg_lower = message.lower().strip()
         response = None
         
-        # 1. Check for Website Building Request (NEW Logic)
-        is_website, web_type = MAXY1_3.is_website_request(message)
-        if is_website:
-            if web_type == 'portfolio':
-                site = CodeComposer.build_portfolio()
-                type_name = "Portfolio Website"
-            else:
-                site = CodeComposer.build_website(title="Project MAXY Site")
-                type_name = "Landing Page"
+        # 1. Check for code generation request (UPGRADED & PRIORITIZED)
+        is_code, language = MAXY1_3.is_code_request(message)
+        if is_code:
+             # Double check it's not a misclassified chart request
+             if "chart" not in message.lower() and "plot" not in message.lower():
+                response = MAXY1_3.generate_code(language, message)
+                confidence = 0.95
+        
+        # 2. Check for Website Building Request
+        if not response:
+            is_website, web_type = MAXY1_3.is_website_request(message)
+            if is_website:
+                if web_type == 'portfolio':
+                    site = CodeComposer.build_portfolio()
+                    type_name = "Portfolio Website"
+                else:
+                    site = CodeComposer.build_website(title="Project MAXY Site")
+                    type_name = "Landing Page"
+                    
+                response = f"### 🏗️ MAXY Website Builder\n\n"
+                response += f"I've generated a clean, responsive **{type_name}** structure for you! "
+                response += f"I've used modern HTML5, CSS Flexbox/Grid, and added some smooth interactivity with JavaScript.\n\n"
                 
-            response = f"### 🏗️ MAXY Website Builder\n\n"
-            response += f"I've generated a clean, responsive **{type_name}** structure for you! "
-            response += f"I've used modern HTML5, CSS Flexbox/Grid, and added some smooth interactivity with JavaScript.\n\n"
+                response += f"#### 📄 HTML Structure\n```html\n{site['html'][:1000]}...\n```\n\n"
+                response += f"#### 🎨 CSS Styles\n```css\n{site['css'][:500]}...\n```\n\n"
+                response += f"#### ⚡ JavaScript Logic\n```javascript\n{site['js']}\n```\n\n"
+                
+                response += f"**How to use this:**\n"
+                response += f"1. Save the HTML as `index.html`.\n"
+                response += f"2. Save the CSS as `style.css`.\n"
+                response += f"3. Save the JS as `script.js`.\n"
+                response += f"4. Open `index.html` in your browser to see your new site!"
+                
+                confidence = 0.95
             
-            response += f"#### 📄 HTML Structure\n```html\n{site['html'][:1000]}...\n```\n\n"
-            response += f"#### 🎨 CSS Styles\n```css\n{site['css'][:500]}...\n```\n\n"
-            response += f"#### ⚡ JavaScript Logic\n```javascript\n{site['js']}\n```\n\n"
-            
-            response += f"**How to use this:**\n"
-            response += f"1. Save the HTML as `index.html`.\n"
-            response += f"2. Save the CSS as `style.css`.\n"
-            response += f"3. Save the JS as `script.js`.\n"
-            response += f"4. Open `index.html` in your browser to see your new site!"
-            
-            confidence = 0.95
-            
-        # 2. Check for chart request (Prioritized over code/analysis)
+        # 3. Check for chart request
         if not response and MAXY1_3.is_chart_request(message)[0]:
             is_chart, chart_type, data, labels, title = MAXY1_3.is_chart_request(message)
             base64_image, description = MAXY1_3.generate_chart_image(chart_type, data, labels, title)
