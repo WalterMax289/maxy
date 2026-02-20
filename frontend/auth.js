@@ -90,6 +90,36 @@ async function loginUser(email, password) {
     return { success: true, message: 'Login successful' };
 }
 
+// Request password reset email
+async function resetPassword(email) {
+    if (!supabaseClient) return { success: false, message: 'Supabase not initialized' };
+
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + window.location.pathname,
+    });
+
+    if (error) {
+        return { success: false, message: error.message };
+    }
+
+    return { success: true, message: 'Password reset link sent! Please check your email.' };
+}
+
+// Update password for logged in user (recovery flow)
+async function updatePassword(newPassword) {
+    if (!supabaseClient) return { success: false, message: 'Supabase not initialized' };
+
+    const { error } = await supabaseClient.auth.updateUser({
+        password: newPassword
+    });
+
+    if (error) {
+        return { success: false, message: error.message };
+    }
+
+    return { success: true, message: 'Password updated successfully!' };
+}
+
 // Update local state for compatibility with chat.js
 function updateLocalState(user) {
     if (!user) return;
@@ -126,14 +156,21 @@ function openAuthModal(type = 'login') {
     const modal = document.getElementById('authModal');
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
+    const forgotForm = document.getElementById('forgotPasswordForm');
+    const updateForm = document.getElementById('updatePasswordForm');
 
     if (!modal) return;
 
     modal.style.display = 'flex';
 
+    // Hide all forms initially
+    if (loginForm) loginForm.style.display = 'none';
+    if (signupForm) signupForm.style.display = 'none';
+    if (forgotForm) forgotForm.style.display = 'none';
+    if (updateForm) updateForm.style.display = 'none';
+
     if (type === 'login') {
         if (loginForm) loginForm.style.display = 'block';
-        if (signupForm) signupForm.style.display = 'none';
 
         // Autofill email if remembered
         const rememberedEmail = localStorage.getItem('maxyRememberedEmail');
@@ -144,9 +181,12 @@ function openAuthModal(type = 'login') {
             emailInput.value = rememberedEmail;
             if (rememberCheckbox) rememberCheckbox.checked = true;
         }
-    } else {
-        if (loginForm) loginForm.style.display = 'none';
+    } else if (type === 'signup') {
         if (signupForm) signupForm.style.display = 'block';
+    } else if (type === 'forgot') {
+        if (forgotForm) forgotForm.style.display = 'block';
+    } else if (type === 'update') {
+        if (updateForm) updateForm.style.display = 'block';
     }
 }
 
@@ -235,6 +275,53 @@ async function handleModalLogin() {
     }
 }
 
+// Handle forgot password from modal
+async function handleModalForgotPassword() {
+    const emailInput = document.getElementById('forgotEmail');
+    if (!emailInput) return;
+
+    const email = emailInput.value.trim();
+    if (!email) {
+        showAuthToast('Please enter your email', 'error');
+        return;
+    }
+
+    showAuthToast('Sending reset link...', 'info');
+    const result = await resetPassword(email);
+
+    if (result.success) {
+        showAuthToast(result.message, 'success');
+        setTimeout(closeAuthModal, 3000);
+    } else {
+        showAuthToast(result.message, 'error');
+    }
+}
+
+// Handle password update from modal
+async function handleModalUpdatePassword() {
+    const passwordInput = document.getElementById('newPassword');
+    if (!passwordInput) return;
+
+    const password = passwordInput.value;
+    if (!password || password.length < 6) {
+        showAuthToast('Password must be at least 6 characters', 'error');
+        return;
+    }
+
+    showAuthToast('Updating password...', 'info');
+    const result = await updatePassword(password);
+
+    if (result.success) {
+        showAuthToast(result.message, 'success');
+        setTimeout(() => {
+            closeAuthModal();
+            window.location.href = 'chat.html';
+        }, 1500);
+    } else {
+        showAuthToast(result.message, 'error');
+    }
+}
+
 // Redirect if not logged in
 async function requireAuth() {
     const loggedIn = await isLoggedIn();
@@ -278,12 +365,20 @@ function showAuthToast(message, type = 'info') {
 
 // Initial check when auth.js loads
 (async () => {
+    // Listen for auth state changes (crucial for password recovery)
+    if (supabaseClient) {
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
+            console.log('Auth Event:', event);
+            if (event === 'PASSWORD_RECOVERY') {
+                openAuthModal('update');
+            } else if (event === 'SIGNED_IN' && session) {
+                updateLocalState(session.user);
+            }
+        });
+    }
+
     const loggedIn = await isLoggedIn();
     if (loggedIn && supabaseClient) {
-        const user = await getCurrentUser();
-        // Since getCurrentUser returns our simplified object, we need to pass a "user-like" object to updateLocalState
-        // or just call updateLocalState with the raw user from Supabase if we had it.
-        // Actually, let's just use the session data if available.
         const { data: { user: sbUser } } = await supabaseClient.auth.getUser();
         if (sbUser) updateLocalState(sbUser);
     }

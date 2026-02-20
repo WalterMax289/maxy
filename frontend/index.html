@@ -1046,11 +1046,15 @@
                 <h3>Welcome Back</h3>
                 <input type="email" id="loginEmail" placeholder="Email Address" required>
                 <input type="password" id="loginPassword" placeholder="Password" required>
-                <label class="remember-email"
-                    style="display: flex; align-items: center; gap: 8px; margin: 12px 0; cursor: pointer; color: rgba(255,255,255,0.7); font-size: 14px;">
-                    <input type="checkbox" id="rememberEmail" style="width: 16px; height: 16px; cursor: pointer;">
-                    <span>Remember my email</span>
-                </label>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <label class="remember-email"
+                        style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: rgba(255,255,255,0.7); font-size: 14px;">
+                        <input type="checkbox" id="rememberEmail" style="width: 16px; height: 16px; cursor: pointer;">
+                        <span>Remember my email</span>
+                    </label>
+                    <a href="#" onclick="openAuthModal('forgot'); return false;" 
+                       style="color: rgba(255,255,255,0.6); font-size: 13px; text-decoration: none;">Forgot Password?</a>
+                </div>
                 <button class="auth-submit" onclick="handleModalLogin()">Login</button>
                 <div class="auth-footer">
                     <p>Don't have an account?</p>
@@ -1070,6 +1074,28 @@
                     <button type="button" class="btn-secondary" id="switchToLogin"
                         onclick="openAuthModal('login')">Login Now</button>
                 </div>
+            </div>
+
+            <div id="forgotPasswordForm" class="auth-form" style="display: none;">
+                <h3>Reset Password</h3>
+                <p style="text-align: center; color: rgba(255,255,255,0.6); margin-bottom: 20px; font-size: 14px;">
+                    Enter your email to receive a password reset link.
+                </p>
+                <input type="email" id="forgotEmail" placeholder="Email Address" required>
+                <button class="auth-submit" onclick="handleModalForgotPassword()">Send Reset Link</button>
+                <div class="auth-footer">
+                    <p>Remembered your password?</p>
+                    <button type="button" class="btn-secondary" onclick="openAuthModal('login')">Back to Login</button>
+                </div>
+            </div>
+
+            <div id="updatePasswordForm" class="auth-form" style="display: none;">
+                <h3>Set New Password</h3>
+                <p style="text-align: center; color: rgba(255,255,255,0.6); margin-bottom: 20px; font-size: 14px;">
+                    Please enter your new password below.
+                </p>
+                <input type="password" id="newPassword" placeholder="New Password" required minlength="6">
+                <button class="auth-submit" onclick="handleModalUpdatePassword()">Update Password</button>
             </div>
         </div>
     </div>
