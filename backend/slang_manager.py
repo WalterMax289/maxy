@@ -55,37 +55,57 @@ class SlangManager:
         print(f"SlangManager {status}")
         return f"Slangs have been {status}."
 
-    def get_random_slang(self):
+    def detect_slang(self, text):
+        """Detect if the input text contains Bangalore slang triggers"""
+        if not text:
+            return False
+            
+        triggers = [
+            "macha", "maga", "guru", "boss", "thika", "sisya", 
+            "da", "kane", "kano", "le", "lo", "aliyas", "dove"
+        ]
+        
+        text_lower = text.lower()
+        # Check for whole words to avoid false positives
+        for trigger in triggers:
+            if re.search(r'\b' + re.escape(trigger) + r'\b', text_lower):
+                return True
+        return False
+
+    def get_random_slang(self, force=False):
         """Get a random slang word"""
-        if not self.enabled:
+        if not self.enabled and not force:
             return "friend"
             
         if not self.slangs:
             return "Maga"
         return random.choice(self.slangs)
 
-    def enhance_text(self, text, model_name="MAXY"):
+    def enhance_text(self, text, model_name="MAXY", force=False):
         """Randomly inject slang into text"""
-        if not self.enabled:
+        if not self.enabled and not force:
             return text
             
-        # 30% chance to start with a slang
-        if random.random() < 0.3:
-            slang = self.get_random_slang()
+        # Higher chance if forced
+        threshold = 0.6 if force else 0.3
+            
+        # Chance to start with a slang
+        if random.random() < threshold:
+            slang = self.get_random_slang(force=True)
             text = f"{slang}, {text}"
             
-        # 30% chance to end with a slang
-        elif random.random() < 0.3:
-            slang = self.get_random_slang()
+        # Chance to end with a slang
+        elif random.random() < threshold:
+            slang = self.get_random_slang(force=True)
             if text.endswith('.'):
                 text = text[:-1]
             text = f"{text}, {slang}."
             
         return text
 
-    def get_greeting(self):
+    def get_greeting(self, force=False):
         """Get a slang-infused greeting"""
-        if not self.enabled:
+        if not self.enabled and not force:
             return random.choice([
                 "Hello, what's up?",
                 "Namaste!",
@@ -94,7 +114,8 @@ class SlangManager:
                 "Hi, let's chat."
             ])
             
-        slang = self.get_random_slang()
+            
+        slang = self.get_random_slang(force=True)
         greetings = [
             f"Yen {slang}, what's up?",
             f"Namaskara {slang}!",

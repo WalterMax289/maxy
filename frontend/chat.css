@@ -412,7 +412,7 @@ button:hover .regen-icon {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 1;
+  opacity: 1.5;
 }
 
 .chat-bg-video::after {

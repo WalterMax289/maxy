@@ -239,7 +239,7 @@ class MAXY1_1:
         }
     
     @staticmethod
-    def generate_concise_response(intent_analysis: Dict[str, Any], message: str) -> tuple[str, float]:
+    def generate_concise_response(intent_analysis: Dict[str, Any], message: str, use_slang: bool = False) -> tuple[str, float]:
         """Generate 3-4 sentence response based on intent"""
         intents = intent_analysis['intents']
         msg_lower = message.lower().strip()
@@ -247,9 +247,9 @@ class MAXY1_1:
         # Greeting - Friendly and welcoming (3-4 sentences)
         if intents['greeting']:
             if intent_analysis.get('is_new_user', False):
-                return (f"Hey {slang_manager.get_random_slang()}! Welcome! I'm MAXY 1.1, your quick AI assistant. I'm here to help with fast answers and friendly chat. What can I do for you today?", 0.98)
+                return (f"Hey {slang_manager.get_random_slang(use_slang)}! Welcome! I'm MAXY 1.1, your quick AI assistant. I'm here to help with fast answers and friendly chat. What can I do for you today?", 0.98)
             else:
-                return (f"Hey {slang_manager.get_random_slang()}! Great to see you again! Ready when you are. What's on your mind today?", 0.97)
+                return (f"Hey {slang_manager.get_random_slang(use_slang)}! Great to see you again! Ready when you are. What's on your mind today?", 0.97)
         
         # Farewell - Warm goodbye (2-3 sentences)
         elif intents['farewell']:
@@ -262,9 +262,9 @@ class MAXY1_1:
         # Gratitude - Humble and helpful (2-3 sentences)
         elif intents['gratitude']:
             return (random.choice([
-                f"You're very welcome! Happy I could help quickly, {slang_manager.get_random_slang()}. Let me know if you need anything else! 😊",
+                f"You're very welcome! Happy I could help quickly, {slang_manager.get_random_slang(use_slang)}. Let me know if you need anything else! 😊",
                 "Anytime! That's what I'm here for. Feel free to ask more questions anytime!",
-                f"Glad I could assist, {slang_manager.get_random_slang()}! Don't hesitate to reach out if you need more quick answers!"
+                f"Glad I could assist, {slang_manager.get_random_slang(use_slang)}! Don't hesitate to reach out if you need more quick answers!"
             ]), 0.96)
         
         # Personal status - Friendly reciprocation (3 sentences)
@@ -376,6 +376,9 @@ class MAXY1_1:
     ) -> Dict[str, Any]:
         """Process message with enhanced understanding and concise 3-4 sentence responses"""
         
+        # Detect if user is using slang to trigger reactive mode
+        use_slang = slang_manager.detect_slang(message)
+        
         # Analyze user intent for better understanding
         intent_analysis = MAXY1_1.analyze_user_intent(message)
         
@@ -391,8 +394,8 @@ class MAXY1_1:
                 "quick"
             )
         
-        # Generate appropriate concise response
-        response, confidence = MAXY1_1.generate_concise_response(intent_analysis, message)
+        # Generate appropriate concise response with slang awareness
+        response, confidence = MAXY1_1.generate_concise_response(intent_analysis, message, use_slang)
         
         # Adjust for context
         if context_status == "continuing_conversation" and intent_analysis['intents']['greeting']:
@@ -409,7 +412,7 @@ class MAXY1_1:
         
         # Inject slang (chance based) for standard interactions
         if not intent_analysis.get('is_new_user', False) and intent_analysis['intents']['greeting'] == False: # Don't double slang greeting
-             response = slang_manager.enhance_text(response)
+             response = slang_manager.enhance_text(response, force=use_slang)
         
         result = {
             'response': response,
@@ -671,7 +674,7 @@ class MAXY1_2:
         }
     
     @staticmethod
-    def generate_detailed_response(context: Dict[str, Any], message: str, conversation_history: Optional[List[Dict]] = None) -> tuple[str, float]:
+    def generate_detailed_response(context: Dict[str, Any], message: str, conversation_history: Optional[List[Dict]] = None, use_slang: bool = False) -> tuple[str, float]:
         """Generate detailed 5-10 sentence response based on context"""
         msg_lower = message.lower().strip()
         intents = context['topics']
@@ -681,9 +684,9 @@ class MAXY1_2:
         # Greeting - Warm and contextual (6-8 sentences)
         if any(g in msg_lower for g in ['hi', 'hello', 'hey', 'greetings']):
             if context.get('is_follow_up'):
-                return (f"Hello again {slang_manager.get_random_slang()}! It's wonderful to continue our conversation. I've been thinking about our previous discussion and I'm ready to dive deeper into any topic you'd like to explore. Whether you need comprehensive research on a specific subject or just want to have an engaging conversation, I'm here to provide detailed insights. What direction would you like to take our discussion today? I'm particularly excited to help with any research questions or analytical topics you might have in mind!", 0.97)
+                return (f"Hello again {slang_manager.get_random_slang(use_slang)}! It's wonderful to continue our conversation. I've been thinking about our previous discussion and I'm ready to dive deeper into any topic you'd like to explore. Whether you need comprehensive research on a specific subject or just want to have an engaging conversation, I'm here to provide detailed insights. What direction would you like to take our discussion today? I'm particularly excited to help with any research questions or analytical topics you might have in mind!", 0.97)
             else:
-                return (f"Namaskara! I'm MAXY 1.2, your dedicated research and conversation companion. I'm genuinely excited to help you explore whatever topics interest you today. Whether you're looking for in-depth Wikipedia research, detailed analysis of complex subjects, or simply an engaging conversation, I'm fully equipped to assist. I specialize in providing comprehensive information with multiple perspectives and thorough context. What would you like to dive into, {slang_manager.get_random_slang()}? I'm ready to provide detailed, well-researched responses!", 0.96)
+                return (f"Namaskara! I'm MAXY 1.2, your dedicated research and conversation companion. I'm genuinely excited to help you explore whatever topics interest you today. Whether you're looking for in-depth Wikipedia research, detailed analysis of complex subjects, or simply an engaging conversation, I'm fully equipped to assist. I specialize in providing comprehensive information with multiple perspectives and thorough context. What would you like to dive into, {slang_manager.get_random_slang(use_slang)}? I'm ready to provide detailed, well-researched responses!", 0.96)
         
         # Personal status - Thoughtful and engaging (5-7 sentences)
         elif any(h in msg_lower for h in ['how are you', 'how you doing']):
@@ -776,6 +779,9 @@ class MAXY1_2:
         # Analyze conversation context for better understanding
         context = MAXY1_2.analyze_conversation_context(message, conversation_history)
         
+        # Detect user slang for reactive mode
+        use_slang = slang_manager.detect_slang(message)
+        
         if is_research:
             # Deep research mode with formatted response length
             result = MAXY1_2.deep_wikipedia_research(message)
@@ -793,7 +799,7 @@ class MAXY1_2:
             confidence = result['confidence']
         else:
             # Conversation mode with detailed 5-10 sentence responses
-            response, confidence = MAXY1_2.generate_detailed_response(context, message, conversation_history)
+            response, confidence = MAXY1_2.generate_detailed_response(context, message, conversation_history, use_slang)
             
             # Ensure 5-10 sentences for MAXY 1.2
             sentences = response.split('. ')
@@ -805,7 +811,7 @@ class MAXY1_2:
             
             # Inject slang mostly for conversational parts if not deep research
             if not is_research:
-                 response = slang_manager.enhance_text(response)
+                 response = slang_manager.enhance_text(response, force=use_slang)
         
         result = {
             'response': response,
@@ -1244,6 +1250,9 @@ DEALLOCATE item_cursor;'''
                 "analysis"
             )
         
+        # Detect slang usage
+        use_slang = slang_manager.detect_slang(message)
+        
         msg_lower = message.lower().strip()
         response = None
         
@@ -1364,7 +1373,7 @@ DEALLOCATE item_cursor;'''
 
             # Basic responses
             elif any(g in msg_lower for g in ['hello', 'hi', 'hey']):
-                slang = slang_manager.get_random_slang()
+                slang = slang_manager.get_random_slang(use_slang)
                 response = f"Hello {slang}! I'm MAXY 1.3, your advanced AI assistant. I can help you build websites, write code, analyze data, and create visualizations. What are we building today?"
                 confidence = 0.95
             
@@ -1373,13 +1382,13 @@ DEALLOCATE item_cursor;'''
                 confidence = 0.96
             
             else:
-                slang = slang_manager.get_random_slang()
+                slang = slang_manager.get_random_slang(use_slang)
                 response = f"I'm ready to help with your project, {slang}! As MAXY 1.3, I can build web structures, write custom code, or perform deep data analysis. What's the next step for us?"
                 confidence = 0.85
         
-        # Inject slang for 1.3 (Code/Analysis) - make it sound like a tech bro?
+        # Inject slang for 1.3 (Code/Analysis)
         if response and "statistical analysis" not in response.lower() and "generated" not in response.lower():
-             response = slang_manager.enhance_text(response)
+             response = slang_manager.enhance_text(response, force=use_slang)
         
         result = {
             'response': response,
