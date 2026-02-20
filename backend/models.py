@@ -1282,21 +1282,25 @@ DEALLOCATE item_cursor;'''
             
             confidence = 0.95
             
-        # 2. Check for numeric data analysis
-        elif len(re.findall(r'-?\d+\.?\d*', message)) >= 3 and any(x in msg_lower for x in ['analyze', 'stats', 'statistics', 'mean', 'data']):
-             # ... existing analysis logic ...
-             pass # (handled below by keeping original if no match)
-
-        # 3. Check for chart request
+        # 2. Check for chart request (Prioritized over code/analysis)
         if not response and MAXY1_3.is_chart_request(message)[0]:
-            # ... existing chart logic ...
-            pass
-
-        # 4. Check for code generation request (Upgraded)
+            is_chart, chart_type, data, labels, title = MAXY1_3.is_chart_request(message)
+            base64_image, description = MAXY1_3.generate_chart_image(chart_type, data, labels, title)
+            
+            if base64_image:
+                response = f"I've created a {chart_type} chart for you based on your data! 📊\n\n"
+                response += f"**{title}** breakdown shows {len(data)} distinct data points total. "
+                response += f"The visual representation above should make the distribution clear."
+                chart_data = {'type': chart_type, 'title': title, 'base64_image': base64_image, 'description': description}
+                confidence = 0.95
+            
+        # 3. Check for code generation request (Upgraded)
         if not response and MAXY1_3.is_code_request(message)[0]:
-            language = MAXY1_3.is_code_request(message)[1]
-            response = MAXY1_3.generate_code(language, message)
-            confidence = 0.93
+             # Double check it's not a misclassified chart request
+             if "chart" not in message.lower() and "plot" not in message.lower():
+                language = MAXY1_3.is_code_request(message)[1]
+                response = MAXY1_3.generate_code(language, message)
+                confidence = 0.93
 
         # 5. Check for Stock Analysis (NEW Logic)
         if not response:
@@ -1462,15 +1466,15 @@ class ModelRouter:
         
         # Check for slang toggle commands
         msg_lower = message.lower().strip().strip('!.')
-        if msg_lower in ["enable slangs", "activate slangs", "turn on slangs", "enable slang", "activate slang"]:
+        if any(cmd in msg_lower for cmd in ["enable slangs", "activate slangs", "turn on slangs", "enable slang", "activate slang"]):
             response_text = slang_manager.set_enabled(True)
             return {
-                'response': f"{response_text} {slang_manager.get_random_slang()}! I'm ready to chat with some local flavor.",
+                'response': f"{response_text} {slang_manager.get_random_slang(force=True)}! I'm ready to chat with some local flavor.",
                 'model': 'System',
                 'confidence': 1.0
             }
         
-        if msg_lower in ["disable slangs", "stop slangs", "turn off slangs", "disable slang", "no slangs"]:
+        if any(cmd in msg_lower for cmd in ["disable slangs", "stop slangs", "turn off slangs", "disable slang", "no slangs"]):
             response_text = slang_manager.set_enabled(False)
             return {
                 'response': f"{response_text} I will keep the conversation formal and standard from now on.",

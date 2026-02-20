@@ -62,7 +62,13 @@ class SlangManager:
             
         triggers = [
             "macha", "maga", "guru", "boss", "thika", "sisya", 
-            "da", "kane", "kano", "le", "lo", "aliyas", "dove"
+            "da", "kane", "kano", "le", "lo", "aliyas", "dove",
+            "mama", "machan", "mass", "scene", "sakath", "tumba", 
+            "swalpa", "adjust", "beda", "beku", "super", "ayyo", 
+            "chindi", "bindaas", "figure", "loose", "item", "jugaad", 
+            "ghanta", "pakao", "mast", "kaand", "faltu", "timepass", 
+            "jhol", "funda", "bakwaas", "senti", "patli", "jhakas",
+            "bro", "dude", "buddy", "maadi", "kelsa", "hogona", "banni"
         ]
         
         text_lower = text.lower()
