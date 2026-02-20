@@ -149,17 +149,32 @@ class MAXY1_1:
     
     @staticmethod
     def quick_wikipedia_lookup(query: str) -> Optional[str]:
-        """Quick Wikipedia lookup for maxy1.1"""
+        """Quick Wikipedia lookup for maxy1.1 with DDG fallback"""
         try:
+            # 1. Try Wikipedia first
             search_results = wikipedia.search(query, results=1)
-            if not search_results:
-                return None
+            if search_results:
+                page = wikipedia.page(search_results[0], auto_suggest=False)
+                summary = page.summary[:500]
+                return summary
             
-            page = wikipedia.page(search_results[0], auto_suggest=False)
-            # Remove source attribution as requested
-            summary = page.summary[:500]
-            return summary
-        except:
+            # 2. Fallback to DuckDuckGo
+            with DDGS() as ddgs:
+                 # Use ddgs.text() and get the first result
+                 results = list(ddgs.text(query, max_results=1))
+                 if results:
+                     return results[0]['body']
+            
+            return None
+        except Exception as e:
+            # If Wikipedia fails, also try DDG
+            try:
+                with DDGS() as ddgs:
+                    results = list(ddgs.text(query, max_results=1))
+                    if results:
+                        return results[0]['body']
+            except:
+                pass
             return None
 
     @staticmethod
@@ -317,21 +332,7 @@ class MAXY1_1:
             
             return ("I can check the weather if you tell me which city! Just ask 'weather in London' for example. 🌍", 0.90)
         
-        # Simple task acknowledgment (2-3 sentences)
-        elif intents['simple_task']:
-            # First try to see if it's a topic we can look up
-            wiki_result = MAXY1_1.quick_wikipedia_lookup(message)
-            if wiki_result:
-                raw_sentences = [s.strip() for s in wiki_result.split('. ') if s.strip()]
-                sentences = raw_sentences[:3]
-                concise = '. '.join(sentences)
-                if not concise.endswith('.'):
-                    concise += '.'
-                return (concise, 0.90)
-                
-            return ("Got it! I'm on it. What would you like me to do with this? Just let me know the next step!", 0.88)
-        
-        # Knowledge query - Quick facts (2-3 sentences max)
+        # Knowledge query - Quick facts (prioritized over simple task)
         elif intents['knowledge'] or MAXY1_1.should_use_wikipedia(message):
             wiki_result = MAXY1_1.quick_wikipedia_lookup(message)
             if wiki_result:
@@ -343,7 +344,22 @@ class MAXY1_1:
                     concise += '.'
                 return (concise, 0.90)
             else:
-                return ("I'd love to help with that! Let me dig into my data banks. What specifically would you like to know about it?", 0.82)
+                # If lookup fails, fall back to a generic but helpful response
+                return ("I tried to look that up but couldn't find a quick answer. I'd love to help though! Could you be more specific about what you'd like to know?", 0.82)
+
+        # Simple task acknowledgment (2-3 sentences)
+        elif intents['simple_task']:
+            # First try to see if it's a topic we can look up (double check)
+            wiki_result = MAXY1_1.quick_wikipedia_lookup(message)
+            if wiki_result:
+                raw_sentences = [s.strip() for s in wiki_result.split('. ') if s.strip()]
+                sentences = raw_sentences[:3]
+                concise = '. '.join(sentences)
+                if not concise.endswith('.'):
+                    concise += '.'
+                return (concise, 0.90)
+                
+            return ("Got it! I'm on it. What would you like me to do with this? Just let me know the next step!", 0.88)
         
         # Help request - Quick capabilities (3-4 sentences)
         elif intents['help']:
