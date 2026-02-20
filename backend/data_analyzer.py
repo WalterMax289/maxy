@@ -5,6 +5,7 @@ Provides comprehensive statistical insights and pattern detection
 
 import math
 import numpy as np
+import re
 from typing import List, Dict, Any, Tuple, Optional
 from collections import Counter
 import logging
@@ -467,3 +468,155 @@ class CorrelationAnalyzer:
         
         direction = "positive" if corr > 0 else "negative"
         return f"{strength} {direction} correlation"
+
+class TextAnalyzer:
+    """Natural language and text document intelligence"""
+    
+    @staticmethod
+    def extract_keywords(text: str, top_n: int = 10) -> List[Tuple[str, int]]:
+        """Extract key topics/keywords from text using frequency analysis"""
+        if not text:
+            return []
+        
+        # Stop words to filter out (basic set)
+        stop_words = {
+            'the', 'and', 'for', 'that', 'this', 'with', 'from', 'your', 'have', 'been',
+            'will', 'was', 'were', 'they', 'their', 'there', 'what', 'which', 'when',
+            'where', 'who', 'how', 'about', 'some', 'any', 'all', 'can', 'not', 'but'
+        }
+        
+        # Simple word extraction
+        words = re.findall(r'\b[a-zA-Z]{4,}\b', text.lower())
+        filtered = [w for w in words if w not in stop_words]
+        
+        counts = Counter(filtered)
+        return counts.most_common(top_n)
+
+    @staticmethod
+    def analyze_sentiment(text: str) -> Dict[str, Any]:
+        """Simple rule-based sentiment analysis"""
+        if not text:
+            return {'sentiment': 'neutral', 'score': 0.5}
+            
+        positive_words = {
+            'great', 'good', 'excellent', 'amazing', 'happy', 'success', 'benefit',
+            'growth', 'innovation', 'strong', 'positive', 'win', 'achievement'
+        }
+        negative_words = {
+            'bad', 'poor', 'failure', 'error', 'crisis', 'decline', 'weak', 'loss',
+            'negative', 'problem', 'risk', 'dangerous', 'slow', 'expensive'
+        }
+        
+        words = re.findall(r'\b\w+\b', text.lower())
+        pos_count = sum(1 for w in words if w in positive_words)
+        neg_count = sum(1 for w in words if w in negative_words)
+        
+        total = pos_count + neg_count
+        if total == 0:
+            return {'sentiment': 'neutral', 'score': 0.5}
+            
+        score = pos_count / total
+        sentiment = 'positive' if score > 0.6 else 'negative' if score < 0.4 else 'neutral'
+        
+        return {
+            'sentiment': sentiment,
+            'score': round(score, 2),
+            'pos_count': pos_count,
+            'neg_count': neg_count
+        }
+
+    @staticmethod
+    def extract_entities(text: str) -> Dict[str, List[str]]:
+        """Extract Emails, URLs, and potential Dates using Regex"""
+        if not text:
+            return {}
+            
+        entities = {
+            'emails': list(set(re.findall(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', text))),
+            'urls': list(set(re.findall(r'https?://[^\s<>"]+|www\.[^\s<>"]+', text))),
+            'dates': list(set(re.findall(r'\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{1,2},? \d{4}\b', text)))
+        }
+        
+        return {k: v for k, v in entities.items() if v}
+
+
+class StructuredDataAnalyzer:
+    """Intelligent parsing and analysis of CSV/JSON data"""
+    
+    @staticmethod
+    def parse_csv_content(content: str) -> Dict[str, Any]:
+        """Parse CSV text into structured format without external libs"""
+        if not content:
+            return {'error': 'Empty content'}
+            
+        lines = [l.strip() for l in content.split('\n') if l.strip()]
+        if not lines:
+            return {'error': 'No data lines'}
+            
+        # Extract headers
+        headers = [h.strip().strip('"') for h in lines[0].split(',')]
+        data = {h: [] for h in headers}
+        
+        # Process rows
+        for line in lines[1:101]: # Limit to first 100 rows for analysis
+            parts = [p.strip().strip('"') for p in line.split(',')]
+            for i, val in enumerate(parts):
+                if i < len(headers):
+                    try:
+                        # Convert to float if possible
+                        num_val = float(val)
+                        data[headers[i]].append(num_val)
+                    except ValueError:
+                        data[headers[i]].append(val)
+        
+        # Identify numeric columns
+        numeric_cols = [h for h in headers if all(isinstance(v, (int, float)) for v in data[h] if v is not None)]
+        
+        return {
+            'headers': headers,
+            'row_count': len(lines) - 1,
+            'numeric_columns': numeric_cols,
+            'data_preview': data
+        }
+
+    @staticmethod
+    def generate_data_insights(parse_result: Dict[str, Any]) -> List[str]:
+        """Generate automated insights for structured data"""
+        insights = []
+        num_cols = parse_result.get('numeric_columns', [])
+        data = parse_result.get('data_preview', {})
+        
+        if not num_cols:
+            insights.append("This dataset appears to be primarily text-based or categorical.")
+            return insights
+            
+        insights.append(f"Detected {len(num_cols)} numeric metrics: {', '.join(num_cols)}.")
+        
+        # Correlation analysis between first few numeric columns
+        if len(num_cols) >= 2:
+            col1, col2 = num_cols[:2]
+            vals1 = data[col1]
+            vals2 = data[col2]
+            
+            # Ensure they are numeric and same length
+            clean_vals1 = [v for v in vals1 if isinstance(v, (int, float))]
+            clean_vals2 = [v for v in vals2 if isinstance(v, (int, float))]
+            
+            if len(clean_vals1) == len(clean_vals2) and len(clean_vals1) > 2:
+                corr = AdvancedAnalyzer.calculate_correlation(clean_vals1, clean_vals2)
+                interpretation = CorrelationAnalyzer._interpret_correlation(corr)
+                insights.append(f"Analyzing relationship: **{col1}** vs **{col2}** shows a {interpretation}.")
+        
+        # Range/Outlier check for first numeric column
+        target_col = num_cols[0]
+        target_vals = [v for v in data[target_col] if isinstance(v, (int, float))]
+        if target_vals:
+            stats = AdvancedAnalyzer.generate_comprehensive_analysis(target_vals)
+            if stats.get('outliers', {}).get('count', 0) > 0:
+                insights.append(f"Alert: Metric **{target_col}** contains potential outliers that may skew simple averages.")
+            
+            trend = stats.get('trends', {}).get('trend')
+            if trend and trend != 'stable':
+                insights.append(f"Continuity check: **{target_col}** shows a {stats['trends']['strength']} {trend} trend across the sampled rows.")
+                
+        return insights

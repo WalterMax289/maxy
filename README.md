@@ -8,7 +8,10 @@ MAXY Chat Backend is a comprehensive FastAPI-based multi-model AI chatbot system
 - **Multi-Model Architecture**: Three specialized AI models with distinct personalities
 - **Conversation Management**: Full conversation history, context awareness, and persistence
 - **Advanced Data Analysis**: Comprehensive statistical analysis, outlier detection, trends
-- **File Processing**: Support for images, PDFs, Word documents, and text files
+- **Advanced File Intelligence**: Enhanced text analysis (sentiment, keywords, entities) and CSV intelligence
+- **Knowledge Synthesis**: Multi-source factual verification (Wikipedia + DuckDuckGo)
+- **Supabase Authentication**: Secure user management with "Forgot Password" flow
+- **Multi-lingual Slang**: Support for Kannada, Hindi, Tamil, and Telugu conversational styles
 - **Professional Visualizations**: Generate charts and graphs with multiple visualization types
 - **Error Handling**: Comprehensive error handling with recovery suggestions
 
@@ -35,22 +38,22 @@ MAXY Chat Backend is a comprehensive FastAPI-based multi-model AI chatbot system
 ## AI Models
 
 ### MAXY 1.1 - Conversational Assistant
-- Natural, friendly conversation
-- Context-aware responses
-- Personality-driven interactions
-- Real-time information handling
+- Natural, friendly conversation with **Multi-lingual Slang Support**
+- Context-aware responses and personality-driven interactions
+- **Slang Conversational Logic**: Recognizes local greetings (e.g., "yen guru")
+- Real-time information handling and quick Wikipedia lookups
 
 ### MAXY 1.2 - Research Expert
-- Deep research capability
-- Multi-source information synthesis
-- Detailed analysis and insights
-- Source citations and tracking
+- **KnowledgeSynthesizer Engine**: Multi-source factual verification
+- Cross-references Wikipedia with DuckDuckGo for high accuracy
+- Detailed analysis, insights, and relevance-scored results
+- Automated context tracking and professional synthesis
 
-### MAXY 1.3 - Programming Expert
-- Multi-language code generation
-- Best practices and patterns
-- Code explanation and optimization
-- Debugging assistance
+### MAXY 1.3 - Data & Programming Expert
+- **Advanced File Intelligence**: Sentiment, keywords, and entity extraction
+- **Structured Data Analysis**: Automated CSV/JSON parsing and correlation
+- Multi-language code generation and best practices
+- Best-in-class programming, visualization, and debugging assistance
 
 ## Key Features
 
@@ -76,12 +79,13 @@ Comprehensive statistical analysis including:
 - Correlation analysis
 - Regression analysis
 
-### 4. File Processing
+### 4. File Intelligence
 Supported file types:
 - **Images**: Analyze dimensions, colors, aspect ratio, format
 - **PDFs**: Extract text, metadata, document structure
 - **Word Documents**: Parse content, count paragraphs, extract tables
-- **Text Files**: Process CSV, JSON, code files, etc.
+- **CSV/JSON**: Automated parsing, outlier detection, and correlation analysis
+- **Text Analysis**: Sentiment detection, keyword extraction, and entity discovery
 
 ### 5. Chart Generation
 Multiple chart types:
@@ -248,11 +252,12 @@ POST /charts
 - Batch operations support
 
 ### Security
-- Input validation
-- SQL injection prevention (prepared for DB integration)
-- File upload validation
-- CORS security
-- Rate limiting ready
+- **Supabase Auth**: Secure user accounts and sessions
+- **Password Recovery**: Complete "Forgot Password" email recovery flow
+- **Input Validation**: Robust sanitization of user messages and data
+- **SQL injection prevention**: Prepared for DB integration
+- **File upload validation**: Size and type checks
+- **CORS security**: Configurable origin controls
 
 ## Configuration
 
@@ -368,15 +373,15 @@ Log levels:
 
 ## Future Enhancements
 
-- [ ] Database integration (PostgreSQL/SQLite)
+- [x] Database integration (Supabase/PostgreSQL)
 - [ ] Redis caching layer
-- [ ] User authentication & authorization
+- [x] User authentication & authorization (Supabase)
 - [ ] Conversation export (PDF/JSON)
-- [ ] Advanced NLP features
+- [x] Advanced NLP features (Sentiment/Entities)
 - [ ] Real-time WebSocket support
 - [ ] Batch processing API
 - [ ] Custom model fine-tuning
-- [ ] Multi-language support
+- [x] Multi-language support (Slang & Triggers)
 - [ ] Advanced rate limiting per user
 
 ## Troubleshooting
@@ -424,12 +429,13 @@ For issues or questions:
 
 ## Statistics
 
-- **Total Lines of Code**: 3,800+
-- **Endpoints**: 15+
-- **AI Models**: 3
+- **Total Lines of Code**: 4,200+
+- **Endpoints**: 18+
+- **AI Models**: 3 (with specialized personalities)
 - **Chart Types**: 7
-- **File Types Supported**: 6+
-- **Statistical Measures**: 20+
+- **File Types Supported**: 8+
+- **Statistical Measures**: 25+
+- **Slang Library**: 440+ Authentic Bangalore Slangs
 - **Test Coverage Ready**: Yes
 
 ---

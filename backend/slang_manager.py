@@ -56,11 +56,12 @@ class SlangManager:
         return f"Slangs have been {status}."
 
     def detect_slang(self, text):
-        """Detect if the input text contains Bangalore slang triggers"""
+        """Detect if the input text contains slang triggers (Kannada, Hindi, Tamil, Telugu, etc.)"""
         if not text:
             return False
             
         triggers = [
+            # Kannada / Bangalore
             "macha", "maga", "guru", "boss", "thika", "sisya", 
             "da", "kane", "kano", "le", "lo", "aliyas", "dove",
             "mama", "machan", "mass", "scene", "sakath", "tumba", 
@@ -68,7 +69,18 @@ class SlangManager:
             "chindi", "bindaas", "figure", "loose", "item", "jugaad", 
             "ghanta", "pakao", "mast", "kaand", "faltu", "timepass", 
             "jhol", "funda", "bakwaas", "senti", "patli", "jhakas",
-            "bro", "dude", "buddy", "maadi", "kelsa", "hogona", "banni"
+            "bro", "dude", "buddy", "maadi", "kelsa", "hogona", "banni",
+            "yen", "helu", "samachara", "yelli", "hogu",
+            
+            # Hindi
+            "kya", "haal", "bhai", "yaar", "dost", "kaise", "bol", "mast", "jhakaas",
+            "bindaas", "paisa", "waat", "kalti", "khopdi", "bheja", "dhassu",
+            
+            # Tamil
+            "eppadi", "irukkenga", "nanba", "vanakkam", "yenna", "saappaadu", "thalaiva",
+            
+            # Telugu
+            "ela", "unnavu", "thammudu", "anna", "namaskaram", "enti", "sangathi"
         ]
         
         text_lower = text.lower()
@@ -77,6 +89,43 @@ class SlangManager:
             if re.search(r'\b' + re.escape(trigger) + r'\b', text_lower):
                 return True
         return False
+
+    def handle_conversational_slang(self, text):
+        """Handle specific slang greetings with localized responses"""
+        text_lower = text.lower().strip().replace('?', '').replace('!', '')
+        
+        # Mapping common greetings to localized responses
+        greetings_map = {
+            # Kannada
+            "yen guru": "Helu guru, yen samachara? What can I help you with today? 😉",
+            "yen samachara": "Yellu super guru! Tell me what's on your mind today.",
+            "maga helu": "Helu maga! Ready and set, what do you need?",
+            "yen maga": "Yenu illa maga! Fast responses ready for you. Tell me!",
+            
+            # Hindi
+            "kya haal hai": "Ekdum mast bhai! Aap batao, how can I help you today? 🔥",
+            "kaise ho": "Badiya dost! Ready to assist you. What's the plan?",
+            "bol bhai": "Ji bhai, tell me what you need! I'm here for you.",
+            
+            # Tamil
+            "eppadi irukkenga": "Nalla irukkenga nanba! How about you? What can MAXY do for you?",
+            "yenna saappaadu": "Innum saapala nanba! AI logic doesn't need food, only your queries! 😂",
+            
+            # Telugu
+            "ela unnavu": "Chala bagunnanu anna! How can I help you today?",
+            "enti sangathi": "Antha manchide! Ready to chat, tell me what you need."
+        }
+        
+        # Check for exact matches first
+        if text_lower in greetings_map:
+            return greetings_map[text_lower]
+            
+        # Check if text contains the keywords
+        for key, response in greetings_map.items():
+            if key in text_lower:
+                return response
+                
+        return None
 
     def get_random_slang(self, force=False):
         """Get a random slang word"""
@@ -127,6 +176,9 @@ class SlangManager:
             f"Namaskara {slang}!",
             f"Hey {slang}, hegidira?",
             f"Lo {slang}, welcome!",
-            f"Banni {slang}, let's chat."
+            f"Banni {slang}, let's chat.",
+            f"Kya haal hai {slang}?",
+            f"Eppadi irukkiya {slang}?",
+            f"Ela unnavu {slang}?"
         ]
         return random.choice(greetings)

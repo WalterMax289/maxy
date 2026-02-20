@@ -9,7 +9,7 @@ import re
 from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
 import wikipedia
-from data_analyzer import AdvancedAnalyzer
+from data_analyzer import AdvancedAnalyzer, TextAnalyzer, StructuredDataAnalyzer
 from code_composer import CodeComposer
 from slang_manager import SlangManager
 import requests
@@ -347,6 +347,11 @@ class MAXY1_1:
         """Generate 3-4 sentence response based on intent"""
         intents = intent_analysis['intents']
         msg_lower = message.lower().strip()
+        
+        # Priority 1: Check for specific slang conversational greetings
+        slang_response = slang_manager.handle_conversational_slang(message)
+        if slang_response:
+            return (slang_response, 0.99)
         
         # Greeting - Friendly and welcoming (3-4 sentences)
         if intents['greeting']:
@@ -1545,15 +1550,47 @@ DEALLOCATE item_cursor;'''
                 file_type = file_data.get('type', 'unknown')
                 file_content = file_data.get('content', '')
                 
-                response = f"I've analyzed your file **{file_name}**. Here's what I found:\n\n"
+                # Intelligent routing based on file type
+                is_csv = file_name.lower().endswith('.csv') or file_type == 'text/csv'
                 
-                content_preview = file_content[:500] if len(file_content) > 500 else file_content
-                word_count = len(file_content.split()) if file_content else 0
-                
-                response += f"📄 **File Overview**\n"
-                response += f"This {file_type} document contains approximately {word_count} words of content. "
-                response += f"I've processed the file and can help you with summarizing points, pattern recognition, or extracting specifics."
-                confidence = 0.90
+                if is_csv:
+                    parse_result = StructuredDataAnalyzer.parse_csv_content(file_content)
+                    if 'error' not in parse_result:
+                        insights = StructuredDataAnalyzer.generate_data_insights(parse_result)
+                        response = f"### 📊 Data Intelligence: {file_name}\n\n"
+                        response += f"I've performed a structured analysis of your CSV file ({parse_result['row_count']} rows).\n\n"
+                        response += "**Key Insights:**\n"
+                        for insight in insights:
+                            response += f"- {insight}\n"
+                        
+                        response += f"\n**Data Preview:** Headers found: `{', '.join(parse_result['headers'])}`. "
+                        response += "I'm ready to perform deeper statistical queries or create visualizations based on this data!"
+                        confidence = 0.98
+                    else:
+                        response = f"I detected a CSV file but couldn't parse it: {parse_result['error']}"
+                else:
+                    # Document / Text Analysis
+                    keywords = TextAnalyzer.extract_keywords(file_content, top_n=5)
+                    sentiment = TextAnalyzer.analyze_sentiment(file_content)
+                    entities = TextAnalyzer.extract_entities(file_content)
+                    
+                    response = f"### 📄 Document Intelligence: {file_name}\n\n"
+                    
+                    # Sentiment and Keywords
+                    response += f"This document has a **{sentiment['sentiment']}** tone. "
+                    if keywords:
+                        response += f"Primary themes identified: **{', '.join([k[0] for k in keywords])}**.\n\n"
+                    
+                    # Entities
+                    if entities:
+                        response += "**Found Entities:**\n"
+                        if entities.get('emails'): response += f"- 📧 **Emails**: {', '.join(entities['emails'][:3])}\n"
+                        if entities.get('urls'): response += f"- 🔗 **Links**: {', '.join(entities['urls'][:3])}\n"
+                        if entities.get('dates'): response += f"- 📅 **Dates**: {', '.join(entities['dates'][:3])}\n"
+                    
+                    word_count = len(file_content.split())
+                    response += f"\n**Summary:** This file contains {word_count} words. I can help you summarize specific sections, extract details, or answer questions about the content."
+                    confidence = 0.95
             
             # Check for chart request (if not handled above)
             elif MAXY1_3.is_chart_request(message)[0]:
