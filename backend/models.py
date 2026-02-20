@@ -151,49 +151,67 @@ class MAXY1_1:
     def quick_wikipedia_lookup(query: str) -> Optional[str]:
         """Quick Wikipedia lookup for maxy1.1 with DDG fallback and smart synthesis"""
         try:
-            # 1. Try Wikipedia first
-            # If query is very short (1-2 words), try searching directly but also try "what is X" if fails
-            search_query = query
+            msg_lower = query.lower()
+            # More specific identity detection
+            is_identity = any(kw in msg_lower for kw in ['who is', 'who was', 'pm of', 'president of', 'ceo of', 'founder of', 'ceo ', 'leader of'])
             
-            # Search
-            search_results = wikipedia.search(search_query, results=3)
+            # 1. For identity queries, prioritize DuckDuckGo for direct snippets
+            if is_identity:
+                try:
+                    with DDGS() as ddgs:
+                        # Refined query for the person's name
+                        ddg_query = f"{query} current name" if any(x in msg_lower for x in ['pm', 'president', 'ceo']) else query
+                        results = list(ddgs.text(ddg_query, max_results=5))
+                        if results:
+                            # Heuristic: Find a result that likely contains a person's name or direct answer
+                            # Exclude results that look like generic definitions or lists
+                            for res in results:
+                                title = res['title'].lower()
+                                if not any(x in title for x in ['list of', 'office of', 'meaning of', 'definition', 'about the']):
+                                    return f"{res['title']}: {res['body']}"
+                            # Fallback to first if no "good" one found
+                            return f"{results[0]['title']}: {results[0]['body']}"
+                except Exception as e:
+                    logger.error(f"DDG Identity search error: {e}")
+
+            # 2. Wikipedia lookup
+            search_query = query
+            search_results = wikipedia.search(search_query, results=5)
             
             if search_results:
-                # Try to get the first result
+                target_idx = 0
+                # Use first result unless it's a generic title and we have better ones
+                if is_identity and len(search_results) > 1:
+                    first_res = search_results[0].lower()
+                    generic_titles = ['prime minister of', 'president of', 'governor of', 'list of', 'office of']
+                    if any(x in first_res for x in generic_titles):
+                        # Heuristic: If first is generic, try second if it's not generic
+                        if not any(x in search_results[1].lower() for x in generic_titles):
+                            target_idx = 1
+                
                 try:
-                    page = wikipedia.page(search_results[0], auto_suggest=False)
-                except wikipedia.exceptions.DisambiguationError as e:
-                    # Pick first option
-                    page = wikipedia.page(e.options[0], auto_suggest=False)
-                except wikipedia.exceptions.PageError:
-                    # Try second result if first fails
-                    if len(search_results) > 1:
-                        page = wikipedia.page(search_results[1], auto_suggest=False)
-                    else:
-                        raise Exception("Page not found")
+                    page = wikipedia.page(search_results[target_idx], auto_suggest=False)
+                except (wikipedia.exceptions.DisambiguationError, wikipedia.exceptions.PageError):
+                    try:
+                        # Try suggest if direct page failed
+                        page = wikipedia.page(search_results[0], auto_suggest=True)
+                    except:
+                        # If that also fails, maybe it's too ambiguous
+                        return None
                         
-                summary = page.summary[:800] # Get more content for better synthesis
+                summary = page.summary[:800]
                 return summary
             
-            # 2. Fallback to DuckDuckGo with "What is" prefix for better definition results
+            # 3. Last Fallback
             with DDGS() as ddgs:
                  ddg_query = query if len(query.split()) > 3 else f"what is {query}"
                  results = list(ddgs.text(ddg_query, max_results=2))
                  if results:
-                     # Combine title and body for better context
                      return f"{results[0]['title']}: {results[0]['body']}"
             
             return None
         except Exception as e:
-            # If Wikipedia fails, also try DDG
-            try:
-                with DDGS() as ddgs:
-                    ddg_query = query if len(query.split()) > 3 else f"what is {query}"
-                    results = list(ddgs.text(ddg_query, max_results=2))
-                    if results:
-                        return f"{results[0]['title']}: {results[0]['body']}"
-            except:
-                pass
+            logger.error(f"Total search error: {e}")
             return None
 
     @staticmethod
@@ -551,10 +569,31 @@ class MAXY1_2:
     def deep_wikipedia_research(query: str) -> Dict[str, Any]:
         """Perform comprehensive Wikipedia research with professional synthesis"""
         try:
+            msg_lower = query.lower()
+            is_identity = any(kw in msg_lower for kw in ['who is', 'who was', 'pm of', 'president of', 'ceo of', 'founder of'])
+            web_supplement = ""
+            
+            # For identity queries, get raw facts from DDG first
+            if is_identity:
+                try:
+                    with DDGS() as ddgs:
+                        ddg_query = f"current {query}" if any(x in msg_lower for x in ['pm', 'president', 'ceo']) else query
+                        ddg_results = list(ddgs.text(ddg_query, max_results=2))
+                        if ddg_results:
+                            web_supplement = f"\n\n**PROVISIONAL DATA (Real-time Synthesis):** {ddg_results[0]['title']} - {ddg_results[0]['body']}"
+                except:
+                    pass
+
             # Search for relevant pages
             search_results = wikipedia.search(query, results=5)
             
             if not search_results:
+                if web_supplement:
+                    return {
+                        'success': True,
+                        'response': f"**RESEARCH INQUIRY: '{query}' (Real-time Fallback)**\n{web_supplement}",
+                        'confidence': 0.85
+                    }
                 return {
                     'success': False,
                     'response': (
@@ -571,11 +610,15 @@ class MAXY1_2:
                 }
             
             # Try to get the main page
+            target_idx = 0
+            if is_identity and len(search_results) > 1:
+                if any(x in search_results[0].lower() for x in ['prime minister', 'president', 'chief executive']):
+                    target_idx = 1
+            
             try:
-                page = wikipedia.page(search_results[0], auto_suggest=False)
-            except wikipedia.exceptions.DisambiguationError as e:
-                best_option = e.options[0] if e.options else search_results[0]
-                page = wikipedia.page(best_option, auto_suggest=False)
+                page = wikipedia.page(search_results[target_idx], auto_suggest=False)
+            except (wikipedia.exceptions.DisambiguationError, wikipedia.exceptions.PageError):
+                page = wikipedia.page(search_results[0], auto_suggest=True)
             
             title = page.title
             summary = page.summary
@@ -592,9 +635,8 @@ class MAXY1_2:
                 intro = intro[:600] + "..."
             
             # 2. Critical Insights & Thematic Analysis
-            # Extract key sentences for bullet points
             all_sentences = [s.strip() for s in summary.split('. ') if len(s.strip()) > 20]
-            insights = all_sentences[2:7] # Take some middle sentences for "insights"
+            insights = all_sentences[2:7]
             
             # 3. Technical Narrative (Main body)
             narrative = " ".join(paragraphs[1:3]) if len(paragraphs) > 1 else summary[600:2000]
@@ -607,6 +649,9 @@ class MAXY1_2:
             # Build Professional Report
             response = f"**DEEP RESEARCH REPORT: {title.upper()}**\n"
             response += f"{'='*60}\n\n"
+            
+            if web_supplement:
+                response += f"⚠️ **LATEST UPDATE:** {web_supplement}\n\n"
             
             response += f"### I. SCHOLARLY OVERVIEW\n"
             response += f"{intro}\n\n"
