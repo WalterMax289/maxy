@@ -1478,8 +1478,9 @@ textarea::placeholder {
   }
 
   .credits-hover-info {
-    left: auto;
-    right: 0;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%) translateY(-10px);
     width: 200px;
     padding: 12px;
   }
@@ -1836,11 +1837,12 @@ textarea::placeholder {
   letter-spacing: 0.5px;
 }
 
-/* Hover Info Box - Positioned below the button */
+/* Hover Info Box - Positioned below the button, centered */
 .credits-hover-info {
   position: absolute;
   top: calc(100% + 15px);
-  left: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
   width: 220px;
   background: rgba(10, 10, 10, 0.95);
   backdrop-filter: blur(20px);
@@ -1850,10 +1852,10 @@ textarea::placeholder {
   padding: 16px;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-10px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
   pointer-events: none;
+  z-index: 100;
 }
 
 .credits-display:hover .credits-hover-info,
@@ -1861,7 +1863,7 @@ textarea::placeholder {
 .credits-hover-info:hover {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
+  transform: translateX(-50%) translateY(0);
   pointer-events: auto;
 }
 

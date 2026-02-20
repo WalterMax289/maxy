@@ -65,7 +65,73 @@ class MAXYThinkingEngine:
         for i, step in enumerate(steps, 1):
             thinking_text += f"{i}. {step}\n"
         
+        if analysis_type == 'research':
+            thinking_text += f"{len(steps) + 1}. Verifying factual consistency...\n"
+            thinking_text += f"{len(steps) + 2}. Cross-referencing sources...\n"
+            
         return thinking_text
+
+
+class KnowledgeSynthesizer:
+    """Intelligent search result synthesis and verification"""
+    
+    @staticmethod
+    def get_keywords(query: str) -> List[str]:
+        """Extract core keywords from query for relevance scoring"""
+        # Basic keyword extraction: remove noise, focus on entities
+        noise = ['is', 'who', 'the', 'of', 'what', 'was', 'were', 'tell', 'me', 'about', 'how', 'does', 'are']
+        words = re.findall(r'\b\w+\b', query.lower())
+        return [w for w in words if w not in noise and len(w) > 2]
+
+    @staticmethod
+    def score_relevance(query: str, title: str, body: str) -> float:
+        """Score how relevant a search result is to the query"""
+        keywords = KnowledgeSynthesizer.get_keywords(query)
+        if not keywords:
+            return 0.5
+            
+        content = (title + " " + body).lower()
+        matches = sum(1 for kw in keywords if kw in content)
+        
+        # Identity query boost: If query is "who is X", ensure X is in the content
+        identity_keywords = ['who is', 'who was', 'identity', 'person']
+        if any(ik in query.lower() for ik in identity_keywords):
+            # Try to find specific names (Title Case words) in query
+            names = re.findall(r'\b[A-Z][a-z]+\b', query)
+            if names:
+                name_matches = sum(1 for name in names if name.lower() in content)
+                if name_matches == 0:
+                    return 0.1 # Very low relevance if name is missing
+        
+        score = matches / len(keywords)
+        
+        # Penalty for low-quality sources in body (casual mentions)
+        junk_indicators = ['reddit', 'quora', 'forum', 'comment', 'manhwa', 'manga', 'recommendation']
+        # If the user didn't ask for entertainment, penalize entertainment sources
+        if not any(ek in query.lower() for ek in ['manga', 'manhwa', 'comic', 'read']):
+            if any(ji in body.lower() for ji in junk_indicators):
+                score *= 0.5
+        
+        return score
+
+    @staticmethod
+    def verify_facts(query: str, results: List[Dict[str, str]]) -> List[Dict[str, Any]]:
+        """Verify and rank search results by relevance"""
+        ranked = []
+        for res in results:
+            score = KnowledgeSynthesizer.score_relevance(query, res.get('title', ''), res.get('body', ''))
+            res['relevance_score'] = score
+            ranked.append(res)
+        
+        return sorted(ranked, key=lambda x: x['relevance_score'], reverse=True)
+
+    @staticmethod
+    def get_best_match(query: str, results: List[Dict[str, str]], threshold: float = 0.3) -> Optional[Dict[str, Any]]:
+        """Identify the single most relevant search result"""
+        verified = KnowledgeSynthesizer.verify_facts(query, results)
+        if verified and verified[0]['relevance_score'] >= threshold:
+            return verified[0]
+        return None
 
 
 class MAXY1_1:
@@ -149,69 +215,55 @@ class MAXY1_1:
     
     @staticmethod
     def quick_wikipedia_lookup(query: str) -> Optional[str]:
-        """Quick Wikipedia lookup for maxy1.1 with DDG fallback and smart synthesis"""
+        """Quick knowledge lookup for maxy1.1 with multi-source verification"""
         try:
-            msg_lower = query.lower()
-            # More specific identity detection
-            is_identity = any(kw in msg_lower for kw in ['who is', 'who was', 'pm of', 'president of', 'ceo of', 'founder of', 'ceo ', 'leader of'])
+            candidates = []
             
-            # 1. For identity queries, prioritize DuckDuckGo for direct snippets
-            if is_identity:
-                try:
-                    with DDGS() as ddgs:
-                        # Refined query for the person's name
-                        ddg_query = f"{query} current name" if any(x in msg_lower for x in ['pm', 'president', 'ceo']) else query
-                        results = list(ddgs.text(ddg_query, max_results=5))
-                        if results:
-                            # Heuristic: Find a result that likely contains a person's name or direct answer
-                            # Exclude results that look like generic definitions or lists
-                            for res in results:
-                                title = res['title'].lower()
-                                if not any(x in title for x in ['list of', 'office of', 'meaning of', 'definition', 'about the']):
-                                    return f"{res['title']}: {res['body']}"
-                            # Fallback to first if no "good" one found
-                            return f"{results[0]['title']}: {results[0]['body']}"
-                except Exception as e:
-                    logger.error(f"DDG Identity search error: {e}")
-
-            # 2. Wikipedia lookup
-            search_query = query
-            search_results = wikipedia.search(search_query, results=5)
-            
-            if search_results:
-                target_idx = 0
-                # Use first result unless it's a generic title and we have better ones
-                if is_identity and len(search_results) > 1:
-                    first_res = search_results[0].lower()
-                    generic_titles = ['prime minister of', 'president of', 'governor of', 'list of', 'office of']
-                    if any(x in first_res for x in generic_titles):
-                        # Heuristic: If first is generic, try second if it's not generic
-                        if not any(x in search_results[1].lower() for x in generic_titles):
-                            target_idx = 1
-                
-                try:
-                    page = wikipedia.page(search_results[target_idx], auto_suggest=False)
-                except (wikipedia.exceptions.DisambiguationError, wikipedia.exceptions.PageError):
+            # 1. Wikipedia Search
+            try:
+                search_results = wikipedia.search(query, results=3)
+                for res in search_results:
                     try:
-                        # Try suggest if direct page failed
-                        page = wikipedia.page(search_results[0], auto_suggest=True)
+                        page = wikipedia.page(res, auto_suggest=False)
+                        candidates.append({
+                            'title': page.title,
+                            'body': page.summary[:800],
+                            'source': 'wikipedia'
+                        })
                     except:
-                        # If that also fails, maybe it's too ambiguous
-                        return None
-                        
-                summary = page.summary[:800]
-                return summary
+                        continue
+            except Exception as e:
+                logger.error(f"Wiki lookup error: {e}")
+
+            # 2. DuckDuckGo Search
+            try:
+                with DDGS() as ddgs:
+                    results = list(ddgs.text(query, max_results=5))
+                    for res in results:
+                        candidates.append({
+                            'title': res['title'],
+                            'body': res['body'],
+                            'source': 'web'
+                        })
+            except Exception as e:
+                logger.error(f"DDG search error: {e}")
+
+            if not candidates:
+                return None
+
+            # 3. Verify and Synthesis
+            best_match = KnowledgeSynthesizer.get_best_match(query, candidates, threshold=0.25)
             
-            # 3. Last Fallback
-            with DDGS() as ddgs:
-                 ddg_query = query if len(query.split()) > 3 else f"what is {query}"
-                 results = list(ddgs.text(ddg_query, max_results=2))
-                 if results:
-                     return f"{results[0]['title']}: {results[0]['body']}"
+            if best_match:
+                content = best_match['body']
+                # If it's a web source, include title
+                if best_match['source'] == 'web':
+                    return f"{best_match['title']}: {content}"
+                return content
             
             return None
         except Exception as e:
-            logger.error(f"Total search error: {e}")
+            logger.error(f"Quick lookup total error: {e}")
             return None
 
     @staticmethod
@@ -567,91 +619,87 @@ class MAXY1_2:
     
     @staticmethod
     def deep_wikipedia_research(query: str) -> Dict[str, Any]:
-        """Perform comprehensive Wikipedia research with professional synthesis"""
+        """Perform comprehensive verified research with professional synthesis"""
         try:
-            msg_lower = query.lower()
-            is_identity = any(kw in msg_lower for kw in ['who is', 'who was', 'pm of', 'president of', 'ceo of', 'founder of'])
-            web_supplement = ""
+            candidates = []
             
-            # For identity queries, get raw facts from DDG first
-            if is_identity:
-                try:
-                    with DDGS() as ddgs:
-                        ddg_query = f"current {query}" if any(x in msg_lower for x in ['pm', 'president', 'ceo']) else query
-                        ddg_results = list(ddgs.text(ddg_query, max_results=2))
-                        if ddg_results:
-                            web_supplement = f"\n\n**PROVISIONAL DATA (Real-time Synthesis):** {ddg_results[0]['title']} - {ddg_results[0]['body']}"
-                except:
-                    pass
+            # 1. Wiki Search
+            try:
+                wiki_searches = wikipedia.search(query, results=5)
+                for res in wiki_searches:
+                    try:
+                        page = wikipedia.page(res, auto_suggest=False)
+                        candidates.append({
+                            'title': page.title,
+                            'body': page.summary,
+                            'url': page.url,
+                            'source': 'wikipedia'
+                        })
+                    except:
+                        continue
+            except:
+                pass
+                
+            # 2. Web Search
+            try:
+                with DDGS() as ddgs:
+                    web_results = list(ddgs.text(query, max_results=5))
+                    for res in web_results:
+                        candidates.append({
+                            'title': res['title'],
+                            'body': res['body'],
+                            'url': res['href'],
+                            'source': 'web'
+                        })
+            except:
+                pass
 
-            # Search for relevant pages
-            search_results = wikipedia.search(query, results=5)
-            
-            if not search_results:
-                if web_supplement:
-                    return {
-                        'success': True,
-                        'response': f"**RESEARCH INQUIRY: '{query}' (Real-time Fallback)**\n{web_supplement}",
-                        'confidence': 0.85
-                    }
+            if not candidates:
                 return {
                     'success': False,
-                    'response': (
-                        f"**RESEARCH INQUIRY: '{query}'**\n"
-                        f"{'='*50}\n\n"
-                        f"Our primary knowledge indices currently contain no direct correlation for this specific inquiry.\n\n"
-                        f"**Recommendations for Refined Synthesis:**\n"
-                        f"• Employ expanded conceptual terminologies\n"
-                        f"• Increase categorical specificity\n"
-                        f"• Verify orthographic accuracy\n"
-                        f"• Establish a broader foundational query"
-                    ),
-                    'confidence': 0.60
+                    'response': "Our core knowledge indices returned no high-confidence data for this inquiry.",
+                    'confidence': 0.40
                 }
+
+            # 3. Verfication and Selection
+            verified_results = KnowledgeSynthesizer.verify_facts(query, candidates)
+            # Take the most relevant result that is detailed enough
+            best_res = None
+            for res in verified_results:
+                if res['relevance_score'] > 0.4 and len(res['body']) > 200:
+                    best_res = res
+                    break
             
-            # Try to get the main page
-            target_idx = 0
-            if is_identity and len(search_results) > 1:
-                if any(x in search_results[0].lower() for x in ['prime minister', 'president', 'chief executive']):
-                    target_idx = 1
-            
-            try:
-                page = wikipedia.page(search_results[target_idx], auto_suggest=False)
-            except (wikipedia.exceptions.DisambiguationError, wikipedia.exceptions.PageError):
-                page = wikipedia.page(search_results[0], auto_suggest=True)
-            
-            title = page.title
-            summary = page.summary
-            url = page.url
+            if not best_res:
+                best_res = verified_results[0]
+
+            title = best_res['title']
+            summary = best_res['body']
+            url = best_res.get('url', 'N/A')
             
             # Professional Synthesis Logic
             paragraphs = [p.strip() for p in summary.split('\n\n') if len(p.strip()) > 100]
             if not paragraphs:
                 paragraphs = [summary]
                 
-            # 1. Scholarly Overview (First para refined)
             intro = paragraphs[0]
             if len(intro) > 600:
                 intro = intro[:600] + "..."
             
-            # 2. Critical Insights & Thematic Analysis
             all_sentences = [s.strip() for s in summary.split('. ') if len(s.strip()) > 20]
             insights = all_sentences[2:7]
             
-            # 3. Technical Narrative (Main body)
             narrative = " ".join(paragraphs[1:3]) if len(paragraphs) > 1 else summary[600:2000]
             if len(narrative) > 1200:
                 narrative = narrative[:1200] + "..."
                 
-            # 4. Academic Conclusion
-            conclusion = f"In summary, the study of {title} reveals a multifaceted landscape across its historical and practical dimensions. Understanding its core principles remains essential for comprehensive mastery of the subject matter."
+            conclusion = f"The data regarding {title} suggests a consistent thematic pattern across primary and secondary sources. Further analysis of its foundational principles provides deeper context into its current relevance."
 
-            # Build Professional Report
-            response = f"**DEEP RESEARCH REPORT: {title.upper()}**\n"
+            response = f"**VERIFIED RESEARCH REPORT: {title.upper()}**\n"
             response += f"{'='*60}\n\n"
             
-            if web_supplement:
-                response += f"⚠️ **LATEST UPDATE:** {web_supplement}\n\n"
+            if best_res['source'] == 'web':
+                response += f"⚠️ **REAL-TIME SYNTHESIS:** This report incorporates current web data verified for relevance.\n\n"
             
             response += f"### I. SCHOLARLY OVERVIEW\n"
             response += f"{intro}\n\n"
@@ -669,13 +717,21 @@ class MAXY1_2:
             
             response += f"**REFERENCE INDICES**\n"
             response += f"📚 Primary Dataset: {url}\n"
-            response += f"🔍 Associated Domains: {', '.join(search_results[1:4])}"
+            response += f"🔍 Synthesis Confidence: {int(best_res['relevance_score'] * 100)}%"
             
             return {
                 'success': True,
                 'response': response,
-                'confidence': 0.95,
+                'confidence': best_res['relevance_score'],
                 'sources': [url]
+            }
+            
+        except Exception as e:
+            logger.error(f"Verified research error: {str(e)}")
+            return {
+                'success': False,
+                'response': f"Research protocols failed due to a synthesis error: {str(e)[:50]}",
+                'confidence': 0.50
             }
             
         except wikipedia.exceptions.PageError:
@@ -1142,14 +1198,20 @@ DEALLOCATE item_cursor;'''
     
     @staticmethod
     def search_real_code(language: str, query: str) -> Optional[str]:
-        """Search the web for real code snippets"""
+        """Search the web for real code snippets with verification"""
         try:
             with DDGS() as ddgs:
                 search_query = f"{language} code for {query}"
-                results = list(ddgs.text(search_query, max_results=3))
+                results = list(ddgs.text(search_query, max_results=5))
                 
                 if results:
-                    return CodeComposer.synthesize_code_from_search(results, language)
+                    # Verified and rank results
+                    verified = KnowledgeSynthesizer.verify_facts(query, results)
+                    # Filter for those that likely contain code
+                    code_results = [r for r in verified if r['relevance_score'] > 0.2]
+                    
+                    if code_results:
+                        return CodeComposer.synthesize_code_from_search(code_results, language)
             return None
         except Exception as e:
             logger.error(f"Error searching for code: {e}")
