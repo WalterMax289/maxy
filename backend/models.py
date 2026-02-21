@@ -208,7 +208,10 @@ class MAXY1_1:
             'what are', 'define', 'describe', 'history of', 'science',
             'technology', 'biology', 'physics', 'chemistry', 'geography',
             'country', 'capital', 'famous', 'invented', 'discovered',
-            'when did', 'where is', 'why does'
+            'when did', 'where is', 'why does', 'sort', 'search', 'array',
+            'list', 'tree', 'graph', 'data structure', 'algorithm', 
+            'implement', 'code', 'function', 'class', 'decorator',
+            'python', 'javascript', 'java', 'html', 'css', 'sql'
         ]
         msg_lower = message.lower()
         return any(kw in msg_lower for kw in research_keywords) and len(message) < 200
@@ -603,7 +606,9 @@ class MAXY1_2:
             'learn about', 'tell me more about', 'details about', 'wikipedia',
             'discovered', 'invented', 'founded', 'created by', 'origin of',
             'biology', 'chemistry', 'physics', 'astronomy', 'geography',
-            'country', 'capital', 'population', 'famous for'
+            'country', 'capital', 'population', 'famous for',
+            'sort', 'search', 'array', 'list', 'tree', 'graph', 'data structure',
+            'algorithm', 'implement', 'code', 'function', 'class', 'decorator'
         ]
         
         conversation_indicators = [
@@ -1034,7 +1039,9 @@ class MAXY1_3:
         code_indicators = [
             'code', 'write', 'create', 'generate', 'function', 'how to',
             'program', 'script', 'example', 'syntax', 'algorithm', 'implement',
-            'snippet', 'coding', 'develop', 'setup', 'server', 'logic'
+            'snippet', 'coding', 'develop', 'setup', 'server', 'logic',
+            'sort', 'search', 'array', 'list', 'tree', 'graph', 'data structure',
+            'decorator', 'class', 'method', 'variable', 'loop', 'conditional'
         ]
         
         is_code = any(ind in msg_lower for ind in code_indicators)
@@ -1044,6 +1051,17 @@ class MAXY1_3:
             if any(kw in msg_lower for kw in keywords):
                 detected_lang = lang
                 break
+        
+        # Priority: If it's a known algorithm or technical concept, it's code
+        technical_concepts = ['bubble sort', 'binary search', 'linked list', 'quick sort', 'merge sort', 'dfs', 'bfs']
+        if any(concept in msg_lower for concept in technical_concepts):
+            return True, detected_lang
+
+        # Sensitivity boost for short technical-looking queries
+        if not is_code and len(msg_lower.split()) <= 3 and not any(g in msg_lower for g in ['hello', 'hi', 'hey', 'help']):
+            # If it looks like a potential technical term, treat as code search
+            if len(msg_lower) > 3:
+                is_code = True
         
         return is_code, detected_lang
     
@@ -1459,9 +1477,15 @@ class MAXY1_3:
                 confidence = 0.96
             
             else:
-                slang = slang_manager.get_random_slang(use_slang)
-                response = f"I'm ready to help with your project, {slang}! As MAXY 1.3, I can build web structures, write custom code, or perform deep data analysis. What's the next step for us?"
-                confidence = 0.85
+                # NEW: Instead of a generic fallback, try a broad code/technical search if it's not a greeting
+                if not any(g in msg_lower for g in ['hello', 'hi', 'hey', 'thanks', 'bye']):
+                    response = MAXY1_3.generate_code("technical", message)
+                    confidence = 0.88
+                
+                if not response:
+                    slang = slang_manager.get_random_slang(use_slang)
+                    response = f"I'm ready to help with your project, {slang}! As MAXY 1.3, I can build web structures, write custom code, or perform deep data analysis. What's the next step for us?"
+                    confidence = 0.85
         
         # Inject slang for 1.3 (Code/Analysis)
         if response and "statistical analysis" not in response.lower() and "generated" not in response.lower():
