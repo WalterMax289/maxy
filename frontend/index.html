@@ -962,7 +962,7 @@
                 for everyone.</p>
             <p>Join us in exploring the future of intelligent assistance.</p>
         </div>
-        <a href="chat.html" class="try-button" id="tryMaxyBtn">Try MAXY Now</a>
+        <a href="chat.html" class="try-button try-maxy-btn" id="tryMaxyBtn">Try MAXY Now</a>
         <a href="#about" class="mouse-scroll" aria-label="Scroll down"></a>
     </div>
 
@@ -1006,9 +1006,9 @@
             <div class="box animate-middle">
                 <h3>Get in Touch</h3>
                 <p>We're here to help with any questions, feedback, or suggestions.</p>
-                <p><strong>Email:</strong> support@maxy.ai</p>
+                <p><strong>Email:</strong> vinayr1811@gmail.com</p>
                 <p><strong>Location:</strong> Bengaluru, Karnataka, India</p>
-                <p>Made by MAXY and passionate team dedicated to accessible AI.</p>
+                <p>Made by Vinay and passionate team dedicated to accessible AI.</p>
             </div>
         </div>
     </section>
@@ -1027,7 +1027,7 @@
             </div>
             <div class="box animate-right">
                 <h3>Do I need an account?</h3>
-                <p>No account is required to chat, but signing up may unlock future personalized features.</p>
+                <p>Yes, an account is required to chat.</p>
             </div>
             <div class="box animate-left">
                 <h3>Is my data private?</h3>
@@ -1052,8 +1052,9 @@
                         <input type="checkbox" id="rememberEmail" style="width: 16px; height: 16px; cursor: pointer;">
                         <span>Remember my email</span>
                     </label>
-                    <a href="#" onclick="openAuthModal('forgot'); return false;" 
-                       style="color: rgba(255,255,255,0.6); font-size: 13px; text-decoration: none;">Forgot Password?</a>
+                    <a href="#" onclick="openAuthModal('forgot'); return false;"
+                        style="color: rgba(255,255,255,0.6); font-size: 13px; text-decoration: none;">Forgot
+                        Password?</a>
                 </div>
                 <button class="auth-submit" onclick="handleModalLogin()">Login</button>
                 <div class="auth-footer">
@@ -1100,6 +1101,11 @@
         </div>
     </div>
 
+    <!-- Bottom Action Section -->
+    <div style="text-align: center; padding: 60px 20px; position: relative; z-index: 10;">
+        <a href="chat.html" class="try-button try-maxy-btn">Try MAXY Now</a>
+    </div>
+
     <!-- Footer -->
     <footer>
         <div>© 2026 MAXY. All rights reserved.</div>
@@ -1134,11 +1140,11 @@
             });
 
             const closeMenuBtn = document.getElementById('closeMenu');
-            if(closeMenuBtn) {
+            if (closeMenuBtn) {
                 closeMenuBtn.addEventListener('click', () => {
-                   isOpen = false;
-                   nav.classList.remove('open');
-                   menuToggle.textContent = '☰';
+                    isOpen = false;
+                    nav.classList.remove('open');
+                    menuToggle.textContent = '☰';
                 });
             }
 
@@ -1231,10 +1237,10 @@
                 }
             }
 
-            const tryMaxyBtn = document.getElementById('tryMaxyBtn');
-            if (tryMaxyBtn) {
-                tryMaxyBtn.addEventListener('click', handleTryMaxyClick);
-            }
+            const tryMaxyBtns = document.querySelectorAll('.try-maxy-btn');
+            tryMaxyBtns.forEach(btn => {
+                btn.addEventListener('click', handleTryMaxyClick);
+            });
         });
     </script>
 </body>

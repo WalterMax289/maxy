@@ -343,7 +343,7 @@ class MAXY1_1:
         }
     
     @staticmethod
-    def generate_concise_response(intent_analysis: Dict[str, Any], message: str, use_slang: bool = False) -> tuple[str, float]:
+    def generate_concise_response(intent_analysis: Dict[str, Any], message: str, use_slang: bool = False, user_name: Optional[str] = None) -> tuple[str, float]:
         """Generate 3-4 sentence response based on intent"""
         intents = intent_analysis['intents']
         msg_lower = message.lower().strip()
@@ -355,10 +355,12 @@ class MAXY1_1:
         
         # Greeting - Friendly and welcoming (3-4 sentences)
         if intents['greeting']:
+            # Use real user name if available, otherwise fall back to slang/friend
+            address = user_name if user_name else slang_manager.get_random_slang(use_slang)
             if intent_analysis.get('is_new_user', False):
-                return (f"Hey {slang_manager.get_random_slang(use_slang)}! Welcome! I'm MAXY 1.1, your quick AI assistant. I'm here to help with fast answers and friendly chat. What can I do for you today?", 0.98)
+                return (f"Hey {address}! Welcome! I'm MAXY 1.1, your quick AI assistant. I'm here to help with fast answers and friendly chat. What can I do for you today?", 0.98)
             else:
-                return (f"Hey {slang_manager.get_random_slang(use_slang)}! Great to see you again! Ready when you are. What's on your mind today?", 0.97)
+                return (f"Hey {address}! Great to see you again! Ready when you are. What's on your mind today?", 0.97)
         
         # Farewell - Warm goodbye (2-3 sentences)
         elif intents['farewell']:
@@ -503,7 +505,8 @@ class MAXY1_1:
     def process_message(
         message: str,
         include_thinking: bool = True,
-        conversation_history: Optional[List[Dict]] = None
+        conversation_history: Optional[List[Dict]] = None,
+        user_name: Optional[str] = None
     ) -> Dict[str, Any]:
         """Process message with enhanced understanding and concise 3-4 sentence responses"""
         
@@ -526,7 +529,7 @@ class MAXY1_1:
             )
         
         # Generate appropriate concise response with slang awareness
-        response, confidence = MAXY1_1.generate_concise_response(intent_analysis, message, use_slang)
+        response, confidence = MAXY1_1.generate_concise_response(intent_analysis, message, use_slang, user_name)
         
         # Adjust for context
         if context_status == "continuing_conversation" and intent_analysis['intents']['greeting']:
@@ -1530,7 +1533,8 @@ class ModelRouter:
         model_name: str,
         message: str,
         include_thinking: bool = True,
-        conversation_history: Optional[List[Dict]] = None
+        conversation_history: Optional[List[Dict]] = None,
+        user_name: Optional[str] = None
     ) -> Dict[str, Any]:
         """Route message to appropriate model"""
         
@@ -1555,12 +1559,12 @@ class ModelRouter:
         model_name_lower = model_name.lower()
         
         if model_name_lower == 'maxy1.1':
-            return MAXY1_1.process_message(message, include_thinking, conversation_history)
+            return MAXY1_1.process_message(message, include_thinking, conversation_history, user_name)
         elif model_name_lower == 'maxy1.2':
             return MAXY1_2.process_message(message, include_thinking, conversation_history)
         elif model_name_lower == 'maxy1.3':
             return MAXY1_3.process_message(message, include_thinking, conversation_history)
         else:
             logger.warning(f"Unknown model: {model_name}, defaulting to MAXY1.1")
-            return MAXY1_1.process_message(message, include_thinking, conversation_history)
+            return MAXY1_1.process_message(message, include_thinking, conversation_history, user_name)
             

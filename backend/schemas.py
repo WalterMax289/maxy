@@ -159,6 +159,7 @@ class ChatRequest(BaseModel):
     temperature: float = Field(default=0.7, ge=0.0, le=1.0, description="Response creativity 0-1")
     max_tokens: Optional[int] = Field(default=None, description="Max response length")
     user_id: Optional[str] = Field(None, description="User ID for credit tracking")
+    user_name: Optional[str] = Field(None, description="User's display name for personalized greetings")
     
     @validator('message')
     def validate_message(cls, v):

@@ -359,7 +359,8 @@ async def chat(request: ChatRequest, http_request: Request):
             request.model,
             request.message,
             include_thinking=False,
-            conversation_history=engine.get_conversation_context()
+            conversation_history=engine.get_conversation_context(),
+            user_name=request.user_name
         )
         
         response_text = model_response['response']

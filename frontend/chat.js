@@ -380,10 +380,10 @@ function loadUserProfile() {
       avatarEl.innerHTML = `<img src="${userData.avatar}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
     } else {
       console.log('Using fallback avatar');
-      // Use initials or default 👤
-      const email = userData.email || 'Guest';
-      const firstLetter = email.charAt(0).toUpperCase();
-      avatarEl.textContent = firstLetter === 'G' && !userData.email ? '👤' : firstLetter;
+      // Use first letter of name, or '👤' for guests
+      const name = userData.name || '';
+      const firstLetter = name.charAt(0).toUpperCase();
+      avatarEl.textContent = firstLetter || '👤';
     }
   }
 }
@@ -1112,7 +1112,8 @@ async function sendMessage() {
       message: text || "Please analyze the uploaded file.",
       model: currentModel,
       history: history,
-      user_id: userId  // Include user ID for credit tracking
+      user_id: userId,  // Include user ID for credit tracking
+      user_name: (() => { try { return JSON.parse(localStorage.getItem('maxyUser') || '{}').name || null; } catch (e) { return null; } })()  // Include user name for personalized greetings
     };
 
     if (uploadedFile && uploadedFileContent) {
