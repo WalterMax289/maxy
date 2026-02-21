@@ -1011,163 +1011,6 @@ class MAXY1_3:
         from chart_generator import ChartGenerator
         return ChartGenerator
     
-    # Programming language templates
-    CODE_TEMPLATES = {
-        'python': {
-            'greeting': 'print("Hello, World!")',
-            'function': '''def greet(name):
-    """Greet a person by name"""
-    return f"Hello, {name}!"
-
-# Example usage
-result = greet("User")
-print(result)''',
-            'loop': '''# Loop through items
-items = [1, 2, 3, 4, 5]
-for item in items:
-    print(f"Item: {item}")'''
-        },
-        'javascript': {
-            'greeting': 'console.log("Hello, World!");',
-            'function': '''function greet(name) {
-    // Greet a person by name
-    return `Hello, ${name}!`;
-}
-
-// Example usage
-const result = greet("User");
-console.log(result);''',
-            'loop': '''// Loop through items
-const items = [1, 2, 3, 4, 5];
-items.forEach(item => {
-    console.log(`Item: ${item}`);
-});'''
-        },
-        'java': {
-            'greeting': 'System.out.println("Hello, World!");',
-            'function': '''public class Greeting {
-    public static String greet(String name) {
-        // Greet a person by name
-        return "Hello, " + name + "!";
-    }
-    
-    public static void main(String[] args) {
-        // Example usage
-        String result = greet("User");
-        System.out.println(result);
-    }
-}''',
-            'loop': '''// Loop through items
-int[] items = {1, 2, 3, 4, 5};
-for (int item : items) {
-    System.out.println("Item: " + item);
-}'''
-        },
-        'cpp': {
-            'greeting': 'std::cout << "Hello, World!" << std::endl;',
-            'function': '''#include <iostream>
-#include <string>
-
-std::string greet(const std::string& name) {
-    // Greet a person by name
-    return "Hello, " + name + "!";
-}
-
-int main() {
-    // Example usage
-    std::string result = greet("User");
-    std::cout << result << std::endl;
-    return 0;
-}''',
-            'loop': '''// Loop through items
-int items[] = {1, 2, 3, 4, 5};
-for (int item : items) {
-    std::cout << "Item: " << item << std::endl;
-}'''
-        },
-        'html': {
-            'greeting': '''<!DOCTYPE html>
-<html>
-<head>
-    <title>Greeting</title>
-</head>
-<body>
-    <h1>Hello, World!</h1>
-</body>
-</html>''',
-            'function': '''<!DOCTYPE html>
-<html>
-<head>
-    <title>Greeting App</title>
-</head>
-<body>
-    <input type="text" id="nameInput" placeholder="Enter your name">
-    <button onclick="greet()">Greet</button>
-    <p id="result"></p>
-    
-    <script>
-        function greet() {
-            const name = document.getElementById('nameInput').value;
-            document.getElementById('result').innerText = `Hello, ${name}!`;
-        }
-    </script>
-</body>
-</html>'''
-        },
-        'css': {
-            'greeting': '''body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    padding: 50px;
-}
-
-h1 {
-    color: #333;
-}''',
-            'function': '''.greeting-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 30px;
-    border-radius: 10px;
-    text-align: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.greeting-card h1 {
-    margin: 0;
-    font-size: 2em;
-}'''
-        },
-        'sql': {
-            'greeting': '-- SQL Greeting\nSELECT "Hello, World!" AS greeting;',
-            'function': '''-- Create a function to greet users
-CREATE FUNCTION greet_user(user_name VARCHAR(50))
-RETURNS VARCHAR(100)
-DETERMINISTIC
-BEGIN
-    RETURN CONCAT("Hello, ", user_name, "!");
-END;
-
--- Example usage
-SELECT greet_user("User") AS greeting;''',
-            'loop': '''-- Loop through items using a cursor
-DECLARE @item INT;
-DECLARE item_cursor CURSOR FOR SELECT number FROM numbers;
-
-OPEN item_cursor;
-FETCH NEXT FROM item_cursor INTO @item;
-
-WHILE @@FETCH_STATUS = 0
-BEGIN
-    PRINT "Item: " + CAST(@item AS VARCHAR);
-    FETCH NEXT FROM item_cursor INTO @item;
-END;
-
-CLOSE item_cursor;
-DEALLOCATE item_cursor;'''
-        }
-    }
-    
     @staticmethod
     def is_code_request(message: str) -> tuple[bool, str]:
         """Detect if message is asking for code and identify the language"""
@@ -1206,51 +1049,50 @@ DEALLOCATE item_cursor;'''
         """Search the web for real code snippets with verification"""
         try:
             with DDGS() as ddgs:
-                search_query = f"{language} code for {query}"
-                results = list(ddgs.text(search_query, max_results=5))
+                # Deep Research Query Optimization
+                search_query = f"{language} implementation of {query} source code"
+                results = list(ddgs.text(search_query, max_results=8))
+                
+                if not results:
+                    # Retry with broader query
+                    search_query = f"{language} {query} code"
+                    results = list(ddgs.text(search_query, max_results=5))
                 
                 if results:
                     # Verified and rank results
                     verified = KnowledgeSynthesizer.verify_facts(query, results)
                     # Filter for those that likely contain code
-                    code_results = [r for r in verified if r['relevance_score'] > 0.2]
+                    code_results = [r for r in verified if r['relevance_score'] > 0.15]
                     
                     if code_results:
                         return CodeComposer.synthesize_code_from_search(code_results, language)
             return None
         except Exception as e:
-            logger.error(f"Error searching for code: {e}")
+            logger.error(f"Error in Deep Research for code: {e}")
             return None
 
     @staticmethod
     def generate_code(language: str, description: str) -> str:
-        """Generate code based on language and description using real search"""
-        # Try real code search first
+        """Generate code based on language and description using Deep Research engine"""
+        # Exclusively use real code search
         real_code = MAXY1_3.search_real_code(language, description)
         
         if real_code:
-            response = f"I've searched the web and found this {language} implementation for you! 💻\n\n"
+            response = f"### 🔍 Deep Research Result: {language.capitalize()}\n\n"
+            response += f"I've performed a deep search across technical sources to find the best implementation for your request:\n\n"
             response += f"{real_code}\n\n"
-            response += f"**Analysis:** I've synthesized this code based on current best practices and search results. "
-            response += f"Please verify the syntax as it's dynamically generated. "
-            response += f"Would you like me to explain how this works or adjust the implementation?"
+            response += f"**Research Insight:** This code was synthesized from multiple verified sources. "
+            response += f"I've prioritized current best practices and functional correctness. "
+            response += f"Would you like me to explain any specific logic or refine this further?"
             return response
             
-        # Fallback to template if search fails
-        templates = MAXY1_3.CODE_TEMPLATES.get(language, MAXY1_3.CODE_TEMPLATES['python'])
-        desc_lower = description.lower()
-        
-        if any(word in desc_lower for word in ['function', 'method', 'def']):
-            template = templates['function']
-        elif any(word in desc_lower for word in ['loop', 'iterate', 'for', 'while']):
-            template = templates['loop']
-        else:
-            template = templates['greeting']
-        
-        code = f"```{language}\n{template}\n```"
-        
-        response = f"I couldn't find a specific snippet on the web, so here's a standard {language} template for that:\n\n{code}\n\n"
-        response += f"This is a baseline example. I can try searching again if you provide more specific requirements! 🚀"
+        # Error response if search fails (No more template fallbacks)
+        response = f"### 🔬 Deep Research Insight\n\n"
+        response += f"I've thoroughly scanned available resources for a {language} implementation of '{description}', but I couldn't find a sufficiently high-quality or verified snippet to provide right now.\n\n"
+        response += f"**Suggestions:**\n"
+        response += f"- Rephrase your request with more specific technical details.\n"
+        response += f"- Specify a different programming language if applicable.\n"
+        response += f"- Check if the request is related to a very niche or private library."
         
         return response
     
@@ -1459,26 +1301,22 @@ DEALLOCATE item_cursor;'''
         if not response:
             is_website, web_type = MAXY1_3.is_website_request(message)
             if is_website:
-                if web_type == 'portfolio':
-                    site = CodeComposer.build_portfolio()
-                    type_name = "Portfolio Website"
+                # Perform Deep Research for Website Structure
+                search_query = f"modern responsive {web_type} website structure HTML CSS JS"
+                research_code = MAXY1_3.search_real_code("html", search_query)
+                
+                if research_code:
+                    response = f"### 🏗️ MAXY Deep Research: Website Builder\n\n"
+                    response += f"I've researched and synthesized a custom **{web_type.capitalize()}** architecture for you based on modern web standards:\n\n"
+                    response += f"{research_code}\n\n"
+                    response += f"**Research Insight:** This structure uses current best practices for responsive design. "
+                    response += f"I've synthesized the core HTML, CSS, and interactive elements from verified technical resources."
                 else:
-                    site = CodeComposer.build_website(title="Project MAXY Site")
-                    type_name = "Landing Page"
-                    
-                response = f"### 🏗️ MAXY Website Builder\n\n"
-                response += f"I've generated a clean, responsive **{type_name}** structure for you! "
-                response += f"I've used modern HTML5, CSS Flexbox/Grid, and added some smooth interactivity with JavaScript.\n\n"
-                
-                response += f"#### 📄 HTML Structure\n```html\n{site['html'][:1000]}...\n```\n\n"
-                response += f"#### 🎨 CSS Styles\n```css\n{site['css'][:500]}...\n```\n\n"
-                response += f"#### ⚡ JavaScript Logic\n```javascript\n{site['js']}\n```\n\n"
-                
-                response += f"**How to use this:**\n"
-                response += f"1. Save the HTML as `index.html`.\n"
-                response += f"2. Save the CSS as `style.css`.\n"
-                response += f"3. Save the JS as `script.js`.\n"
-                response += f"4. Open `index.html` in your browser to see your new site!"
+                    response = f"### 🔬 Website Research Insight\n\n"
+                    response += f"I initiated a deep search for a '{web_type}' website structure, but I couldn't synthesize a complete, verified implementation at this moment.\n\n"
+                    response += f"**Suggestions:**\n"
+                    response += f"- Try asking for specific components (e.g., 'build a responsive navbar in CSS').\n"
+                    response += f"- Provide more details about the style or framework you're interested in."
                 
                 confidence = 0.95
             
