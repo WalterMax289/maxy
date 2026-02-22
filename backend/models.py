@@ -933,19 +933,22 @@ class MAXY1_2:
         }
     
     @staticmethod
-    def generate_detailed_response(context: Dict[str, Any], message: str, conversation_history: Optional[List[Dict]] = None, use_slang: bool = False) -> tuple[str, float]:
+    def generate_detailed_response(context: Dict[str, Any], message: str, conversation_history: Optional[List[Dict]] = None, use_slang: bool = False, user_name: Optional[str] = None) -> tuple[str, float]:
         """Generate detailed 5-10 sentence response based on context"""
         msg_lower = message.lower().strip()
         intents = context['topics']
         depth = context['inquiry_depth']
         complexity = context['complexity']
         
+        # Determine address name
+        user_display = f", {user_name}" if user_name else ""
+        
         # Greeting - Warm and contextual (6-8 sentences)
         if any(g in msg_lower for g in ['hi', 'hello', 'hey', 'greetings']):
             if context.get('is_follow_up'):
-                return (f"Hello again {slang_manager.get_random_slang(use_slang)}! It's wonderful to continue our conversation. I've been thinking about our previous discussion and I'm ready to dive deeper into any topic you'd like to explore. Whether you need comprehensive research on a specific subject or just want to have an engaging conversation, I'm here to provide detailed insights. What direction would you like to take our discussion today? I'm particularly excited to help with any research questions or analytical topics you might have in mind!", 0.97)
+                return (f"Hello again {slang_manager.get_random_slang(use_slang)}{user_display}! It's wonderful to continue our conversation. I've been thinking about our previous discussion and I'm ready to dive deeper into any topic you'd like to explore. Whether you need comprehensive research on a specific subject or just want to have an engaging conversation, I'm here to provide detailed insights. What direction would you like to take our discussion today? I'm particularly excited to help with any research questions or analytical topics you might have in mind!", 0.97)
             else:
-                return (f"Namaskara! I'm MAXY 1.2, your dedicated research and conversation companion. I'm genuinely excited to help you explore whatever topics interest you today. Whether you're looking for in-depth Wikipedia research, detailed analysis of complex subjects, or simply an engaging conversation, I'm fully equipped to assist. I specialize in providing comprehensive information with multiple perspectives and thorough context. What would you like to dive into, {slang_manager.get_random_slang(use_slang)}? I'm ready to provide detailed, well-researched responses!", 0.96)
+                return (f"Namaskara{user_display}! I'm MAXY 1.2, your dedicated research and conversation companion. I'm genuinely excited to help you explore whatever topics interest you today. Whether you're looking for in-depth Wikipedia research, detailed analysis of complex subjects, or simply an engaging conversation, I'm fully equipped to assist. I specialize in providing comprehensive information with multiple perspectives and thorough context. What would you like to dive into, {slang_manager.get_random_slang(use_slang)}? I'm ready to provide detailed, well-researched responses!", 0.96)
         
         # Personal status - Thoughtful and engaging (5-7 sentences)
         elif any(h in msg_lower for h in ['how are you', 'how you doing']):
@@ -1017,7 +1020,8 @@ class MAXY1_2:
     def process_message(
         message: str,
         include_thinking: bool = True,
-        conversation_history: Optional[List[Dict]] = None
+        conversation_history: Optional[List[Dict]] = None,
+        user_name: Optional[str] = None
     ) -> Dict[str, Any]:
         """Process message - research or conversation mode"""
         
@@ -1058,7 +1062,7 @@ class MAXY1_2:
             confidence = result['confidence']
         else:
             # Conversation mode with detailed 5-10 sentence responses
-            response, confidence = MAXY1_2.generate_detailed_response(context, message, conversation_history, use_slang)
+            response, confidence = MAXY1_2.generate_detailed_response(context, message, conversation_history, use_slang, user_name)
             
             # Ensure 5-10 sentences for MAXY 1.2
             sentences = response.split('. ')
@@ -1390,7 +1394,8 @@ class MAXY1_3:
         message: str,
         include_thinking: bool = True,
         conversation_history: Optional[List[Dict]] = None,
-        file_data: Optional[Dict] = None
+        file_data: Optional[Dict] = None,
+        user_name: Optional[str] = None
     ) -> Dict[str, Any]:
         """Process message with AI capabilities including dynamic code and website generation"""
         
@@ -1570,7 +1575,8 @@ class MAXY1_3:
             # Basic responses
             elif any(g in msg_lower for g in ['hello', 'hi', 'hey']):
                 slang = slang_manager.get_random_slang(use_slang)
-                response = f"Hello {slang}! I'm MAXY 1.3, your advanced AI assistant. I can help you build websites, write code, analyze data, and create visualizations. What are we building today?"
+                user_display = f" {user_name}" if user_name else ""
+                response = f"Hello{user_display} {slang}! I'm MAXY 1.3, your advanced AI assistant. I can help you build websites, write code, analyze data, and create visualizations. What are we building today?"
                 confidence = 0.95
             
             elif any(q in msg_lower for q in ['who are you', 'what can you do']):
@@ -1686,9 +1692,9 @@ class ModelRouter:
         if model_name_lower == 'maxy1.1':
             return MAXY1_1.process_message(message, include_thinking, conversation_history, user_name)
         elif model_name_lower == 'maxy1.2':
-            return MAXY1_2.process_message(message, include_thinking, conversation_history)
+            return MAXY1_2.process_message(message, include_thinking, conversation_history, user_name)
         elif model_name_lower == 'maxy1.3':
-            return MAXY1_3.process_message(message, include_thinking, conversation_history)
+            return MAXY1_3.process_message(message, include_thinking, conversation_history, None, user_name)
         else:
             logger.warning(f"Unknown model: {model_name}, defaulting to MAXY1.1")
             return MAXY1_1.process_message(message, include_thinking, conversation_history, user_name)
