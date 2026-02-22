@@ -80,6 +80,20 @@
           </div>
         </div>
 
+        <!-- Daily Updates Nav Item -->
+        <div id="updatesNavBtn" class="nav-icon-link updates-nav-item" title="Daily Updates">
+          <img src="assets/maxy12.gif" alt="Updates" class="nav-updates-icon">
+          <div class="updates-hover-info">
+            <div class="updates-hover-header">Daily Updates</div>
+            <div id="updatesHoverList" class="updates-hover-list">
+              <!-- Updates will be loaded here -->
+              <div class="updates-loading-small">
+                <div class="spinner-small"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <a href="index.html" title="Go to Home" class="nav-icon-link">
           <img src="assets/home.png" alt="Home" class="nav-home-icon">
         </a>
@@ -231,33 +245,6 @@
       <div id="creditsCountdown" style="font-size: 24px; font-weight: bold; color: #f59e0b; margin-bottom: 24px;">
         03:00:00</div>
       <p style="color: var(--text-muted); font-size: 14px;">Credits refresh every 3 hours</p>
-    </div>
-  </div>
-
-  <!-- Daily Updates Modal -->
-  <div id="updatesModal" class="updates-modal-overlay" style="display: none;">
-    <div class="updates-modal">
-      <div class="updates-modal-header">
-        <div class="updates-header-content">
-          <img src="assets/maxy12.gif" alt="MAXY" class="updates-logo">
-          <h2>Daily Updates</h2>
-        </div>
-        <button id="closeUpdatesBtn" class="close-updates-btn" aria-label="Close">✕</button>
-      </div>
-      <div class="updates-modal-body" id="updatesList">
-        <!-- Updates will be loaded here -->
-        <div class="updates-loading">
-          <div class="loading-spinner"></div>
-          <span>Fetching latest updates...</span>
-        </div>
-      </div>
-      <div class="updates-modal-footer">
-        <label class="dont-show-again">
-          <input type="checkbox" id="dontShowAgain">
-          <span>Don't show again for this update</span>
-        </label>
-        <button id="dismissUpdatesBtn" class="dismiss-updates-btn">Got it!</button>
-      </div>
     </div>
   </div>
 
