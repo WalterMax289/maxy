@@ -1157,7 +1157,8 @@ class MAXY1_3:
             'heap', 'hash table'
         ]
         
-        is_code = any(ind in msg_lower for ind in code_indicators)
+        code_patterns = [r'\b' + re.escape(ind) + r'\b' for ind in code_indicators]
+        is_code = any(re.search(pattern, msg_lower) for pattern in code_patterns)
         
         detected_lang = 'python'  # default
         for lang, keywords in languages.items():
@@ -1224,15 +1225,9 @@ class MAXY1_3:
             response += f"Would you like me to explain any specific logic or refine this further?"
             return response
             
-        # Error response if search fails (No more template fallbacks)
-        response = f"### 🔬 Deep Research Insight\n\n"
-        response += f"I've thoroughly scanned available resources for a {language} implementation of '{description}', but I couldn't find a sufficiently high-quality or verified snippet to provide right now.\n\n"
-        response += f"**Suggestions:**\n"
-        response += f"- Rephrase your request with more specific technical details.\n"
-        response += f"- Specify a different programming language if applicable.\n"
-        response += f"- Check if the request is related to a very niche or private library."
-        
-        return response
+            return response
+            
+        return None
     
     @staticmethod
     def is_chart_request(message: str) -> tuple[bool, str, list, list, str]:
@@ -1493,16 +1488,41 @@ class MAXY1_3:
                 analysis_type
             )
         
-        # 1. PRIORITY: EXISTING 1.3 FEATURES (Technical/Data)
+        # 1. PRIORITY: UTILITY FEATURES (Weather/Time/Date) - Priority check to avoid false positives
+        
+        # Weather (from 1.1)
+        if not response and intents['weather']:
+            words = message.split()
+            city = None
+            if 'in' in words:
+                idx = words.index('in')
+                if idx + 1 < len(words): city = words[idx + 1].strip('?.!')
+            if city:
+                weather_info = MAXY1_1.get_weather(city)
+                if weather_info:
+                    response = f"{weather_info} 🌤️"
+                    confidence = 0.95
+
+        # Time/Date (from 1.1)
+        if not response:
+            if intents['time_query']:
+                response = f"It's {datetime.now().strftime('%I:%M %p')} right now! ⏰"
+                confidence = 0.97
+            elif intents['date_query']:
+                response = f"Today is {datetime.now().strftime('%A, %B %d, %Y')}! 📅"
+                confidence = 0.97
+
+        # 2. PRIORITY: EXISTING 1.3 FEATURES (Technical/Data)
         
         # Code Request
-        if analysis['is_code'] and not analysis['is_chart']:
+        if not response and analysis['is_code'] and not analysis['is_chart']:
             is_code, language = MAXY1_3.is_code_request(message)
             response = MAXY1_3.generate_code(language, message)
-            confidence = 0.96
+            if response:
+                confidence = 0.96
 
         # Website Request
-        elif analysis['is_website']:
+        if not response and analysis['is_website']:
              is_website, web_type = MAXY1_3.is_website_request(message)
              search_query = f"modern responsive {web_type} website structure HTML CSS JS"
              research_code = MAXY1_3.search_real_code("html", search_query)
@@ -1512,12 +1532,10 @@ class MAXY1_3:
                  response += f"I've researched and synthesized a custom **{web_type.capitalize()}** architecture for you based on modern web standards:\n\n"
                  response += f"{research_code}\n\n"
                  response += f"**Research Insight:** This structure uses current best practices for responsive design."
-             else:
-                 response = f"### 🔬 Website Research Insight\n\nI initiated a deep search for a '{web_type}' website structure, but I couldn't synthesize a complete, verified implementation at this moment."
-             confidence = 0.95
+                 confidence = 0.95
 
         # Chart Request
-        elif analysis['is_chart']:
+        if not response and analysis['is_chart']:
             is_chart, chart_type, data, labels, title = MAXY1_3.is_chart_request(message)
             base64_image, desc = MAXY1_3.generate_chart_image(chart_type, data, labels, title)
             if base64_image:
@@ -1526,7 +1544,7 @@ class MAXY1_3:
                 confidence = 0.95
 
         # Stock Analysis
-        elif not response:
+        if not response:
             stock_match = re.search(r'\b(stock|price|ticker)\s+(?:of\s+)?([A-Z]{1,5})\b', message.upper())
             if stock_match:
                 ticker = stock_match.group(2)
@@ -1552,30 +1570,8 @@ class MAXY1_3:
                 response = f"### 📄 Document Intelligence: {file_name}\n\nThis document has a **{sentiment['sentiment']}** tone. Primary themes: {', '.join([k[0] for k in keywords])}."
                 confidence = 0.95
 
-        # 2. CONSOLIDATED FEATURES FROM 1.1 & 1.2
+        # 3. CONSOLIDATED FEATURES FROM 1.1 & 1.2
         
-        # Weather (from 1.1)
-        if not response and intents['weather']:
-            words = message.split()
-            city = None
-            if 'in' in words:
-                idx = words.index('in')
-                if idx + 1 < len(words): city = words[idx + 1].strip('?.!')
-            if city:
-                weather_info = MAXY1_1.get_weather(city)
-                if weather_info:
-                    response = f"{weather_info} 🌤️"
-                    confidence = 0.95
-
-        # Time/Date (from 1.1)
-        if not response:
-            if intents['time_query']:
-                response = f"It's {datetime.now().strftime('%I:%M %p')} right now! ⏰"
-                confidence = 0.97
-            elif intents['date_query']:
-                response = f"Today is {datetime.now().strftime('%A, %B %d, %Y')}! 📅"
-                confidence = 0.97
-
         # Jokes/Entertainment (from 1.1)
         if not response and intents['entertainment']:
             joke = random.choice(MAXY1_1.JOKES + ["Why did the cross-functional team cross the road? To attend a stand-up on the other side!"])
@@ -1634,8 +1630,11 @@ class MAXY1_3:
         if not response:
             # Technical search fallback from 1.3 original
             response = MAXY1_3.generate_code("technical", message)
-            if "research insight" in response.lower() and "couldn't find" in response.lower():
-                # If even technical search fails, use a generic helpful message
+            if response and "research insight" in response.lower() and "couldn't find" in response.lower():
+                # This should no longer happen as generate_code returns None on fail
+                response = None
+            
+            if not response:
                 slang = slang_manager.get_random_slang(use_slang)
                 response = f"I'm here to help with your project, {slang}! I'm ready for code generation, data analysis, or deep research. Could you provide a bit more detail on what you're looking for?"
             confidence = 0.85
