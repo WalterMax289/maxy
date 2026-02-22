@@ -45,23 +45,23 @@ When you send a message, MAXY goes through a sophisticated routing and synthesis
 
 ```mermaid
 graph TD
-    A[User Message] --> B{Intent Analysis}
+    A[User Message] --> B{Prioritized Intent Analysis}
     
-    B -- "Greeting/Casual Chat" --> C[MAXY 1.1]
-    B -- "Educational/Research" --> D[MAXY 1.2]
     B -- "Code/Data/Files" --> E[MAXY 1.3]
+    B -- "Educational/Research" --> D[MAXY 1.2]
+    B -- "Greeting/Casual Chat" --> C[MAXY 1.1]
     
-    C --> C1[Check Slang Library]
-    C1 --> C2[Quick Knowledge Check]
-    C2 --> C3[Generate Friendly Response]
+    E --> E1[Analyze Files/CSV if present]
+    E1 --> E2[Search Real Code Sources]
+    E2 --> E3[Synthesize Logic & Code]
     
     D --> D1[Search Wikipedia]
     D1 --> D2[Search Web / DDG]
     D2 --> D3[Synthesize Verified Report]
     
-    E --> E1[Analyze Files/CSV if present]
-    E1 --> E2[Search Real Code Sources]
-    E2 --> E3[Generate Technical Solution]
+    C --> C1[Quick Knowledge Check]
+    C1 --> C2[Check Slang Library]
+    C2 --> C3[Generate Friendly Response]
     
     C3 --> F[Final Output with Thinking Display]
     D3 --> F

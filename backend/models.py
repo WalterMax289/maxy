@@ -1421,19 +1421,6 @@ class MAXY1_3:
         # Detect slang usage
         use_slang = slang_manager.detect_slang(message)
         
-        # Priority 0: Check for specific slang conversational greetings
-        slang_response = slang_manager.handle_conversational_slang(message)
-        if slang_response:
-            return {
-                'response': slang_response,
-                'model': MAXY1_3.NAME,
-                'confidence': 0.99,
-                'thinking': thinking
-            }
-        
-        msg_lower = message.lower().strip()
-        response = None
-        
         # 1. Check for code generation request (UPGRADED & PRIORITIZED)
         is_code, language = MAXY1_3.is_code_request(message)
         if is_code:
@@ -1464,6 +1451,19 @@ class MAXY1_3:
                     response += f"- Provide more details about the style or framework you're interested in."
                 
                 confidence = 0.95
+
+        # 3. Check for Conversational Slang (Moved after technical priorities)
+        if not response:
+            slang_response = slang_manager.handle_conversational_slang(message)
+            if slang_response:
+                return {
+                    'response': slang_response,
+                    'model': MAXY1_3.NAME,
+                    'confidence': 0.99,
+                    'thinking': thinking
+                }
+
+        msg_lower = message.lower().strip()
             
         # 3. Check for chart request
         if not response and MAXY1_3.is_chart_request(message)[0]:
