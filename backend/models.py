@@ -1418,6 +1418,9 @@ class MAXY1_3:
                 "analysis"
             )
         
+        msg_lower = message.lower().strip()
+        response = None
+        
         # Detect slang usage
         use_slang = slang_manager.detect_slang(message)
         
@@ -1463,8 +1466,6 @@ class MAXY1_3:
                     'thinking': thinking
                 }
 
-        msg_lower = message.lower().strip()
-            
         # 3. Check for chart request
         if not response and MAXY1_3.is_chart_request(message)[0]:
             is_chart, chart_type, data, labels, title = MAXY1_3.is_chart_request(message)
