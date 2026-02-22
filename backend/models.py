@@ -1103,11 +1103,15 @@ class MAXY1_3:
     - Pattern recognition in text
     - Summary generation
     - Natural conversation
+    - Weather updates
+    - Wikipedia & Deep Research
+    - Philosophical & Personal discussion
+    - Jokes & Entertainment
     """
     
     NAME = "MAXY 1.3"
-    VERSION = "1.3.0"
-    DESCRIPTION = "Advanced AI assistant for data analysis, programming, and visualization"
+    VERSION = "1.3.1"
+    DESCRIPTION = "The ultimate MAXY model - data analysis, programming, visualization, and deep research expert"
     
     # Import chart generator
     @staticmethod
@@ -1398,6 +1402,60 @@ class MAXY1_3:
         return is_website, type
 
     @staticmethod
+    def analyze_user_intent(message: str) -> Dict[str, Any]:
+        """Comprehensive intent analysis for MAXY 1.3 combining 1.1 and 1.2 logic"""
+        msg_lower = message.lower().strip()
+        
+        # Core intents from 1.1
+        intents = {
+            'greeting': any(g in msg_lower for g in ['hi', 'hello', 'hey', 'greetings', 'howdy', 'namaskaar']),
+            'farewell': any(f in msg_lower for f in ['bye', 'goodbye', 'see you', 'farewell', 'later']),
+            'gratitude': any(t in msg_lower for t in ['thanks', 'thank you', 'appreciate', 'grateful']),
+            'personal_status': any(h in msg_lower for h in ['how are you', 'how you doing']),
+            'identity': any(i in msg_lower for i in ['your name', 'who are you', 'what are you']),
+            'entertainment': any(j in msg_lower for j in ['joke', 'funny', 'laugh']),
+            'time_query': any(t in msg_lower for t in ['time', 'what time', 'current time']),
+            'date_query': any(d in msg_lower for d in ['date', 'today', 'what day']),
+            'help': any(h in msg_lower for h in ['help', 'what can you do']),
+            'weather': any(w in msg_lower for w in ['weather', 'temperature', 'rain', 'sunny']),
+            'calculation': any(c in msg_lower for c in ['calculate', 'math', 'plus', 'minus', 'times', 'divided']),
+        }
+        
+        # Deep analysis metrics from 1.2
+        topics = {
+            'science': any(t in msg_lower for t in ['science', 'physics', 'chemistry', 'biology', 'research']),
+            'history': any(t in msg_lower for t in ['history', 'ancient', 'century', 'war', 'civilization']),
+            'technology': any(t in msg_lower for t in ['technology', 'computer', 'internet', 'software', 'ai']),
+            'geography': any(t in msg_lower for t in ['country', 'capital', 'city', 'continent', 'population']),
+            'personal': any(t in msg_lower for t in ['i feel', 'i think', 'my opinion', 'in my experience']),
+            'philosophy': any(t in msg_lower for t in ['meaning', 'philosophy', 'why do we', 'purpose', 'existence'])
+        }
+        
+        # Depth indicators
+        depth_indicators = {
+            'surface': ['what is', 'who is', 'simple', 'basic', 'quick'],
+            'moderate': ['how does', 'why does', 'explain', 'tell me about'],
+            'deep': ['analyze', 'comprehensive', 'detailed', 'in-depth', 'research', 'history of', 'science of']
+        }
+        
+        inquiry_depth = 'surface'
+        for depth, indicators in depth_indicators.items():
+            if any(ind in msg_lower for ind in indicators):
+                inquiry_depth = depth
+                break
+                
+        return {
+            'intents': intents,
+            'topics': topics,
+            'depth': inquiry_depth,
+            'is_research': MAXY1_2.is_research_query(message),
+            'is_code': MAXY1_3.is_code_request(message)[0],
+            'is_chart': MAXY1_3.is_chart_request(message)[0],
+            'is_website': MAXY1_3.is_website_request(message)[0],
+            'word_count': len(message.split())
+        }
+
+    @staticmethod
     def process_message(
         message: str,
         include_thinking: bool = True,
@@ -1405,81 +1463,70 @@ class MAXY1_3:
         file_data: Optional[Dict] = None,
         user_name: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Process message with AI capabilities including dynamic code and website generation"""
+        """Ultimate message processing consolidating ALL MAXY features"""
         
         thinking = None
         confidence = 0.85
         chart_data = None
+        response = None
+        analysis_type = "analysis" # Default for 1.3
         
+        # Analyze comprehensive intent
+        analysis = MAXY1_3.analyze_user_intent(message)
+        intents = analysis['intents']
+        use_slang = slang_manager.detect_slang(message)
+        
+        # Determine thinking type based on intent
+        if analysis['is_code'] or analysis['is_website']:
+            analysis_type = "analysis"
+        elif analysis['is_research'] or analysis['depth'] == 'deep':
+            analysis_type = "research"
+        elif analysis['intents']['greeting'] or analysis['topics']['personal']:
+            analysis_type = "conversation"
+        else:
+            analysis_type = "general"
+
         if include_thinking:
             thinking = MAXYThinkingEngine.generate_thinking(
                 MAXY1_3.NAME,
                 message,
-                "analysis"
+                analysis_type
             )
         
-        msg_lower = message.lower().strip()
-        response = None
+        # 1. PRIORITY: EXISTING 1.3 FEATURES (Technical/Data)
         
-        # Detect slang usage
-        use_slang = slang_manager.detect_slang(message)
-        
-        # 1. Check for code generation request (UPGRADED & PRIORITIZED)
-        is_code, language = MAXY1_3.is_code_request(message)
-        if is_code:
-             # Double check it's not a misclassified chart request
-             if "chart" not in message.lower() and "plot" not in message.lower():
-                response = MAXY1_3.generate_code(language, message)
-                confidence = 0.95
-        
-        # 2. Check for Website Building Request
-        if not response:
-            is_website, web_type = MAXY1_3.is_website_request(message)
-            if is_website:
-                # Perform Deep Research for Website Structure
-                search_query = f"modern responsive {web_type} website structure HTML CSS JS"
-                research_code = MAXY1_3.search_real_code("html", search_query)
-                
-                if research_code:
-                    response = f"### 🏗️ MAXY Deep Research: Website Builder\n\n"
-                    response += f"I've researched and synthesized a custom **{web_type.capitalize()}** architecture for you based on modern web standards:\n\n"
-                    response += f"{research_code}\n\n"
-                    response += f"**Research Insight:** This structure uses current best practices for responsive design. "
-                    response += f"I've synthesized the core HTML, CSS, and interactive elements from verified technical resources."
-                else:
-                    response = f"### 🔬 Website Research Insight\n\n"
-                    response += f"I initiated a deep search for a '{web_type}' website structure, but I couldn't synthesize a complete, verified implementation at this moment.\n\n"
-                    response += f"**Suggestions:**\n"
-                    response += f"- Try asking for specific components (e.g., 'build a responsive navbar in CSS').\n"
-                    response += f"- Provide more details about the style or framework you're interested in."
-                
-                confidence = 0.95
+        # Code Request
+        if analysis['is_code'] and not analysis['is_chart']:
+            is_code, language = MAXY1_3.is_code_request(message)
+            response = MAXY1_3.generate_code(language, message)
+            confidence = 0.96
 
-        # 3. Check for Conversational Slang (Moved after technical priorities)
-        if not response:
-            slang_response = slang_manager.handle_conversational_slang(message)
-            if slang_response:
-                return {
-                    'response': slang_response,
-                    'model': MAXY1_3.NAME,
-                    'confidence': 0.99,
-                    'thinking': thinking
-                }
+        # Website Request
+        elif analysis['is_website']:
+             is_website, web_type = MAXY1_3.is_website_request(message)
+             search_query = f"modern responsive {web_type} website structure HTML CSS JS"
+             research_code = MAXY1_3.search_real_code("html", search_query)
+             
+             if research_code:
+                 response = f"### 🏗️ MAXY Deep Research: Website Builder\n\n"
+                 response += f"I've researched and synthesized a custom **{web_type.capitalize()}** architecture for you based on modern web standards:\n\n"
+                 response += f"{research_code}\n\n"
+                 response += f"**Research Insight:** This structure uses current best practices for responsive design."
+             else:
+                 response = f"### 🔬 Website Research Insight\n\nI initiated a deep search for a '{web_type}' website structure, but I couldn't synthesize a complete, verified implementation at this moment."
+             confidence = 0.95
 
-        # 3. Check for chart request
-        if not response and MAXY1_3.is_chart_request(message)[0]:
+        # Chart Request
+        elif analysis['is_chart']:
             is_chart, chart_type, data, labels, title = MAXY1_3.is_chart_request(message)
-            base64_image, description = MAXY1_3.generate_chart_image(chart_type, data, labels, title)
-            
+            base64_image, desc = MAXY1_3.generate_chart_image(chart_type, data, labels, title)
             if base64_image:
-                response = f"I've created a {chart_type} chart for you based on your data! 📊\n\n"
-                response += f"**{title}** breakdown shows {len(data)} distinct data points total. "
-                response += f"The visual representation above should make the distribution clear."
-                chart_data = {'type': chart_type, 'title': title, 'base64_image': base64_image, 'description': description}
+                response = f"I've created a {chart_type} chart for you based on your data! 📊\n\n**{title}** breakdown shows {len(data)} distinct data points total."
+                chart_data = {'type': chart_type, 'title': title, 'base64_image': base64_image, 'description': desc}
                 confidence = 0.95
-            
-        # 4. Check for Stock Analysis (NEW Logic)
-        if not response:
+
+        # Stock Analysis
+        elif not response:
             stock_match = re.search(r'\b(stock|price|ticker)\s+(?:of\s+)?([A-Z]{1,5})\b', message.upper())
             if stock_match:
                 ticker = stock_match.group(2)
@@ -1488,122 +1535,125 @@ class MAXY1_3:
                     response = stock_analysis
                     confidence = 0.95
 
-        # Fallback to original logic if no response generated yet
-        if not response:
-            # Detect numeric data for analysis
-            numbers = re.findall(r'-?\d+\.?\d*', message)
-            
-            if len(numbers) >= 3 and any(x in msg_lower for x in ['analyze', 'stats', 'statistics', 'mean', 'average', 'data']):
-                try:
-                    data_points = [float(n) for n in numbers]
-                    analysis = AdvancedAnalyzer.generate_comprehensive_analysis(data_points)
-                    
-                    if 'error' not in analysis:
-                        response = f"### 📊 Statistical Analysis\n\n"
-                        response += f"I analyzed your **{len(data_points)} data points**. "
-                        
-                        # Better integration of insights
-                        insights = AdvancedAnalyzer.generate_insights(analysis)
-                        response += f"{insights[0]} " if insights else ""
-                        
-                        response += f"\n\n**Findings:**\n"
-                        response += f"- **Average (Mean):** {analysis['central_tendency']['mean']}\n"
-                        response += f"- **Midpoint (Median):** {analysis['central_tendency']['median']}\n"
-                        response += f"- **Variation:** Standard deviation of {analysis['dispersion']['std_dev']}\n"
-                        
-                        if analysis['trends']['trend'] != 'insufficient_data':
-                            response += f"- **Trend:** Data shows a {analysis['trends']['strength']} {analysis['trends']['trend']} direction.\n"
-                            
-                        confidence = 0.95
-                    else:
-                        response = f"I tried to analyze the numbers, but encountered an error: {analysis['error']}"
-                except Exception as e:
-                    logger.error(f"Error in quick analysis: {e}")
-
-            # Check if we have file data to analyze
-            elif file_data:
-                file_name = file_data.get('name', 'unknown file')
-                file_type = file_data.get('type', 'unknown')
-                file_content = file_data.get('content', '')
-                
-                # Intelligent routing based on file type
-                is_csv = file_name.lower().endswith('.csv') or file_type == 'text/csv'
-                
-                if is_csv:
-                    parse_result = StructuredDataAnalyzer.parse_csv_content(file_content)
-                    if 'error' not in parse_result:
-                        insights = StructuredDataAnalyzer.generate_data_insights(parse_result)
-                        response = f"### 📊 Data Intelligence: {file_name}\n\n"
-                        response += f"I've performed a structured analysis of your CSV file ({parse_result['row_count']} rows).\n\n"
-                        response += "**Key Insights:**\n"
-                        for insight in insights:
-                            response += f"- {insight}\n"
-                        
-                        response += f"\n**Data Preview:** Headers found: `{', '.join(parse_result['headers'])}`. "
-                        response += "I'm ready to perform deeper statistical queries or create visualizations based on this data!"
-                        confidence = 0.98
-                    else:
-                        response = f"I detected a CSV file but couldn't parse it: {parse_result['error']}"
-                else:
-                    # Document / Text Analysis
-                    keywords = TextAnalyzer.extract_keywords(file_content, top_n=5)
-                    sentiment = TextAnalyzer.analyze_sentiment(file_content)
-                    entities = TextAnalyzer.extract_entities(file_content)
-                    
-                    response = f"### 📄 Document Intelligence: {file_name}\n\n"
-                    
-                    # Sentiment and Keywords
-                    response += f"This document has a **{sentiment['sentiment']}** tone. "
-                    if keywords:
-                        response += f"Primary themes identified: **{', '.join([k[0] for k in keywords])}**.\n\n"
-                    
-                    # Entities
-                    if entities:
-                        response += "**Found Entities:**\n"
-                        if entities.get('emails'): response += f"- 📧 **Emails**: {', '.join(entities['emails'][:3])}\n"
-                        if entities.get('urls'): response += f"- 🔗 **Links**: {', '.join(entities['urls'][:3])}\n"
-                        if entities.get('dates'): response += f"- 📅 **Dates**: {', '.join(entities['dates'][:3])}\n"
-                    
-                    word_count = len(file_content.split())
-                    response += f"\n**Summary:** This file contains {word_count} words. I can help you summarize specific sections, extract details, or answer questions about the content."
-                    confidence = 0.95
-            
-            # Check for chart request (if not handled above)
-            elif MAXY1_3.is_chart_request(message)[0]:
-                is_chart, chart_type, data, labels, title = MAXY1_3.is_chart_request(message)
-                base64_image, description = MAXY1_3.generate_chart_image(chart_type, data, labels, title)
-                
-                if base64_image:
-                    response = f"I've created a {chart_type} chart for you based on your data! 📊\n\n"
-                    response += f"**{title}** breakdown shows {len(data)} distinct data points total. "
-                    response += f"The visual representation above should make the distribution clear."
-                    chart_data = {'type': chart_type, 'title': title, 'base64_image': base64_image, 'description': description}
-                else:
-                    response = f"I tried to create your {chart_type} chart, but there was a rendering issue. "
-                    response += f"The total for your data ({title}) is {sum(data)}."
-                confidence = 0.92
-
-            # Basic responses
-            elif any(g in msg_lower for g in ['hello', 'hi', 'hey']):
-                slang = slang_manager.get_random_slang(use_slang)
-                user_display = f" {user_name}" if user_name else ""
-                response = f"Hello{user_display} {slang}! I'm MAXY 1.3, your advanced AI assistant. I can help you build websites, write code, analyze data, and create visualizations. What are we building today?"
-                confidence = 0.95
-            
-            elif any(q in msg_lower for q in ['who are you', 'what can you do']):
-                response = "I'm MAXY 1.3, upgraded with a **Dynamic Code Engine**! I can:\n\n🚀 **Build Websites** - Ask me to 'build a landing page' or 'create a portfolio'\n💻 **Programming** - Write complex scripts in Python, JS, and more\n📊 **Data Insights** - Analyze numbers and generate visual charts\n📁 **File Intelligence** - Process and extract data from your uploads"
-                confidence = 0.96
-            
+        # File Intelligence
+        if not response and file_data:
+            # We process files if no other high-priority technical intent was matched
+            file_name = file_data.get('name', 'unknown file')
+            file_content = file_data.get('content', '')
+            if file_name.lower().endswith('.csv'):
+                parse_result = StructuredDataAnalyzer.parse_csv_content(file_content)
+                if 'error' not in parse_result:
+                    insights = StructuredDataAnalyzer.generate_data_insights(parse_result)
+                    response = f"### 📊 Data Intelligence: {file_name}\n\nKey Insights:\n" + "\n".join([f"- {i}" for i in insights])
+                    confidence = 0.98
             else:
-                # NEW: Instead of a generic fallback, try a broad code/technical search if it's not a greeting
-                if not any(g in msg_lower for g in ['hello', 'hi', 'hey', 'thanks', 'bye']):
-                    response = MAXY1_3.generate_code("technical", message)
-                    confidence = 0.88
-                
-                if not response:
-                    slang = slang_manager.get_random_slang(use_slang)
-                    response = f"I'm ready to help with your project, {slang}! As MAXY 1.3, I can build web structures, write custom code, or perform deep data analysis. What's the next step for us?"
-                    confidence = 0.85
+                keywords = TextAnalyzer.extract_keywords(file_content, top_n=5)
+                sentiment = TextAnalyzer.analyze_sentiment(file_content)
+                response = f"### 📄 Document Intelligence: {file_name}\n\nThis document has a **{sentiment['sentiment']}** tone. Primary themes: {', '.join([k[0] for k in keywords])}."
+                confidence = 0.95
+
+        # 2. CONSOLIDATED FEATURES FROM 1.1 & 1.2
+        
+        # Weather (from 1.1)
+        if not response and intents['weather']:
+            words = message.split()
+            city = None
+            if 'in' in words:
+                idx = words.index('in')
+                if idx + 1 < len(words): city = words[idx + 1].strip('?.!')
+            if city:
+                weather_info = MAXY1_1.get_weather(city)
+                if weather_info:
+                    response = f"{weather_info} 🌤️"
+                    confidence = 0.95
+
+        # Time/Date (from 1.1)
+        if not response:
+            if intents['time_query']:
+                response = f"It's {datetime.now().strftime('%I:%M %p')} right now! ⏰"
+                confidence = 0.97
+            elif intents['date_query']:
+                response = f"Today is {datetime.now().strftime('%A, %B %d, %Y')}! 📅"
+                confidence = 0.97
+
+        # Jokes/Entertainment (from 1.1)
+        if not response and intents['entertainment']:
+            joke = random.choice(MAXY1_1.JOKES + ["Why did the cross-functional team cross the road? To attend a stand-up on the other side!"])
+            response = f"{joke} 😄"
+            confidence = 0.92
+
+        # Deep Research (from 1.2) - Higher priority than general conversation
+        if not response and (analysis['is_research'] or analysis['depth'] == 'deep'):
+            research_result = MAXY1_2.deep_wikipedia_research(message)
+            if not research_result['success'] or "does not reside" in research_result['response']:
+                web_result = MAXY1_2.perform_web_search(message)
+                if web_result['success']:
+                    research_result = web_result
+            
+            if research_result['success']:
+                response = MAXY1_2.format_research_response(research_result['response'], analysis['depth'])
+                confidence = research_result['confidence']
+
+        # Philosophy & Personal (from 1.2)
+        if not response:
+            if analysis['topics']['philosophy']:
+                 response, confidence = MAXY1_2.generate_detailed_response(analysis, message, conversation_history, use_slang, user_name)
+            elif analysis['topics']['personal']:
+                 response, confidence = MAXY1_2.generate_detailed_response(analysis, message, conversation_history, use_slang, user_name)
+
+        # Greetings & Identity (Combined)
+        if not response:
+            if intents['greeting']:
+                user_display = f" {user_name}" if user_name else ""
+                slang = slang_manager.get_random_slang(use_slang)
+                response = f"Hello{user_display} {slang}! I'm MAXY 1.3, your most advanced AI companion. I've been upgraded with all the research capabilities of 1.2 and the speed of 1.1. I can build websites, write code, analyze data, and perform deep research. What shall we tackle today?"
+                confidence = 0.98
+            elif intents['identity']:
+                response = "I'm MAXY 1.3 – the ultimate version of the MAXY AI series. I combine rapid response logic, deep Wikipedia research, and advanced data visualization into one powerful interface. Whether you need a statistical analysis, a web landing page, or a deep dive into history, I've got you covered."
+                confidence = 0.96
+
+        # Calculation (from 1.1)
+        if not response and intents['calculation']:
+             response = "I can definitely help with that calculation! Please provide the numbers and the operation you'd like me to perform."
+             confidence = 0.90
+
+        # Help
+        if not response and intents['help']:
+            response = "I am MAXY 1.3, upgraded with a **Grand Unified Engine**! I can:\n\n🚀 **Build & Code** - Websites, Python, JS, SQL\n📊 **Analyze & Visualize** - CSVs, Statistics, Charts\n🔍 **Research** - Deep Wiki & Web searches\n🌤️ **Utility** - Weather, Time, Stock prices\n💬 **Chat** - Intelligent, context-aware conversation"
+            confidence = 0.98
+
+        # FINAL FALLBACKS
+        if not response:
+            # Try a quick wiki lookup if it's a short query that looks like a topic
+            if analysis['word_count'] <= 3 and not use_slang:
+                wiki_result = MAXY1_1.quick_wikipedia_lookup(message)
+                if wiki_result:
+                    response = wiki_result
+                    confidence = 0.92
+
+        if not response:
+            # Technical search fallback from 1.3 original
+            response = MAXY1_3.generate_code("technical", message)
+            if "research insight" in response.lower() and "couldn't find" in response.lower():
+                # If even technical search fails, use a generic helpful message
+                slang = slang_manager.get_random_slang(use_slang)
+                response = f"I'm here to help with your project, {slang}! I'm ready for code generation, data analysis, or deep research. Could you provide a bit more detail on what you're looking for?"
+            confidence = 0.85
+        
+        # Slang Enhancement
+        if response and "statistical analysis" not in response.lower() and "generated" not in response.lower() and "verified research report" not in response.lower():
+             response = slang_manager.enhance_text(response, force=use_slang)
+        
+        result = {
+            'response': response,
+            'model': MAXY1_3.NAME,
+            'confidence': confidence,
+        }
+        
+        if thinking: result['thinking'] = thinking
+        if chart_data: result['charts'] = [chart_data]
+            
+        return result
         
         # Inject slang for 1.3 (Code/Analysis)
         if response and "statistical analysis" not in response.lower() and "generated" not in response.lower():
@@ -1655,11 +1705,13 @@ class ModelRouter:
                 'Multi-topic knowledge'
             ],
             'maxy1.3': [
+                'Grand Unified Engine (1.1 + 1.2 + 1.3)',
                 'File processing & analysis',
-                'Data extraction',
-                'Content summarization',
-                'Pattern recognition',
-                'Document insights'
+                'Deep Wikipedia search & synthesis',
+                'Dynamic Code & Website generation',
+                'Data visualization & Charting',
+                'Weather, Time, Stock updates',
+                'Intelligent conversation with slang'
             ]
         }
         
