@@ -213,57 +213,51 @@ class MAXY1_1:
             'list', 'tree', 'graph', 'data structure', 'algorithm', 
             'implement', 'code', 'function', 'class', 'decorator',
             'python', 'javascript', 'java', 'html', 'css', 'sql',
-            'pm of', 'president of', 'governor of', 'ceo of''can you explain',
-'could you tell me',
-'i want to know',
-'learn about',
-'guide to',
-'overview of',
-'introduction to',
-'basics of',
-'advanced',
-'in depth',
-'detailed explanation',
-'summary of',
-'quick facts about',
-'key points of',
-'important facts',
-'meaning of',
-'definition of',
-'full form of',
-'origin of',
-'background of',
-'concept of'
- Time / Historical Queries
-'when was',
-'when is',
-'how long does',
-'how long did',
-'how many years',
-'timeline of',
-'era of',
-'period of',
-'ancient',
-'modern',
-'medieval',
-'future of',
-'predicted',
-'forecast of',
-'trend in',
-'evolution of'
-# Location / Geography
-'located in',
-'situated in',
-'map of',
-'population of',
-'area of',
-'largest',
-'smallest',
-'bordering',
-'neighboring countries',
-'climate of',
-'currency of',
-'language of'
+            'pm of', 'president of', 'governor of', 'ceo of',
+            'can you explain', 'could you tell me', 'i want to know',
+            'learn about', 'guide to', 'overview of', 'introduction to',
+            'basics of', 'advanced', 'in depth', 'detailed explanation',
+            'summary of', 'quick facts about', 'key points of',
+            'important facts', 'meaning of', 'definition of',
+            'full form of', 'origin of', 'background of', 'concept of',
+            # Time / Historical Queries
+            'when was', 'when is', 'how long does', 'how long did',
+            'how many years', 'timeline of', 'era of', 'period of',
+            'ancient', 'modern', 'medieval', 'future of', 'predicted',
+            'forecast of', 'trend in', 'evolution of',
+            # Location / Geography
+            'located in', 'situated in', 'map of', 'population of',
+            'area of', 'largest', 'smallest', 'bordering',
+            'neighboring countries', 'climate of', 'currency of',
+            'language of',
+            # People / Position
+            'founder of', 'owner of', 'chairman of', 'minister of',
+            'prime minister of', 'king of', 'queen of', 'director of',
+            'author of', 'creator of', 'biography of', 'net worth of',
+            'age of', 'early life of',
+            # Science and Education
+            'theory of', 'law of', 'principle of', 'formula for',
+            'equation of', 'difference between', 'compare',
+            'comparison between', 'advantages of', 'disadvantages of',
+            'types of', 'branches of', 'process of', 'cycle of',
+            'structure of', 'function of', 'example of',
+            # Programming / Tech
+            'syntax of', 'how to use', 'usage of',
+            'best practices for', 'error in', 'debug', 'optimize',
+            'performance of', 'library for', 'framework for', 'api for',
+            'database', 'backend', 'frontend', 'full stack',
+            'machine learning', 'artificial intelligence', 'cybersecurity',
+            'cloud computing', 'blockchain', 'data science', 'deep learning',
+            # Data Structures & Algorithms
+            'time complexity', 'space complexity', 'big o notation',
+            'linear search', 'binary search', 'merge sort', 'quick sort',
+            'dynamic programming', 'recursion', 'greedy algorithm',
+            'stack', 'queue', 'linked list', 'binary tree', 'bst',
+            'heap', 'hash table',
+            # Business / Economy
+            'market value', 'stock price of', 'economy of', 'gdp of',
+            'inflation rate', 'revenue of', 'profit of',
+            'business model of', 'case study of', 'impact of', 'benefits of'
         ]
         msg_lower = message.lower()
         return any(kw in msg_lower for kw in research_keywords) and len(message) < 200
@@ -655,14 +649,55 @@ class MAXY1_2:
         research_indicators = [
             'research', 'tell me about', 'what is', 'who is', 'explain',
             'info about', 'information on', 'details about', 'who was',
-            'history of', 'science of', 'how does', 'why does', 'information about',
-            'learn about', 'tell me more about', 'details about', 'wikipedia',
-            'discovered', 'invented', 'founded', 'created by', 'origin of',
-            'biology', 'chemistry', 'physics', 'astronomy', 'geography',
-            'country', 'capital', 'population', 'famous for',
-            'sort', 'search', 'array', 'list', 'tree', 'graph', 'data structure',
-            'algorithm', 'implement', 'code', 'function', 'class', 'decorator',
-            'pm of', 'president of', 'governor of', 'ceo of'
+            'what are', 'define', 'describe', 'history of', 'science',
+            'technology', 'biology', 'physics', 'chemistry', 'geography',
+            'country', 'capital', 'famous', 'invented', 'discovered',
+            'when did', 'where is', 'why does', 'the history of',
+            'pm of', 'president of', 'governor of', 'ceo of',
+            'can you explain', 'could you tell me', 'i want to know',
+            'learn about', 'guide to', 'overview of', 'introduction to',
+            'basics of', 'advanced', 'in depth', 'detailed explanation',
+            'summary of', 'quick facts about', 'key points of',
+            'important facts', 'meaning of', 'definition of',
+            'full form of', 'origin of', 'background of', 'concept of',
+            # Time / Historical Queries
+            'when was', 'when is', 'how long does', 'how long did',
+            'how many years', 'timeline of', 'era of', 'period of',
+            'ancient', 'modern', 'medieval', 'future of', 'predicted',
+            'forecast of', 'trend in', 'evolution of',
+            # Location / Geography
+            'located in', 'situated in', 'map of', 'population of',
+            'area of', 'largest', 'smallest', 'bordering',
+            'neighboring countries', 'climate of', 'currency of',
+            'language of',
+            # People / Position
+            'founder of', 'owner of', 'chairman of', 'minister of',
+            'prime minister of', 'king of', 'queen of', 'director of',
+            'author of', 'creator of', 'biography of', 'net worth of',
+            'age of', 'early life of',
+            # Science and Education
+            'theory of', 'law of', 'principle of', 'formula for',
+            'equation of', 'difference between', 'compare',
+            'comparison between', 'advantages of', 'disadvantages of',
+            'types of', 'branches of', 'process of', 'cycle of',
+            'structure of', 'function of', 'example of',
+            # Programming / Tech
+            'syntax of', 'how to use', 'usage of',
+            'best practices for', 'error in', 'debug', 'optimize',
+            'performance of', 'library for', 'framework for', 'api for',
+            'database', 'backend', 'frontend', 'full stack',
+            'machine learning', 'artificial intelligence', 'cybersecurity',
+            'cloud computing', 'blockchain', 'data science', 'deep learning',
+            # Data Structures & Algorithms
+            'time complexity', 'space complexity', 'big o notation',
+            'linear search', 'binary search', 'merge sort', 'quick sort',
+            'dynamic programming', 'recursion', 'greedy algorithm',
+            'stack', 'queue', 'linked list', 'binary tree', 'bst',
+            'heap', 'hash table',
+            # Business / Economy
+            'market value', 'stock price of', 'economy of', 'gdp of',
+            'inflation rate', 'revenue of', 'profit of',
+            'business model of', 'case study of', 'impact of', 'benefits of'
         ]
         
         conversation_indicators = [
@@ -1095,7 +1130,19 @@ class MAXY1_3:
             'program', 'script', 'example', 'syntax', 'algorithm', 'implement',
             'snippet', 'coding', 'develop', 'setup', 'server', 'logic',
             'sort', 'search', 'array', 'list', 'tree', 'graph', 'data structure',
-            'decorator', 'class', 'method', 'variable', 'loop', 'conditional'
+            'decorator', 'class', 'method', 'variable', 'loop', 'conditional',
+            # technical from expanded list
+            'syntax of', 'how to use', 'usage of', 'best practices for',
+            'error in', 'debug', 'optimize', 'performance of',
+            'library for', 'framework for', 'api for', 'database',
+            'backend', 'frontend', 'full stack', 'machine learning',
+            'artificial intelligence', 'cybersecurity', 'cloud computing',
+            'blockchain', 'data science', 'deep learning',
+            'time complexity', 'space complexity', 'big o notation',
+            'linear search', 'binary search', 'merge sort', 'quick sort',
+            'dynamic programming', 'recursion', 'greedy algorithm',
+            'stack', 'queue', 'linked list', 'binary tree', 'bst',
+            'heap', 'hash table'
         ]
         
         is_code = any(ind in msg_lower for ind in code_indicators)
