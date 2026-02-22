@@ -308,9 +308,9 @@ class SlangManager:
         if text_lower in greetings_map:
             return greetings_map[text_lower]
             
-        # Check if text contains the keywords
+        # Check if text contains the keywords as whole words
         for key, response in greetings_map.items():
-            if key in text_lower:
+            if re.search(r'\b' + re.escape(key) + r'\b', text_lower):
                 return response
                 
         return None

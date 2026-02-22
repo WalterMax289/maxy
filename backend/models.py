@@ -397,7 +397,22 @@ class MAXY1_1:
         intents = intent_analysis['intents']
         msg_lower = message.lower().strip()
         
-        # Priority 1: Check for specific slang conversational greetings
+        # Priority 1: Check for knowledge/research queries FIRST to avoid accidental slang triggers
+        if intents['knowledge'] or MAXY1_1.should_use_wikipedia(message):
+            wiki_result = MAXY1_1.quick_wikipedia_lookup(message)
+            if wiki_result:
+                # Allow 4-5 sentences for "Gemini-like" fluency
+                raw_sentences = [s.strip() for s in wiki_result.split('. ') if s.strip()]
+                clean_sentences = [s for s in raw_sentences if len(s) > 10]
+                sentences = clean_sentences[:5] 
+                concise = '. '.join(sentences)
+                if not concise.endswith('.'):
+                    concise += '.'
+                if len(concise) < 100:
+                    concise += " Would you like to know more about its history or specific details?"
+                return (concise, 0.92)
+
+        # Priority 2: Check for specific slang conversational greetings
         slang_response = slang_manager.handle_conversational_slang(message)
         if slang_response:
             return (slang_response, 0.99)
@@ -477,30 +492,6 @@ class MAXY1_1:
             
             return ("I can check the weather if you tell me which city! Just ask 'weather in London' for example. 🌍", 0.90)
         
-        # Knowledge query - Quick facts (prioritized over simple task)
-        elif intents['knowledge'] or MAXY1_1.should_use_wikipedia(message):
-            wiki_result = MAXY1_1.quick_wikipedia_lookup(message)
-            if wiki_result:
-                # Allow 4-5 sentences for "Gemini-like" fluency
-                raw_sentences = [s.strip() for s in wiki_result.split('. ') if s.strip()]
-                
-                # Smart filtering: remove very short "sentences" that might be artifacts
-                clean_sentences = [s for s in raw_sentences if len(s) > 10]
-                
-                # Take up to 5 sentences
-                sentences = clean_sentences[:5] 
-                concise = '. '.join(sentences)
-                if not concise.endswith('.'):
-                    concise += '.'
-                    
-                # If too short, add a follow up
-                if len(concise) < 100:
-                    concise += " Would you like to know more about its history or specific details?"
-                    
-                return (concise, 0.92)
-            else:
-                return ("I looked into that but couldn't find a precise match in my immediate database. Could you provide a bit more context or rephrase your question? I'm eager to help!", 0.82)
-
         # Simple task - Check for single word/short "tasks" that are actually topics
         elif intents['simple_task']:
             # If message is very short (1-3 words), treat as potential query FIRST
@@ -938,10 +929,15 @@ class MAXY1_2:
         """Generate detailed 5-10 sentence response based on context"""
         msg_lower = message.lower().strip()
         
-        # Priority 1: Check for specific slang conversational greetings
-        slang_response = slang_manager.handle_conversational_slang(message)
-        if slang_response:
-            return (slang_response, 0.99)
+        # Priority 1: Check for deep research FIRST
+        if context['inquiry_depth'] == 'deep' or MAXY1_2.is_research_query(message):
+             # We skip direct response here to let process_message handle research flow
+             pass
+        else:
+            # Priority 2: Check for specific slang conversational greetings
+            slang_response = slang_manager.handle_conversational_slang(message)
+            if slang_response:
+                return (slang_response, 0.99)
             
         intents = context['topics']
         depth = context['inquiry_depth']
@@ -980,10 +976,11 @@ class MAXY1_2:
         elif any(j in msg_lower for j in ['joke', 'funny']):
             jokes = [
                 "Why did the researcher break up with Wikipedia? There were too many redirects to other sources, and they just couldn't commit to one article! It was a classic case of information overload. But seriously, I'd be happy to help you find reliable sources on any topic! 📚",
-                "What do you call a scientist who loves to dance? A step-researcher! They really know how to move through the data. I'd love to help you find information that's equally engaging and informative! 🎵",
-                "Why don't scientists trust atoms? Because they make up everything - literally! And I've thoroughly researched this claim. Speaking of research, is there a topic you'd like me to investigate for you? ⚛️"
+                "Why don't deep-learning models ever go on vacation? Because they're always afraid they'll lose their weights! 😅",
+                "How many researchers does it take to change a lightbulb? Only one, but they'll need five peer-reviewed sources and a comprehensive meta-analysis of lightbulb efficiency first! 😂",
+                "I asked a research paper for a joke, but it said the results were inconclusive and required further study. Typical, right? 📖"
             ]
-            return (random.choice(jokes), 0.91)
+            return (random.choice(jokes), 0.92)
         
         # Personal feelings - Empathetic and offering research (6-8 sentences)
         elif intents['personal']:
@@ -1165,7 +1162,11 @@ class MAXY1_3:
                 break
         
         # Priority: If it's a known algorithm or technical concept, it's code
-        technical_concepts = ['bubble sort', 'binary search', 'linked list', 'quick sort', 'merge sort', 'dfs', 'bfs']
+        technical_concepts = [
+            'bubble sort', 'binary search', 'linked list', 'quick sort', 'merge sort', 
+            'dfs', 'bfs', 'dijkstra', 'dynamic programming', 'hash map', 'stack trace',
+            'rest api', 'webhook', 'database schema', 'unit test', 'regex', 'regular expression'
+        ]
         if any(concept in msg_lower for concept in technical_concepts):
             return True, detected_lang
 
@@ -1476,15 +1477,7 @@ class MAXY1_3:
                 chart_data = {'type': chart_type, 'title': title, 'base64_image': base64_image, 'description': description}
                 confidence = 0.95
             
-        # 3. Check for code generation request (Upgraded)
-        if not response and MAXY1_3.is_code_request(message)[0]:
-             # Double check it's not a misclassified chart request
-             if "chart" not in message.lower() and "plot" not in message.lower():
-                language = MAXY1_3.is_code_request(message)[1]
-                response = MAXY1_3.generate_code(language, message)
-                confidence = 0.93
-
-        # 5. Check for Stock Analysis (NEW Logic)
+        # 4. Check for Stock Analysis (NEW Logic)
         if not response:
             stock_match = re.search(r'\b(stock|price|ticker)\s+(?:of\s+)?([A-Z]{1,5})\b', message.upper())
             if stock_match:
