@@ -1175,12 +1175,6 @@ class MAXY1_3:
         if any(concept in msg_lower for concept in technical_concepts):
             return True, detected_lang
 
-        # Sensitivity boost for short technical-looking queries
-        if not is_code and len(msg_lower.split()) <= 3 and not any(g in msg_lower for g in ['hello', 'hi', 'hey', 'help']):
-            # If it looks like a potential technical term, treat as code search
-            if len(msg_lower) > 3:
-                is_code = True
-        
         return is_code, detected_lang
     
     @staticmethod
