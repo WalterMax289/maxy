@@ -52,6 +52,7 @@ async function registerUser(name, email, password) {
         email: email,
         password: password,
         options: {
+            emailRedirectTo: window.location.origin,
             data: {
                 full_name: name,
                 join_date: new Date().toISOString()

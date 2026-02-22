@@ -205,13 +205,65 @@ class MAXY1_1:
         """Determine if this is a knowledge/research question"""
         research_keywords = [
             'what is', 'who is', 'how does', 'explain', 'tell me about',
+            'info about', 'information on', 'details about', 'who was',
             'what are', 'define', 'describe', 'history of', 'science',
             'technology', 'biology', 'physics', 'chemistry', 'geography',
             'country', 'capital', 'famous', 'invented', 'discovered',
             'when did', 'where is', 'why does', 'sort', 'search', 'array',
             'list', 'tree', 'graph', 'data structure', 'algorithm', 
             'implement', 'code', 'function', 'class', 'decorator',
-            'python', 'javascript', 'java', 'html', 'css', 'sql'
+            'python', 'javascript', 'java', 'html', 'css', 'sql',
+            'pm of', 'president of', 'governor of', 'ceo of''can you explain',
+'could you tell me',
+'i want to know',
+'learn about',
+'guide to',
+'overview of',
+'introduction to',
+'basics of',
+'advanced',
+'in depth',
+'detailed explanation',
+'summary of',
+'quick facts about',
+'key points of',
+'important facts',
+'meaning of',
+'definition of',
+'full form of',
+'origin of',
+'background of',
+'concept of'
+ Time / Historical Queries
+'when was',
+'when is',
+'how long does',
+'how long did',
+'how many years',
+'timeline of',
+'era of',
+'period of',
+'ancient',
+'modern',
+'medieval',
+'future of',
+'predicted',
+'forecast of',
+'trend in',
+'evolution of'
+# Location / Geography
+'located in',
+'situated in',
+'map of',
+'population of',
+'area of',
+'largest',
+'smallest',
+'bordering',
+'neighboring countries',
+'climate of',
+'currency of',
+'language of'
         ]
         msg_lower = message.lower()
         return any(kw in msg_lower for kw in research_keywords) and len(message) < 200
@@ -325,7 +377,7 @@ class MAXY1_1:
             'time_query': any(t in msg_lower for t in ['time', 'what time', 'current time']),
             'date_query': any(d in msg_lower for d in ['date', 'today', 'what day']),
             'help': any(h in msg_lower for h in ['help', 'what can you do']),
-            'knowledge': any(k in msg_lower for k in ['what is', 'who is', 'how does', 'explain', 'tell me about']),
+            'knowledge': any(k in msg_lower for k in ['what is', 'who is', 'how does', 'explain', 'tell me about', 'info about', 'information on', 'details about']),
             'calculation': any(c in msg_lower for c in ['calculate', 'math', 'plus', 'minus', 'times', 'divided']),
             'weather': any(w in msg_lower for w in ['weather', 'temperature', 'rain', 'sunny']),
             'simple_task': len(message.split()) <= 3 and not any(char.isdigit() for char in message)
@@ -602,13 +654,15 @@ class MAXY1_2:
         """Determine if user wants deep research or just conversation"""
         research_indicators = [
             'research', 'tell me about', 'what is', 'who is', 'explain',
+            'info about', 'information on', 'details about', 'who was',
             'history of', 'science of', 'how does', 'why does', 'information about',
             'learn about', 'tell me more about', 'details about', 'wikipedia',
             'discovered', 'invented', 'founded', 'created by', 'origin of',
             'biology', 'chemistry', 'physics', 'astronomy', 'geography',
             'country', 'capital', 'population', 'famous for',
             'sort', 'search', 'array', 'list', 'tree', 'graph', 'data structure',
-            'algorithm', 'implement', 'code', 'function', 'class', 'decorator'
+            'algorithm', 'implement', 'code', 'function', 'class', 'decorator',
+            'pm of', 'president of', 'governor of', 'ceo of'
         ]
         
         conversation_indicators = [

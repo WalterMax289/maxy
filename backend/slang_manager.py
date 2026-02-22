@@ -74,7 +74,7 @@ class SlangManager:
             
             # Hindi
             "kya", "haal", "bhai", "yaar", "dost", "kaise", "bol", "mast", "jhakaas",
-            "bindaas", "paisa", "waat", "kalti", "khopdi", "bheja", "dhassu",
+            "bindaas", "paisa", "waat", "kalti", "khopdi", "bheja", "dhassu","acha"
             
             # Tamil
             "eppadi", "irukkenga", "nanba", "vanakkam", "yenna", "saappaadu", "thalaiva",
