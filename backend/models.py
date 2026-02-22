@@ -8,6 +8,8 @@ import logging
 import re
 from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
+import os
+import json
 import wikipedia
 from data_analyzer import AdvancedAnalyzer, TextAnalyzer, StructuredDataAnalyzer
 from code_composer import CodeComposer
@@ -209,6 +211,9 @@ class MAXY1_1:
             'what are', 'define', 'describe', 'history of', 'science',
             'technology', 'biology', 'physics', 'chemistry', 'geography',
             'country', 'capital', 'famous', 'invented', 'discovered',
+            'meaning of', 'purpose', 'history', 'science', 'research', 'analysis',
+            'details', 'whois', 'news', 'happening', 'headlines', 'trends',
+            'health', 'medical', 'symptoms', 'treatment', 'prevention',
             'when did', 'where is', 'why does', 'sort', 'search', 'array',
             'list', 'tree', 'graph', 'data structure', 'algorithm', 
             'implement', 'code', 'function', 'class', 'decorator',
@@ -260,7 +265,7 @@ class MAXY1_1:
             'business model of', 'case study of', 'impact of', 'benefits of'
         ]
         msg_lower = message.lower()
-        return any(kw in msg_lower for kw in research_keywords) and len(message) < 200
+        return any(kw in msg_lower for kw in research_keywords)
     
     @staticmethod
     def quick_wikipedia_lookup(query: str) -> Optional[str]:
@@ -370,7 +375,9 @@ class MAXY1_1:
             'entertainment': any(j in msg_lower for j in ['joke', 'funny', 'laugh']),
             'time_query': any(t in msg_lower for t in ['time', 'what time', 'current time']),
             'date_query': any(d in msg_lower for d in ['date', 'today', 'what day']),
+            'daily_updates': any(u in msg_lower for u in ['daily updates', 'what is new', 'whats new', 'latest updates']),
             'help': any(h in msg_lower for h in ['help', 'what can you do']),
+            'news': any(n in msg_lower for n in ['news', 'happening', 'headlines', 'world today', 'current events']),
             'knowledge': any(k in msg_lower for k in ['what is', 'who is', 'how does', 'explain', 'tell me about', 'info about', 'information on', 'details about', 'is there a meaning', 'meaning of', 'purpose of']),
             'calculation': any(c in msg_lower for c in ['calculate', 'math', 'plus', 'minus', 'times', 'divided']),
             'weather': any(w in msg_lower for w in ['weather', 'temperature', 'rain', 'sunny']),
@@ -397,8 +404,21 @@ class MAXY1_1:
         intents = intent_analysis['intents']
         msg_lower = message.lower().strip()
         
-        # Priority 1: Check for knowledge/research queries FIRST to avoid accidental slang triggers
-        if intents['knowledge'] or MAXY1_1.should_use_wikipedia(message):
+        # Priority 0: Daily Updates handler
+        if intents.get('daily_updates'):
+            try:
+                updates_path = os.path.join(os.path.dirname(__file__), "updates.json")
+                if os.path.exists(updates_path):
+                    with open(updates_path, 'r') as f:
+                        data = json.load(f)
+                        latest = data['updates'][0]
+                        return (f"Here's the latest update from {latest['date']}: **{latest['title']}**. {latest['description']} Would you like more details?", 0.95)
+            except Exception as e:
+                logger.error(f"Error in daily_updates handler: {e}")
+            return ("I'm checking our latest updates! We've recently enhanced our domain knowledge and added Bangalore slang support. What else would you like to know?", 0.90)
+
+        # Priority 1: Check for knowledge/research/news queries FIRST
+        if intents['knowledge'] or intents.get('news') or MAXY1_1.should_use_wikipedia(message):
             wiki_result = MAXY1_1.quick_wikipedia_lookup(message)
             if wiki_result:
                 # Allow 4-5 sentences for "Gemini-like" fluency
@@ -644,6 +664,10 @@ class MAXY1_2:
             'what are', 'define', 'describe', 'history of', 'science',
             'technology', 'biology', 'physics', 'chemistry', 'geography',
             'country', 'capital', 'famous', 'invented', 'discovered',
+            'news', 'happening', 'headlines', 'world today', 'current events',
+            'daily updates', 'whats new', 'latest updates',
+            'health', 'medical', 'symptoms', 'treatment', 'prevention',
+            'trends', 'latest in', 'quantum', 'innovation',
             'when did', 'where is', 'why does', 'the history of',
             'pm of', 'president of', 'governor of', 'ceo of',
             'can you explain', 'could you tell me', 'i want to know',
@@ -1059,6 +1083,26 @@ class MAXY1_2:
                  if web_result['success']:
                      result = web_result
 
+            # Daily Updates special handling
+            if any(u in message.lower() for u in ['daily updates', 'whats new', 'what is new', 'latest updates']):
+                try:
+                    import json
+                    updates_path = os.path.join(os.path.dirname(__file__), "updates.json")
+                    with open(updates_path, 'r') as f:
+                        data = json.load(f)
+                        resp = "**MAXY DAILY UPDATES**\n" + "="*30 + "\n\n"
+                        for up in data['updates'][:3]:
+                            resp += f"• **{up['title']}** ({up['date']}): {up['description']}\n"
+                        resp += "\nWould you like more details on any of these?"
+                        return {
+                            'response': resp,
+                            'model': MAXY1_2.NAME,
+                            'confidence': 0.98,
+                            'thinking': thinking
+                        }
+                except Exception as e:
+                    logger.error(f"Error in MAXY 1.2 daily_updates handler: {e}")
+
             raw_response = result['response']
             
             # Format based on inquiry depth (5-10 sentences)
@@ -1395,16 +1439,19 @@ class MAXY1_3:
         msg_lower = message.lower().strip()
         
         # Core intents from 1.1
+        # Core intents
         intents = {
-            'greeting': any(g in msg_lower for g in ['hi', 'hello', 'hey', 'greetings', 'howdy', 'namaskaar']),
-            'farewell': any(f in msg_lower for f in ['bye', 'goodbye', 'see you', 'farewell', 'later']),
-            'gratitude': any(t in msg_lower for t in ['thanks', 'thank you', 'appreciate', 'grateful']),
+            'greeting': any(re.search(r'\b' + re.escape(g) + r'\b', msg_lower) for g in ['hi', 'hello', 'hey', 'greetings', 'howdy', 'namaskaar']),
+            'farewell': any(re.search(r'\b' + re.escape(f) + r'\b', msg_lower) for f in ['bye', 'goodbye', 'see you', 'farewell', 'later']),
+            'gratitude': any(re.search(r'\b' + re.escape(t) + r'\b', msg_lower) for t in ['thanks', 'thank you', 'appreciate', 'grateful']),
             'personal_status': any(h in msg_lower for h in ['how are you', 'how you doing']),
             'identity': any(i in msg_lower for i in ['your name', 'who are you', 'what are you']),
             'entertainment': any(j in msg_lower for j in ['joke', 'funny', 'laugh']),
             'time_query': any(t in msg_lower for t in ['time', 'what time', 'current time']),
             'date_query': any(d in msg_lower for d in ['date', 'today', 'what day']),
             'help': any(h in msg_lower for h in ['help', 'what can you do']),
+            'news': any(n in msg_lower for n in ['news', 'happening', 'headlines', 'world today', 'current events']),
+            'daily_updates': any(u in msg_lower for u in ['daily updates', 'whats new', 'what is new', 'latest updates']),
             'weather': any(w in msg_lower for w in ['weather', 'temperature', 'rain', 'sunny']),
             'calculation': any(c in msg_lower for c in ['calculate', 'math', 'plus', 'minus', 'times', 'divided']),
         }
@@ -1494,6 +1541,21 @@ class MAXY1_3:
                 analysis_type
             )
         
+        # 0. Daily Updates check
+        if not response and intents.get('daily_updates'):
+            try:
+                import json
+                updates_path = os.path.join(os.path.dirname(__file__), "updates.json")
+                with open(updates_path, 'r') as f:
+                    data = json.load(f)
+                    response = "**MAXY ENTERPRISE INTELLIGENCE: DAILY UPDATES**\n" + "="*50 + "\n\n"
+                    for up in data['updates']:
+                        response += f"### {up['title']} ({up['date']})\n{up['description']}\n\n"
+                    response += "Would you like an in-depth analysis of any of these trends or improvements?"
+                    confidence = 0.99
+            except Exception as e:
+                logger.error(f"Error in MAXY 1.3 daily_updates handler: {e}")
+
         # 1. PRIORITY: UTILITY FEATURES (Weather/Time/Date) - Priority check to avoid false positives
         
         # Weather (from 1.1)
@@ -1515,7 +1577,7 @@ class MAXY1_3:
             if intents['time_query']:
                 response = f"It's {datetime.now().strftime('%I:%M %p')} right now! ⏰"
                 confidence = 0.97
-            elif intents['date_query']:
+            elif intents['date_query'] and not intents['news']:
                 response = f"Today is {datetime.now().strftime('%A, %B %d, %Y')}! 📅"
                 confidence = 0.97
 

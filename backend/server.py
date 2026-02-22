@@ -148,6 +148,7 @@ async def root():
             "health": "/health",
             "conversations": "/conversations",
             "models": "/models",
+            "updates": "/api/updates",
             "docs": "/api/docs"
         }
     }
@@ -243,6 +244,21 @@ async def get_model_info(model_name: str):
         )
     
     return model_info
+
+
+@app.get("/api/updates", tags=["Updates"])
+async def get_updates():
+    """Get daily updates and feature announcements"""
+    try:
+        updates_file = os.path.join(os.path.dirname(__file__), "updates.json")
+        if os.path.exists(updates_file):
+            import json
+            with open(updates_file, 'r') as f:
+                return json.load(f)
+        return {"updates": [], "message": "No updates available"}
+    except Exception as e:
+        logger.error(f"Error reading updates: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to load updates")
 
 
 # ===== CHAT ENDPOINTS =====

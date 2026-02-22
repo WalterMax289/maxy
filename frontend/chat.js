@@ -98,6 +98,11 @@ const newChatBtn = document.getElementById("newChatBtn");
 const recentsList = document.getElementById("recentsList");
 const uploadBtn = document.querySelector(".upload-btn");
 const submenu = document.querySelector(".upload-submenu");
+const updatesModal = document.getElementById("updatesModal");
+const updatesList = document.getElementById("updatesList");
+const closeUpdatesBtn = document.getElementById("closeUpdatesBtn");
+const dismissUpdatesBtn = document.getElementById("dismissUpdatesBtn");
+const dontShowAgainCheckbox = document.getElementById("dontShowAgain");
 const submenuButtons = document.querySelectorAll(".upload-submenu button");
 const deleteModal = document.getElementById("deleteModal");
 const cancelDelete = document.getElementById("cancelDelete");
@@ -1672,6 +1677,7 @@ document.addEventListener('DOMContentLoaded', () => {
   startConnectionMonitoring();
   setupDragAndDrop();
   loadUserProfile(); // Load user profile data
+  initDailyUpdates(); // Initialize Daily Updates modal
 
   // Add click handler to connection status for manual retry
   const statusContainer = document.getElementById('connectionStatus');
@@ -1717,6 +1723,82 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Periodically check credits
 setInterval(checkCredits, 30000); // Check every 30 seconds
+
+// ===== DAILY UPDATES LOGIC =====
+async function fetchDailyUpdates() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/updates`);
+    if (!response.ok) throw new Error('Failed to fetch updates');
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching updates:', error);
+    return null;
+  }
+}
+
+function showDailyUpdatesModal(data) {
+  if (!data || !data.updates || data.updates.length === 0) return;
+
+  const lastViewedUpdate = localStorage.getItem('maxyLastViewedUpdate');
+  const dontShowAgain = localStorage.getItem('maxyDontShowUpdates') === 'true';
+  const latestUpdateDate = data.updates[0].date;
+
+  // If user said "don't show again" for THIS specific update, skip
+  if (dontShowAgain && lastViewedUpdate === latestUpdateDate) {
+    return;
+  }
+
+  // Clear loading state
+  updatesList.innerHTML = '';
+
+  data.updates.forEach(update => {
+    const item = document.createElement('div');
+    item.className = 'update-item';
+
+    let badgeClass = 'badge-feature';
+    if (update.type === 'improvement') badgeClass = 'badge-improvement';
+    if (update.type === 'fix') badgeClass = 'badge-fix';
+
+    item.innerHTML = `
+      <span class="update-badge ${badgeClass}">${update.type}</span>
+      <div class="update-title">${update.title}</div>
+      <div class="update-description">${update.description}</div>
+      <div class="update-date">${update.date}</div>
+    `;
+    updatesList.appendChild(item);
+  });
+
+  updatesModal.style.display = 'flex';
+
+  // Track that we showed this update
+  localStorage.setItem('maxyLastViewedUpdate', latestUpdateDate);
+}
+
+function initDailyUpdates() {
+  if (!updatesModal) return;
+
+  // Close handlers
+  const closeUpdates = () => {
+    updatesModal.style.display = 'none';
+    if (dontShowAgainCheckbox.checked) {
+      localStorage.setItem('maxyDontShowUpdates', 'true');
+    } else {
+      localStorage.setItem('maxyDontShowUpdates', 'false');
+    }
+  };
+
+  closeUpdatesBtn.addEventListener('click', closeUpdates);
+  dismissUpdatesBtn.addEventListener('click', closeUpdates);
+
+  updatesModal.addEventListener('click', (e) => {
+    if (e.target === updatesModal) closeUpdates();
+  });
+
+  // Fetch and show
+  fetchDailyUpdates().then(data => {
+    if (data) showDailyUpdatesModal(data);
+  });
+}
 
 // Cleanup on page unload
 window.addEventListener('beforeunload', () => {

@@ -1,0 +1,23 @@
+{
+    "last_updated": "2026-02-22",
+    "updates": [
+        {
+            "date": "2026-02-22",
+            "title": "Specialized Domain Evaluation",
+            "description": "MAXY models now have enhanced capabilities in Technical, Educational, Health, and News domains.",
+            "type": "feature"
+        },
+        {
+            "date": "2026-02-21",
+            "title": "Deep Research Integration",
+            "description": "MAXY 1.3 now uses dynamic web research for more accurate and up-to-date information.",
+            "type": "improvement"
+        },
+        {
+            "date": "2026-02-20",
+            "title": "Bangalore Slang Support",
+            "description": "All MAXY models now understand and can respond with authentic Bangalore slang.",
+            "type": "feature"
+        }
+    ]
+}
