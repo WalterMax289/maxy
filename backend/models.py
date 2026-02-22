@@ -504,7 +504,8 @@ class MAXY1_1:
         # Simple task - Check for single word/short "tasks" that are actually topics
         elif intents['simple_task']:
             # If message is very short (1-3 words), treat as potential query FIRST
-            if len(message.split()) <= 3:
+            # Unnless it's a identified slang greeting/trigger
+            if len(message.split()) <= 3 and not use_slang:
                  wiki_result = MAXY1_1.quick_wikipedia_lookup(message)
                  if wiki_result:
                     raw_sentences = [s.strip() for s in wiki_result.split('. ') if s.strip()]
@@ -936,6 +937,12 @@ class MAXY1_2:
     def generate_detailed_response(context: Dict[str, Any], message: str, conversation_history: Optional[List[Dict]] = None, use_slang: bool = False, user_name: Optional[str] = None) -> tuple[str, float]:
         """Generate detailed 5-10 sentence response based on context"""
         msg_lower = message.lower().strip()
+        
+        # Priority 1: Check for specific slang conversational greetings
+        slang_response = slang_manager.handle_conversational_slang(message)
+        if slang_response:
+            return (slang_response, 0.99)
+            
         intents = context['topics']
         depth = context['inquiry_depth']
         complexity = context['complexity']
@@ -1412,6 +1419,16 @@ class MAXY1_3:
         
         # Detect slang usage
         use_slang = slang_manager.detect_slang(message)
+        
+        # Priority 0: Check for specific slang conversational greetings
+        slang_response = slang_manager.handle_conversational_slang(message)
+        if slang_response:
+            return {
+                'response': slang_response,
+                'model': MAXY1_3.NAME,
+                'confidence': 0.99,
+                'thinking': thinking
+            }
         
         msg_lower = message.lower().strip()
         response = None
