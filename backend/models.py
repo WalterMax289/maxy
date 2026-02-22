@@ -360,18 +360,18 @@ class MAXY1_1:
         """Analyze what the user wants - improved context understanding"""
         msg_lower = message.lower().strip()
         
-        # Intent categories
+        # Intent categories with word boundaries for short words
         intents = {
-            'greeting': any(g in msg_lower for g in ['hi', 'hello', 'hey', 'greetings', 'howdy']),
-            'farewell': any(f in msg_lower for f in ['bye', 'goodbye', 'see you', 'farewell', 'later']),
-            'gratitude': any(t in msg_lower for t in ['thanks', 'thank you', 'appreciate', 'grateful']),
+            'greeting': any(re.search(r'\b' + re.escape(g) + r'\b', msg_lower) for g in ['hi', 'hello', 'hey', 'greetings', 'howdy']),
+            'farewell': any(re.search(r'\b' + re.escape(f) + r'\b', msg_lower) for f in ['bye', 'goodbye', 'see you', 'farewell', 'later']),
+            'gratitude': any(re.search(r'\b' + re.escape(t) + r'\b', msg_lower) for t in ['thanks', 'thank you', 'appreciate', 'grateful']),
             'personal_status': any(h in msg_lower for h in ['how are you', 'how you doing']),
             'identity': any(i in msg_lower for i in ['your name', 'who are you', 'what are you']),
             'entertainment': any(j in msg_lower for j in ['joke', 'funny', 'laugh']),
             'time_query': any(t in msg_lower for t in ['time', 'what time', 'current time']),
             'date_query': any(d in msg_lower for d in ['date', 'today', 'what day']),
             'help': any(h in msg_lower for h in ['help', 'what can you do']),
-            'knowledge': any(k in msg_lower for k in ['what is', 'who is', 'how does', 'explain', 'tell me about', 'info about', 'information on', 'details about']),
+            'knowledge': any(k in msg_lower for k in ['what is', 'who is', 'how does', 'explain', 'tell me about', 'info about', 'information on', 'details about', 'is there a meaning', 'meaning of', 'purpose of']),
             'calculation': any(c in msg_lower for c in ['calculate', 'math', 'plus', 'minus', 'times', 'divided']),
             'weather': any(w in msg_lower for w in ['weather', 'temperature', 'rain', 'sunny']),
             'simple_task': len(message.split()) <= 3 and not any(char.isdigit() for char in message)
@@ -477,7 +477,7 @@ class MAXY1_1:
             if 'in' in words:
                 idx = words.index('in')
                 if idx + 1 < len(words):
-                    city = words[idx + 1].strip('?.!')
+                    city = " ".join(words[idx + 1:]).strip('?.!')
             
             # If no "in", try to take the last word if it looks like a city
             if not city and len(words) > 0:
@@ -1142,14 +1142,13 @@ class MAXY1_3:
             'program', 'script', 'example', 'syntax', 'algorithm', 'implement',
             'snippet', 'coding', 'develop', 'setup', 'server', 'logic',
             'sort', 'search', 'array', 'list', 'tree', 'graph', 'data structure',
+            'snippet', 'coding', 'develop', 'setup', 'server', 'logic',
+            'sort', 'search', 'array', 'list', 'tree', 'graph', 'data structure',
             'decorator', 'class', 'method', 'variable', 'loop', 'conditional',
-            # technical from expanded list
             'syntax of', 'how to use', 'usage of', 'best practices for',
             'error in', 'debug', 'optimize', 'performance of',
             'library for', 'framework for', 'api for', 'database',
-            'backend', 'frontend', 'full stack', 'machine learning',
-            'artificial intelligence', 'cybersecurity', 'cloud computing',
-            'blockchain', 'data science', 'deep learning',
+            'backend', 'frontend', 'full stack', 'coding for',
             'time complexity', 'space complexity', 'big o notation',
             'linear search', 'binary search', 'merge sort', 'quick sort',
             'dynamic programming', 'recursion', 'greedy algorithm',
@@ -1433,15 +1432,28 @@ class MAXY1_3:
                 inquiry_depth = depth
                 break
                 
+        # Detect question complexity (align with 1.2)
+        complexity = 'simple'
+        question_words = msg_lower.count('?')
+        word_count = len(message.split())
+        
+        if word_count > 15 or question_words >= 2:
+            complexity = 'complex'
+        elif word_count > 8 or question_words == 1:
+            complexity = 'moderate'
+
         return {
             'intents': intents,
             'topics': topics,
-            'depth': inquiry_depth,
+            'complexity': complexity,
+            'inquiry_depth': inquiry_depth,
+            'depth': inquiry_depth,  # Keep for 1.3 internal logic if used
             'is_research': MAXY1_2.is_research_query(message),
             'is_code': MAXY1_3.is_code_request(message)[0],
             'is_chart': MAXY1_3.is_chart_request(message)[0],
             'is_website': MAXY1_3.is_website_request(message)[0],
-            'word_count': len(message.split())
+            'word_count': word_count,
+            'message_length': len(message)
         }
 
     @staticmethod
@@ -1490,7 +1502,8 @@ class MAXY1_3:
             city = None
             if 'in' in words:
                 idx = words.index('in')
-                if idx + 1 < len(words): city = words[idx + 1].strip('?.!')
+                if idx + 1 < len(words):
+                    city = " ".join(words[idx + 1:]).strip('?.!')
             if city:
                 weather_info = MAXY1_1.get_weather(city)
                 if weather_info:
