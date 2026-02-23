@@ -94,69 +94,19 @@ python -m http.server 5500 --directory frontend
 
 ---
 
-## 📁 Project Structure
+## 📂 Project Roadmap
 
-```
-maxy/
-├── backend/
-│   ├── server.py         # Main FastAPI application
-│   ├── models.py         # AI model implementations
-│   ├── config.py         # Configuration management
-│   ├── schemas.py        # Pydantic models
-│   ├── database.py       # Database operations
-│   ├── news_updater.py   # News fetching service
-│   └── updates.json      # Dynamic updates data
-├── frontend/
-│   ├── chat.html         # Main chat interface
-│   ├── chat.css         # Styling
-│   ├── chat.js          # Frontend logic
-│   └── assets/          # Images and assets
-├── logs/                # Application logs
-├── .env.example         # Environment template
-└── start_backend.bat    # Windows startup script
-```
+- [x] **v2.0**: Bangalore Slang Integration
+- [x] **v2.0**: Real-time Daily Updates popover
+- [x] **v2.0**: Advanced File Intelligence (PDF/CSV)
+- [ ] **v2.1**: Multi-lingual slang expansion (Planned)
+- [ ] **v2.1**: Image generation integration (Planned)
 
 ---
 
-## 🔧 Configuration
-
-Key environment variables in `.env`:
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DATABASE_URL` | Database connection | SQLite |
-| `SECRET_KEY` | JWT secret | Generated |
-| `DEBUG` | Debug mode | False |
-| `PORT` | Server port | 8000 |
-| `MAX_CREDITS_PER_USER` | Message credits | 30 |
-
----
-
-## 📖 Documentation
-
-- [Detailed Documentation](./DOCUMENTATION.md)
-- [Deployment Guide](./DEPLOYMENT_GUIDE.md)
-- [Render Deployment](./RENDER_DEPLOY.md)
-- [Vercel Deployment](./VERCEL_DEPLOY.md)
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
----
-
-## 📄 License
-
-MIT License - feel free to use this project for any purpose.
-
----
-
-## 👤 Author
-
-**WalterMax289**
-- GitHub: [@WalterMax289](https://github.com/WalterMax289)
+## 📖 Useful Links
+*   [Full Documentation](./DOCUMENTATION.md)
+*   [Vercel + Render Deployment Guide](./DEPLOYMENT_GUIDE.md)
 
 ---
 
