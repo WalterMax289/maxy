@@ -22,7 +22,7 @@ from schemas import (
     ChatRequest, ChatResponse, ChatMessage, FileData, AnalysisResult,
     ConversationCreate, ConversationResponse, DataAnalysisRequest,
     DataAnalysisResponse, ErrorResponse, FeedbackRequest, HealthStatus,
-    ModelInfo, ChartRequest, ChartResponse, FileType
+    ModelInfo, ChartRequest, ChartResponse, FileType, AIThinking
 )
 from models import ModelRouter, MAXYThinkingEngine
 from engine import ConversationManager, ResponseValidator
@@ -410,7 +410,11 @@ async def chat(request: ChatRequest, http_request: Request):
             conversation_id=conv_id,
             response=response_text,
             model_used=request.model,
-            thinking=None,  # Simplified - not using AIThinking object for now
+            thinking=AIThinking(
+                reasoning=thinking,
+                model_used=request.model,
+                confidence=confidence
+            ) if thinking else None,
             file_processed=file_analysis is not None,
             analysis=file_analysis,
             confidence=confidence,

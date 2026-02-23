@@ -229,7 +229,7 @@ class KnowledgeSynthesizer:
             if any(ji in body.lower() for ji in junk_indicators):
                 score *= 0.5
         
-        return max(0.01, score)
+        return min(1.0, max(0.01, score))
 
     @staticmethod
     def verify_facts(query: str, results: List[Dict[str, str]]) -> List[Dict[str, Any]]:
@@ -1816,28 +1816,11 @@ class MAXY1_3:
         result = {
             'response': response,
             'model': MAXY1_3.NAME,
-            'confidence': confidence,
+            'confidence': min(1.0, confidence),
         }
         
         if thinking: result['thinking'] = thinking
         if chart_data: result['charts'] = [chart_data]
-            
-        return result
-        
-        # Inject slang for 1.3 (Code/Analysis)
-        if response and "statistical analysis" not in response.lower() and "generated" not in response.lower():
-             response = slang_manager.enhance_text(response, force=use_slang)
-        
-        result = {
-            'response': response,
-            'model': MAXY1_3.NAME,
-            'confidence': confidence,
-        }
-        
-        if thinking:
-            result['thinking'] = thinking
-        if chart_data:
-            result['charts'] = [chart_data]
             
         return result
 
