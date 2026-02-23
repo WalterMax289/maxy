@@ -82,8 +82,10 @@ class KnowledgeSynthesizer:
         """Extract core keywords from query for relevance scoring"""
         # Basic keyword extraction: remove noise, focus on entities
         noise = ['is', 'who', 'the', 'of', 'what', 'was', 'were', 'tell', 'me', 'about', 'how', 'does', 'are']
+        # Allow short but critical terms like PM, CM, CEO
+        critical_titles = ['pm', 'cm', 'ceo', 'cfo', 'cto', 'md', 'mp', 'mla']
         words = re.findall(r'\b\w+\b', query.lower())
-        return [w for w in words if w not in noise and len(w) > 2]
+        return [w for w in words if (w in critical_titles or (w not in noise and len(w) > 2))]
 
     @staticmethod
     def score_relevance(query: str, title: str, body: str) -> float:
@@ -96,19 +98,43 @@ class KnowledgeSynthesizer:
         matches = sum(1 for kw in keywords if kw in content)
         
         # Identity query boost: If query is "who is X", ensure X is in the content
-        identity_keywords = ['who is', 'who was', 'identity', 'person']
-        if any(ik in query.lower() for ik in identity_keywords):
+        identity_keywords = ['who is', 'who was', 'identity', 'person', 'pm of', 'president of', 'ceo of', 'chief minister of']
+        msg_lower = query.lower()
+        
+        if any(ik in msg_lower for ik in identity_keywords):
+            # Boost matches that contain "is the [title]" or similar direct statements
+            direct_indicators = ['is the current', 'serving as', 'incumbent', 'holds the position', 'is currently the']
+            if any(di in content for di in direct_indicators):
+                matches += 1 
+            
             # Try to find specific names (Title Case words) in query
             names = re.findall(r'\b[A-Z][a-z]+\b', query)
             if names:
                 name_matches = sum(1 for name in names if name.lower() in content)
-                if name_matches == 0:
-                    return 0.1 # Very low relevance if name is missing
+                if name_matches == 0 and len(names) > 0:
+                    return 0.1 # Very low relevance if name is missing from result
+                matches += name_matches
         
-        score = matches / len(keywords)
+        score = matches / (len(keywords) + 1)
+        
+        # News/Headline Penalty for identity queries
+        if any(ik in msg_lower for ik in ['who is', 'pm of', 'president of', 'ceo of', 'cm of']):
+            # Titles with colons, question marks at start, or buzzwords are often news
+            news_indicators = [':', '?', 'breaking', 'live', 'update', 'latest', 'counters', 'claims', 'vs', 'opinion', 'watch', 'video']
+            if any(ni in title.lower() for ni in news_indicators):
+                score *= 0.3
+            
+            # Boost if the Title of the result matches the query keywords well
+            title_matches = sum(1 for kw in keywords if kw in title.lower())
+            if title_matches >= 2:
+                score += 0.2
+                
+            # Wikipedia / Factual Source Boost
+            if "wikipedia" in title.lower() or "britannica" in title.lower() or "biography" in title.lower():
+                score += 0.4
         
         # Penalty for low-quality sources in body (casual mentions)
-        junk_indicators = ['reddit', 'quora', 'forum', 'comment', 'manhwa', 'manga', 'recommendation']
+        junk_indicators = ['reddit', 'quora', 'forum', 'comment', 'manhwa', 'manga', 'recommendation', 'fanfiction']
         # If the user didn't ask for entertainment, penalize entertainment sources
         if not any(ek in query.lower() for ek in ['manga', 'manhwa', 'comic', 'read']):
             if any(ji in body.lower() for ji in junk_indicators):
@@ -273,9 +299,20 @@ class MAXY1_1:
         try:
             candidates = []
             
-            # 1. Wikipedia Search
+            # 1. Wikipedia Search (Prioritize exact title match)
             try:
-                search_results = wikipedia.search(query, results=3)
+                # Try to get the specific page for the query first
+                try:
+                    direct_res = wikipedia.page(query, auto_suggest=True)
+                    candidates.append({
+                        'title': direct_res.title,
+                        'body': direct_res.summary[:800],
+                        'source': 'wikipedia'
+                    })
+                except:
+                    pass
+                    
+                search_results = wikipedia.search(query, results=5)
                 for res in search_results:
                     try:
                         page = wikipedia.page(res, auto_suggest=False)
@@ -292,7 +329,13 @@ class MAXY1_1:
             # 2. DuckDuckGo Search
             try:
                 with DDGS() as ddgs:
-                    results = list(ddgs.text(query, max_results=5))
+                    # For identity queries, try to get more results to find the direct answer
+                    search_query = query
+                    if any(ik in query.lower() for ik in ['pm of', 'ceo of', 'president of']):
+                        if not query.lower().startswith('who is'):
+                            search_query = f"who is the {query}"
+                            
+                    results = list(ddgs.text(search_query, max_results=8))
                     for res in results:
                         candidates.append({
                             'title': res['title'],
@@ -378,7 +421,7 @@ class MAXY1_1:
             'daily_updates': any(u in msg_lower for u in ['daily updates', 'what is new', 'whats new', 'latest updates']),
             'help': any(h in msg_lower for h in ['help', 'what can you do']),
             'news': any(n in msg_lower for n in ['news', 'happening', 'headlines', 'world today', 'current events']),
-            'knowledge': any(k in msg_lower for k in ['what is', 'who is', 'how does', 'explain', 'tell me about', 'info about', 'information on', 'details about', 'is there a meaning', 'meaning of', 'purpose of']),
+            'knowledge': any(k in msg_lower for k in ['what is', 'who is', 'how does', 'explain', 'tell me about', 'info about', 'information on', 'details about', 'is there a meaning', 'meaning of', 'purpose of', 'pm of', 'ceo of', 'president of', 'cm of', 'leader of']),
             'calculation': any(c in msg_lower for c in ['calculate', 'math', 'plus', 'minus', 'times', 'divided']),
             'weather': any(w in msg_lower for w in ['weather', 'temperature', 'rain', 'sunny']),
             'simple_task': len(message.split()) <= 3 and not any(char.isdigit() for char in message)
@@ -421,7 +464,61 @@ class MAXY1_1:
         if intents['knowledge'] or intents.get('news') or MAXY1_1.should_use_wikipedia(message):
             wiki_result = MAXY1_1.quick_wikipedia_lookup(message)
             if wiki_result:
-                # Allow 4-5 sentences for "Gemini-like" fluency
+                # Priority: Identity Extraction (One-word/Short Answer)
+                is_position_query = any(ik in msg_lower for ik in ['pm of', 'president of', 'ceo of', 'cm of', 'leader of', 'who is the current'])
+                is_person_query = msg_lower.startswith('who is ') and not is_position_query
+                
+                if intents.get('knowledge') and (is_position_query or is_person_query):
+                    # Expanded exclusion list for titles, locations, and generic terms
+                    blacklist = [
+                        "University", "Republic", "States", "Kingdom", "Minister", "President", 
+                        "Council", "Congress", "Parliament", "National", "Public", "Official", 
+                        "Government", "General", "Cabinet", "Supreme", "Federal", "Union", "South", "North", "East", "West",
+                        "India", "American", "British", "World", "Global", "Today", "News", "Breaking", "Live", "Update",
+                        "Jagran", "Josh", "Times", "Post", "Gazette", "Chronicle", "Herald", "Observer", "Tribune", "Daily",
+                        "Guardian", "Mirror", "Standard", "Express", "Sun", "Mail", "Telegraph", "Independent", "Reuters", "Associated", "Press",
+                        "White", "House", "Washington", "Street", "Journal", "Gazette", "City", "County", "District",
+                        "Electoral", "College", "Foundation", "Institute", "Organization", "Department", "Agency", "Commission", "Association"
+                    ]
+                    
+                    snippet_clean = wiki_result.replace('\n', ' ').replace(':', ' is ')
+                    
+                    if is_position_query:
+                        # Seeking a Name for a Position
+                        # Pattern 1: [Name] is the [Position]
+                        match1 = re.search(r'\b([A-Z][a-z]+ [A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s+is\s+(?:the\s+)?(?:current\s+)?(?:prime\s+minister|president|ceo|cm|leader|head|ruler)\b', snippet_clean, re.I)
+                        if match1:
+                            name = match1.group(1).strip()
+                            if not any(bl in name for bl in blacklist):
+                                return (f"{name}.", 0.98)
+                                
+                        # Pattern 2: [Position] is [Name]
+                        match2 = re.search(r'\b(?:prime\s+minister|president|ceo|cm|leader)\s+(?:of\s+[\w\s]+)?\s+is\s+([A-Z][a-z]+ [A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\b', snippet_clean, re.I)
+                        if match2:
+                            name = match2.group(1).strip()
+                            if not any(bl in name for bl in blacklist):
+                                return (f"{name}.", 0.98)
+                                
+                    elif is_person_query:
+                        # Seeking a Title for a Person (e.g. "Who is Narendra Modi")
+                        # Return the first 1-2 descriptive sentences
+                        sentences = [s.strip() for s in wiki_result.split('. ') if len(s.strip()) > 15]
+                        if sentences:
+                            # Keep it very concise for MAXY 1.1
+                            return (f"{sentences[0]}.", 0.95)
+                    
+                    # Fallback for position queries: Stricter general name extraction
+                    if is_position_query:
+                        potential_names = re.findall(r'\b[A-Z][a-z]+ [A-Z][a-z]+(?:\s[A-Z][a-z]+)?\b', snippet_clean)
+                        if potential_names:
+                            for name in potential_names:
+                                words_in_name = name.split()
+                                if any(w.lower() in msg_lower for w in words_in_name): continue
+                                if any(bl in name for bl in blacklist): continue
+                                if any(title in name for title in ["Minister", "President", "Secretary", "Director", "Policy", "State", "National", "Public"]): continue
+                                return (f"{name}.", 0.98)
+                            
+                # Allow 4-5 sentences for "Gemini-like" fluency for general knowledge
                 raw_sentences = [s.strip() for s in wiki_result.split('. ') if s.strip()]
                 clean_sentences = [s for s in raw_sentences if len(s) > 10]
                 sentences = clean_sentences[:5] 
@@ -598,12 +695,16 @@ class MAXY1_1:
             response = "I'm listening! Go on." 
             confidence = 0.99
         
-        # Ensure response is 2-3 sentences max for MAXY 1.1
+        # Ensure response logic for MAXY 1.1 conciseness
+        # Only truncate if it's NOT a very short (likely identity) response
         sentences = [s.strip() for s in response.split('. ') if s.strip()]
         if len(sentences) > 3:
             response = '. '.join(sentences[:3])
             if not response.endswith('.'):
                 response += '.'
+        elif len(sentences) == 1 and len(response.split()) <= 4:
+            # If it's a one-word answer, leave it as is (with optional ending dot)
+            pass
         
         # Inject slang (chance based) for standard interactions
         if not intent_analysis.get('is_new_user', False) and intent_analysis['intents']['greeting'] == False: # Don't double slang greeting

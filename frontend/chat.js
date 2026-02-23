@@ -32,11 +32,19 @@ function detectBackendUrl() {
   // Check localStorage for manual override
   const stored = localStorage.getItem('maxyBackendUrl');
   if (stored) return stored;
+
   // Default to localhost
   return 'http://localhost:8000';
 }
 
-const BACKEND_URL = PRODUCTION_BACKEND_URL || detectBackendUrl();
+// Logic: Use detectBackendUrl() first. If it returns something besides localhost (like empty string for same-origin), 
+// it means we are likely running in the same environment as the backend.
+// Otherwise, fall back to PRODUCTION_BACKEND_URL if detectBackendUrl returns default localhost but we're not on localhost.
+const detectedBase = detectBackendUrl();
+const BACKEND_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? detectedBase
+  : (PRODUCTION_BACKEND_URL || detectedBase);
+
 console.log('Backend URL configured as:', BACKEND_URL || '(same origin - relative URLs)');
 let isBackendConnected = false;
 let connectionCheckInterval = null;
@@ -1745,9 +1753,10 @@ function updateDailyUpdatesUI(data) {
     let badgeClass = 'badge-feature';
     if (update.type === 'improvement') badgeClass = 'badge-improvement';
     if (update.type === 'fix') badgeClass = 'badge-fix';
+    if (update.type === 'happening') badgeClass = 'badge-happening';
 
     item.innerHTML = `
-      <span class="update-hover-badge ${badgeClass}">${update.type}</span>
+      <span class="update-hover-badge ${badgeClass}">${update.type || 'update'}</span>
       <div class="update-hover-title">${update.title}</div>
       <div class="update-hover-desc">${update.description}</div>
       <div class="update-hover-date">${update.date}</div>

@@ -21,6 +21,7 @@ class WorldNewsUpdater:
                 for res in news_results:
                     updates.append({
                         "title": res.get("title", "Global News Update"),
+                        "type": "happening",
                         "date": datetime.now().strftime("%B %d, %Y"),
                         "description": res.get("body", "Breaking news from around the world today.")
                     })
