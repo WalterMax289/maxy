@@ -980,44 +980,8 @@ async function copyToClipboard(text) {
   }
 }
 
-function showToast(message) {
-  const existingToast = document.querySelector('.toast-notification');
-  if (existingToast) existingToast.remove();
+/* showToast utility moved to utils.js */
 
-  const toast = document.createElement('div');
-  toast.className = 'toast-notification';
-  toast.textContent = message;
-  toast.style.cssText = `
-    position: fixed;
-    bottom: 100px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: rgba(30, 30, 30, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.1);
-    padding: 12px 24px;
-    border-radius: 10px;
-    color: #fff;
-    font-size: 14px;
-    z-index: 1000;
-    opacity: 0;
-    transition: all 0.3s ease;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-  `;
-
-  document.body.appendChild(toast);
-
-  requestAnimationFrame(() => {
-    toast.style.opacity = '1';
-    toast.style.transform = 'translateX(-50%) translateY(0)';
-  });
-
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(-50%) translateY(20px)';
-    setTimeout(() => toast.remove(), 300);
-  }, 2000);
-}
 
 // ===== FALLBACK AI RESPONSES =====
 const FALLBACK_RESPONSES = [
@@ -1070,7 +1034,7 @@ async function sendMessage() {
       // Remove the old message and its AI response
       chat.messages.splice(messageIndex, 2);
       // Remove from DOM
-      const messageEl = document.querySelector(`[data-message-id="${editingMessageId}"]`);
+      const messageEl = document.querySelector(`[data - message - id= "${editingMessageId}"]`);
       if (messageEl) {
         const aiResponseEl = messageEl.nextElementSibling;
         messageEl.style.opacity = '0';
@@ -1129,7 +1093,7 @@ async function sendMessage() {
       const maxSize = 10 * 1024 * 1024;
       if (uploadedFile.size > maxSize) {
         hideTypingIndicator();
-        addMessage(`❌ File too large. Maximum size is 10MB. Your file is ${formatFileSize(uploadedFile.size)}.`, "ai");
+        addMessage(`❌ File too large.Maximum size is 10MB.Your file is ${ formatFileSize(uploadedFile.size) }.`, "ai");
         sendBtn.disabled = false;
         return;
       }
@@ -1142,94 +1106,94 @@ async function sendMessage() {
       };
     }
 
-    const chatUrl = BACKEND_URL ? `${BACKEND_URL}/chat` : '/chat';
-    const response = await fetch(chatUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody),
-      signal: controller.signal
-    });
+    const chatUrl = BACKEND_URL ? `${ BACKEND_URL } /chat` : '/chat';
+const response = await fetch(chatUrl, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(requestBody),
+  signal: controller.signal
+});
 
-    clearTimeout(timeoutId);
-    hideTypingIndicator();
+clearTimeout(timeoutId);
+hideTypingIndicator();
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const errorMessage = errorData.detail || `Server error: ${response.status}`;
+if (!response.ok) {
+  const errorData = await response.json().catch(() => ({}));
+  const errorMessage = errorData.detail || `Server error: ${response.status}`;
 
-      if (response.status === 413) {
-        addMessage(`❌ ${errorMessage}`, "ai");
-      } else if (response.status === 429) {
-        addMessage(`⏳ Rate limit exceeded. Please wait a moment before trying again.`, "ai");
-      } else if (response.status >= 500) {
-        addMessage(`❌ Server error (${response.status}). Please try again later.`, "ai");
-      } else {
-        addMessage(`❌ ${errorMessage}`, "ai");
-      }
-      sendBtn.disabled = false;
-      return;
-    }
-
-    const data = await response.json();
-
-    addMessage(data.response || "No response received.", "ai");
-
-    if (data.charts && data.charts.length > 0) {
-      data.charts.forEach(chart => {
-        const chartHtml = `<img src="data:image/png;base64,${chart.base64_image}" alt="${chart.description}" style="max-width: 100%; border-radius: 8px; margin-top: 10px;" />`;
-        addMessageToDOM(chartHtml, "ai");
-      });
-    }
-
-    if (data.suggestions && data.suggestions.length > 0) {
-      showQuickReplies(data.suggestions);
-    } else {
-      showQuickReplies(QUICK_REPLY_SUGGESTIONS);
-    }
-
-    if (uploadedFile && data.fileProcessed) {
-      clearUploadedFile();
-    }
-
-    sendBtn.disabled = false;
-  } catch (err) {
-    clearTimeout(timeoutId);
-    hideTypingIndicator();
-    sendBtn.disabled = false;
-
-    if (err.name === 'AbortError') {
-      addMessage("⏱️ Request timed out. The server took too long to respond. Please try again.", "ai");
-    } else if (err.message && err.message.includes('fetch')) {
-      // Backend not available - use offline fallback responses
-      console.log('Backend not available, using offline mode');
-      const lowerText = text.toLowerCase();
-      let response = FALLBACK_RESPONSES[Math.floor(Math.random() * FALLBACK_RESPONSES.length)];
-
-      if (lowerText.includes('hello') || lowerText.includes('hi')) {
-        response = "Hello! Nice to meet you! How can I help you today?";
-      } else if (lowerText.includes('help')) {
-        response = "I'm here to help! I can answer questions, have conversations, or just chat. What do you need?";
-      } else if (lowerText.includes('time')) {
-        response = `The current time is ${new Date().toLocaleTimeString()}.`;
-      } else if (lowerText.includes('date') || lowerText.includes('day')) {
-        response = `Today is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`;
-      } else if (lowerText.includes('your name')) {
-        response = "I'm MAXY, your AI assistant! I'm running in offline mode right now since the backend server isn't connected. Start the server by running START_SERVER.bat";
-      } else if (lowerText.includes('thank')) {
-        response = "You're welcome! Happy to help!";
-      } else if (lowerText.includes('bye')) {
-        response = "Goodbye! Have a great day!";
-      } else if (lowerText.includes('server') || lowerText.includes('backend') || lowerText.includes('connect')) {
-        response = "To connect to the backend:\n1. Close this browser tab\n2. Run START_SERVER.bat\n3. Wait for 'Uvicorn running' message\n4. Refresh this page";
-      }
-
-      addMessage(response + "\n\n⚠️ Running in offline mode. Start the server for full AI features.", "ai");
-      updateConnectionStatus('disconnected', 'Connection Failed');
-    } else {
-      console.error("Backend error:", err);
-      addMessage("❌ An unexpected error occurred. Please try again.", "ai");
-    }
+  if (response.status === 413) {
+    addMessage(`❌ ${errorMessage}`, "ai");
+  } else if (response.status === 429) {
+    addMessage(`⏳ Rate limit exceeded. Please wait a moment before trying again.`, "ai");
+  } else if (response.status >= 500) {
+    addMessage(`❌ Server error (${response.status}). Please try again later.`, "ai");
+  } else {
+    addMessage(`❌ ${errorMessage}`, "ai");
   }
+  sendBtn.disabled = false;
+  return;
+}
+
+const data = await response.json();
+
+addMessage(data.response || "No response received.", "ai");
+
+if (data.charts && data.charts.length > 0) {
+  data.charts.forEach(chart => {
+    const chartHtml = `<img src="data:image/png;base64,${chart.base64_image}" alt="${chart.description}" style="max-width: 100%; border-radius: 8px; margin-top: 10px;" />`;
+    addMessageToDOM(chartHtml, "ai");
+  });
+}
+
+if (data.suggestions && data.suggestions.length > 0) {
+  showQuickReplies(data.suggestions);
+} else {
+  showQuickReplies(QUICK_REPLY_SUGGESTIONS);
+}
+
+if (uploadedFile && data.fileProcessed) {
+  clearUploadedFile();
+}
+
+sendBtn.disabled = false;
+  } catch (err) {
+  clearTimeout(timeoutId);
+  hideTypingIndicator();
+  sendBtn.disabled = false;
+
+  if (err.name === 'AbortError') {
+    addMessage("⏱️ Request timed out. The server took too long to respond. Please try again.", "ai");
+  } else if (err.message && err.message.includes('fetch')) {
+    // Backend not available - use offline fallback responses
+    console.log('Backend not available, using offline mode');
+    const lowerText = text.toLowerCase();
+    let response = FALLBACK_RESPONSES[Math.floor(Math.random() * FALLBACK_RESPONSES.length)];
+
+    if (lowerText.includes('hello') || lowerText.includes('hi')) {
+      response = "Hello! Nice to meet you! How can I help you today?";
+    } else if (lowerText.includes('help')) {
+      response = "I'm here to help! I can answer questions, have conversations, or just chat. What do you need?";
+    } else if (lowerText.includes('time')) {
+      response = `The current time is ${new Date().toLocaleTimeString()}.`;
+    } else if (lowerText.includes('date') || lowerText.includes('day')) {
+      response = `Today is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`;
+    } else if (lowerText.includes('your name')) {
+      response = "I'm MAXY, your AI assistant! I'm running in offline mode right now since the backend server isn't connected. Start the server by running START_SERVER.bat";
+    } else if (lowerText.includes('thank')) {
+      response = "You're welcome! Happy to help!";
+    } else if (lowerText.includes('bye')) {
+      response = "Goodbye! Have a great day!";
+    } else if (lowerText.includes('server') || lowerText.includes('backend') || lowerText.includes('connect')) {
+      response = "To connect to the backend:\n1. Close this browser tab\n2. Run START_SERVER.bat\n3. Wait for 'Uvicorn running' message\n4. Refresh this page";
+    }
+
+    addMessage(response + "\n\n⚠️ Running in offline mode. Start the server for full AI features.", "ai");
+    updateConnectionStatus('disconnected', 'Connection Failed');
+  } else {
+    console.error("Backend error:", err);
+    addMessage("❌ An unexpected error occurred. Please try again.", "ai");
+  }
+}
 }
 
 // ===== FILE UPLOAD FUNCTIONS =====
@@ -1686,12 +1650,20 @@ window.addEventListener('click', (e) => {
 // Toggle Daily Updates on click
 if (updatesNavBtn) {
   updatesNavBtn.addEventListener('click', (e) => {
+    // Robust detection: find if we clicked the button or anything inside it
+    const btn = e.target.closest('#updatesNavBtn');
+    if (!btn) return;
+
     // Only toggle if we didn't click inside the hover info box itself
-    // This allows clicking items/scrolling inside without closing the popover
     if (updatesHoverInfo) {
       if (!updatesHoverInfo.contains(e.target)) {
         e.stopPropagation(); // Prevent window listener from firing
         updatesHoverInfo.classList.toggle('active');
+
+        // Re-fetch updates if opening
+        if (updatesHoverInfo.classList.contains('active')) {
+          initDailyUpdates();
+        }
       }
     }
   });
@@ -1752,81 +1724,10 @@ document.addEventListener('DOMContentLoaded', () => {
 // Periodically check credits
 setInterval(checkCredits, 30000); // Check every 30 seconds
 
-// ===== DAILY UPDATES LOGIC =====
-async function fetchDailyUpdates() {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/updates`);
-    if (!response.ok) throw new Error('Failed to fetch updates');
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching updates:', error);
-    return null;
-  }
-}
-
-function updateDailyUpdatesUI(data) {
-  if (!data || !data.updates || data.updates.length === 0 || !updatesHoverList) return;
-
-  // Clear loading state
-  updatesHoverList.innerHTML = '';
-
-  // Categorize updates
-  const techUpdates = data.updates.filter(u => u.type === 'tech' || u.type === 'feature' || u.type === 'improvement');
-  const bengaluruUpdates = data.updates.filter(u => u.type === 'bengaluru' || u.type === 'happening');
-
-  // Helper to create sections
-  const createSection = (title, updates, titleIcon = '🚀') => {
-    if (updates.length > 0) {
-      const header = document.createElement('div');
-      header.className = 'updates-hover-section-header';
-      header.innerHTML = `<span>${titleIcon}</span> ${title}`;
-      updatesHoverList.appendChild(header);
-
-      updates.forEach(update => {
-        const item = document.createElement('div');
-        item.className = 'update-hover-item';
-
-        let badgeClass = 'badge-feature';
-        let badgeLabel = update.type || 'update';
-
-        if (update.type === 'tech') badgeClass = 'badge-tech';
-        if (update.type === 'bengaluru') {
-          badgeClass = 'badge-newsflash';
-          badgeLabel = 'News Flash';
-        }
-        if (update.type === 'improvement') badgeClass = 'badge-improvement';
-        if (update.type === 'fix') badgeClass = 'badge-fix';
-
-        // Format date string if it exists
-        let formattedDate = update.date;
-        if (formattedDate && formattedDate.includes('T')) {
-          const d = new Date(formattedDate);
-          formattedDate = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
-        }
-
-        item.innerHTML = `
-          <div class="update-hover-content">
-            <span class="update-hover-badge ${badgeClass}">${badgeLabel}</span>
-            <div class="update-hover-title">${update.title}</div>
-            <div class="update-hover-desc">${update.description}</div>
-            <div class="update-hover-footer">
-               <span class="update-hover-date">${formattedDate}</span>
-            </div>
-          </div>
-        `;
-        updatesHoverList.appendChild(item);
-      });
-    }
-  };
-
-  createSection('Industry & Tech Updates', techUpdates, '🌐');
-  createSection('Bengaluru News Flash', bengaluruUpdates, '⚡');
-}
-
+// fetchDailyUpdates and updateDailyUpdatesUI moved to utils.js
 function initDailyUpdates() {
-  // Fetch and show updates in the popover
   fetchDailyUpdates().then(data => {
-    if (data) updateDailyUpdatesUI(data);
+    if (data) updateDailyUpdatesUI(data, 'updatesHoverList');
   });
 }
 
