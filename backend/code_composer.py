@@ -44,44 +44,57 @@ class CodeComposer:
         combined_code = ""
         seen_snippets = set()
         
+        # Determine language specific patterns
+        is_web = language.lower() in ['html', 'css', 'js', 'javascript']
+        
         for res in results:
             body = res.get('body', '')
             title = res.get('title', '')
             content = title + "\n" + body
             
             # 1. Try to extract content between backticks (markdown blocks)
-            snippets = re.findall(r'```(?:' + language + r')?\n(.*?)\n```', content, re.DOTALL)
+            snippets = re.findall(r'```(?:' + language + r')?\n(.*?)\n```', content, re.DOTALL | re.IGNORECASE)
             
             # 2. If no markdown blocks, look for language-specific structures
             if not snippets:
-                if language == 'python':
-                    # Look for complete function blocks or class definitions
-                    # Matches starting from 'def ' or 'class '
+                if language.lower() == 'python':
                     py_matches = re.findall(r'((?:def|class)\s+\w+.*?)(?=\n\w|\Z)', content, re.DOTALL)
                     if not py_matches:
-                        # Try to find common patterns like 'def foo(): ...' even if not perfectly formatted
                         py_matches = re.findall(r'def\s+\w+\(.*?\):.*?(?=\s+def|\s+class|\Z)', content, re.DOTALL)
                     snippets = py_matches
-                elif language in ['javascript', 'js']:
+                elif language.lower() in ['javascript', 'js']:
                     js_matches = re.findall(r'(?:function\s+\w+\(|const\s+\w+\s*=|let\s+\w+\s*=|var\s+\w+\s*=).*?\}', content, re.DOTALL)
                     snippets = js_matches
+                elif language.lower() == 'html':
+                    html_matches = re.findall(r'<(?:div|section|header|footer|nav|main|html|body|head).*?>.*?</(?:div|section|header|footer|nav|main|html|body|head)>', content, re.DOTALL | re.IGNORECASE)
+                    snippets = html_matches
+                elif language.lower() == 'css':
+                    css_matches = re.findall(r'[.#\w\s,-]+?\s*\{[^{}]*?\}', content, re.DOTALL)
+                    snippets = css_matches
 
             # 3. Process found snippets
             for snip in snippets:
                 snip = snip.strip()
-                if CodeComposer.is_actually_code(snip, language) and snip not in seen_snippets:
+                # Relaxed validation for web languages
+                is_valid = CodeComposer.is_actually_code(snip, language) if not is_web else len(snip) > 20
+                if is_valid and snip not in seen_snippets:
                     combined_code += snip + "\n\n"
                     seen_snippets.add(snip)
             
-            if len(combined_code) > 2000:
+            if len(combined_code) > 2500: # Slightly increased limit
                 break
         
         if not combined_code:
-            # Fallback: if no valid code blocks found, return the most detailed technical result as text
+            # Fallback: if no valid code blocks found, try to extract paragraphs that look like technical explanations or templates
+            best_fallback = ""
             for res in results:
                 body = res.get('body', '')
-                if any(x in body.lower() for x in ['implementation', 'algorithm', 'syntax', 'manual']):
-                    return f"I found a technical overview for this request:\n\n{body}"
+                if any(x in body.lower() for x in ['example', 'template', 'snippet', 'tutorial', 'guide']):
+                    if len(body) > len(best_fallback):
+                        best_fallback = body
+            
+            if best_fallback:
+                return f"I found a technical reference that might help:\n\n{best_fallback}"
             return ""
             
         return f"```{language}\n{combined_code.strip()}\n```"

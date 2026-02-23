@@ -1226,19 +1226,22 @@ class MAXY1_3:
         try:
             with DDGS() as ddgs:
                 # Deep Research Query Optimization
-                search_query = f"{language} implementation of {query} source code"
+                search_query = f"{language} code for {query} snippet template"
+                if language.lower() in ['html', 'css', 'js']:
+                    search_query = f"complete {language} template for {query} responsive"
+                
                 results = list(ddgs.text(search_query, max_results=8))
                 
                 if not results:
                     # Retry with broader query
-                    search_query = f"{language} {query} code"
+                    search_query = f"{language} {query} code example"
                     results = list(ddgs.text(search_query, max_results=5))
                 
                 if results:
                     # Verified and rank results
                     verified = KnowledgeSynthesizer.verify_facts(query, results)
-                    # Filter for those that likely contain code
-                    code_results = [r for r in verified if r['relevance_score'] > 0.15]
+                    # Filter for those that likely contain code - relaxed threshold
+                    code_results = [r for r in verified if r['relevance_score'] > 0.1]
                     
                     if code_results:
                         return CodeComposer.synthesize_code_from_search(code_results, language)
@@ -1260,8 +1263,6 @@ class MAXY1_3:
             response += f"**Research Insight:** This code was synthesized from multiple verified sources. "
             response += f"I've prioritized current best practices and functional correctness. "
             response += f"Would you like me to explain any specific logic or refine this further?"
-            return response
-            
             return response
             
         return None
@@ -1418,10 +1419,10 @@ class MAXY1_3:
     def is_website_request(message: str) -> tuple[bool, str]:
         """Detect if user wants to build a website and what type"""
         msg_lower = message.lower()
-        website_indicators = ['build', 'create', 'make', 'website', 'web site', 'page', 'landing', 'portfolio']
+        website_indicators = ['build', 'create', 'make', 'website', 'web site', 'page', 'landing', 'portfolio', 'ui', 'interface']
         
-        is_website = ('website' in msg_lower or 'web site' in msg_lower or 'page' in msg_lower) and \
-                     any(ind in msg_lower for ind in ['build', 'create', 'make', 'design', 'setup'])
+        is_website = any(ind in msg_lower for ind in website_indicators) and \
+                     any(act in msg_lower for act in ['build', 'create', 'make', 'design', 'setup', 'generate', 'show me'])
         
         type = 'general'
         if 'portfolio' in msg_lower:
@@ -1430,6 +1431,8 @@ class MAXY1_3:
             type = 'landing'
         elif 'business' in msg_lower:
             type = 'business'
+        elif 'dashboard' in msg_lower:
+            type = 'dashboard'
             
         return is_website, type
 
@@ -1593,15 +1596,31 @@ class MAXY1_3:
         # Website Request
         if not response and analysis['is_website']:
              is_website, web_type = MAXY1_3.is_website_request(message)
-             search_query = f"modern responsive {web_type} website structure HTML CSS JS"
+             search_query = f"complete responsive simple {web_type} website code template single file HTML CSS"
              research_code = MAXY1_3.search_real_code("html", search_query)
              
              if research_code:
                  response = f"### 🏗️ MAXY Deep Research: Website Builder\n\n"
-                 response += f"I've researched and synthesized a custom **{web_type.capitalize()}** architecture for you based on modern web standards:\n\n"
+                 response += f"I've researched and synthesized a professional **{web_type.capitalize()}** template for you using modern design standards:\n\n"
                  response += f"{research_code}\n\n"
-                 response += f"**Research Insight:** This structure uses current best practices for responsive design."
+                 response += f"**Research Insight:** This code incorporates responsive layout patterns from verified technical sources. "
+                 response += "Would you like me to add more specific sections or refine the style?"
                  confidence = 0.95
+             else:
+                 # Local Fallback Template for Common Requests
+                 if web_type == 'portfolio':
+                     response = "### 🏗️ MAXY Template: Professional Portfolio\n\n"
+                     response += "I couldn't find a perfect live match in time, so I've generated a high-quality local starter for you:\n\n"
+                     response += "```html\n"
+                     response += "<!DOCTYPE html>\n<html>\n<head>\n<style>\n  body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; margin: 0; }\n"
+                     response += "  .hero { height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, #1e293b 0%, #0f172a 100%); }\n"
+                     response += "</style>\n</head>\n<body>\n  <nav>Portfolio</nav>\n  <section class='hero'><h1>Hello, I am a Developer</h1></section>\n</body>\n</html>\n```\n\n"
+                     response += "Would you like me to continue searching for more advanced animations or layouts?"
+                     confidence = 0.90
+                 else:
+                     response = f"I'm ready to build your {web_type} website! While I'm refining the deep search for complex templates, "
+                     response += "could you tell me if you have a specific color theme or list of sections in mind?"
+                     confidence = 0.85
 
         # Chart Request
         if not response and analysis['is_chart']:

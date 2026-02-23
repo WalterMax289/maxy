@@ -17,6 +17,7 @@ from pydantic import BaseModel
 
 # Import custom modules
 from config import config
+from news_updater import WorldNewsUpdater
 from schemas import (
     ChatRequest, ChatResponse, ChatMessage, FileData, AnalysisResult,
     ConversationCreate, ConversationResponse, DataAnalysisRequest,
@@ -768,6 +769,14 @@ async def get_credits_status():
 async def startup_event():
     """Application startup"""
     logger.info(f"Starting {config.API_TITLE} v{config.API_VERSION}")
+    
+    # Refresh daily updates with world news on startup
+    try:
+        logger.info("Refreshing daily world news updates...")
+        WorldNewsUpdater.update_json_file()
+    except Exception as e:
+        logger.error(f"Failed to refresh news on startup: {e}")
+        
     logger.info(f"Debug mode: {config.DEBUG}")
     logger.info(f"CORS origins: {config.ALLOWED_ORIGINS}")
     logger.info(f"Features - Wikipedia: {config.ENABLE_WIKIPEDIA}, Charts: {config.ENABLE_CHARTS}")
