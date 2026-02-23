@@ -6,8 +6,7 @@ uvicorn>=0.24.0
 pydantic>=2.5.0
 python-dotenv>=1.0.0
 
-# Database
-sqlalchemy>=2.0.0
+
 
 # File Processing - Use compatible versions for Python 3.14
 Pillow>=10.2.0
@@ -16,12 +15,10 @@ python-docx>=0.8.11
 
 # Data Analysis & Processing - Flexible versions for compatibility
 numpy>=1.26.0
-scipy>=1.11.0
 pandas>=2.1.0
 
 # Visualization
 matplotlib>=3.8.0
-plotly>=5.18.0
 
 # Web & Research
 requests>=2.31.0
@@ -31,10 +28,8 @@ yfinance>=0.2.36
 
 # Utilities
 python-multipart>=0.0.6
-aiofiles>=23.2.0
 
-# Logging & Monitoring
-structlog>=23.2.0
+
 
 # Production WSGI
 gunicorn>=21.0.0
