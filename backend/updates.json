@@ -1,12 +1,6 @@
 {
     "updates": [
         {
-            "title": "Uber's CEO Just Delivered Disappointing News for Tesla Stock Investors",
-            "type": "tech",
-            "date": "2026-02-22T16:57:35+00:00",
-            "description": "Don't miss the latest top 10 list, available with Stock Advisor, and join an investing community..."
-        },
-        {
             "title": "Water technology experts, entrepreneurs share dreams for the industry",
             "type": "tech",
             "date": "2025-10-27T04:06:00+00:00",
@@ -25,22 +19,28 @@
             "description": "The North Carolina Technology Association (NC TECH)'s newly released 2026 State of the Technology Industry Report (commonly known as NC STIR) highlights a sector that continues to expand its footprint,"
         },
         {
-            "title": "CNBC's Inside India newsletter: India is throwing its weight behind AI \u2014 but is ...",
-            "type": "bengaluru",
-            "date": "2026-02-19T09:57:36+00:00",
-            "description": "This report is from this week's CNBC's \"Inside India\" newsletter which brings you timely, insightful..."
+            "title": "Industry Expo And Pros Cite Five 2025 Smart Home Trends",
+            "type": "tech",
+            "date": "2025-10-07T10:00:00+00:00",
+            "description": "Forbes contributors publish independent expert analyses and insights. Jamie Gold writes about wellness design and related housing topics. Technology can enhance a home's comfort, energy management, wellness and security without being an eyesore. \"Two ..."
         },
         {
-            "title": "Gold, silver rates today highlights: Silver futures decline 10%, check MCX prices",
+            "title": "CNBC's Inside India newsletter: India is throwing its weight behind AI \u2014 but is ...",
             "type": "bengaluru",
-            "date": "2026-02-04T18:30:00+00:00",
-            "description": "Gold, silver rates today highlights: The price of gold on Thursday stood at \u20b91,59,730 for 24-carat per 10 grams, while silver was priced at \u20b93,37,100 per kilogram."
+            "date": "2026-02-19T10:34:38+00:00",
+            "description": "This report is from this week's CNBC's \"Inside India\" newsletter which brings you timely, insightful..."
         },
         {
             "title": "MCX Gold, Silver Rate Feb 2 highlights: Check rates in Delhi, Mumbai and Bengaluru before you buy or sell",
             "type": "bengaluru",
             "date": "2026-02-01T18:30:00+00:00",
             "description": "Gold, Silver Feb 2 Rates: 24-carat gold on MCX fell to \u20b91,36,185 per 10 grams, down from an opening price of \u20b91,46,800 per 10 ..."
+        },
+        {
+            "title": "Asia FX gains as tariff concerns hurt dollar; AI-led stocks hit records",
+            "type": "bengaluru",
+            "date": "2026-02-23T07:34:38+00:00",
+            "description": "Emerging Asian currencies strengthened on Monday as uncertainty over U.S. trade policy kept the..."
         }
     ]
 }

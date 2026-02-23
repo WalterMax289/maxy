@@ -1093,7 +1093,7 @@ async function sendMessage() {
       const maxSize = 10 * 1024 * 1024;
       if (uploadedFile.size > maxSize) {
         hideTypingIndicator();
-        addMessage(`❌ File too large.Maximum size is 10MB.Your file is ${ formatFileSize(uploadedFile.size) }.`, "ai");
+        addMessage(`❌ File too large.Maximum size is 10MB.Your file is ${formatFileSize(uploadedFile.size)}.`, "ai");
         sendBtn.disabled = false;
         return;
       }
@@ -1106,94 +1106,94 @@ async function sendMessage() {
       };
     }
 
-    const chatUrl = BACKEND_URL ? `${ BACKEND_URL } /chat` : '/chat';
-const response = await fetch(chatUrl, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(requestBody),
-  signal: controller.signal
-});
+    const chatUrl = BACKEND_URL ? `${BACKEND_URL}/chat` : '/chat';
+    const response = await fetch(chatUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal
+    });
 
-clearTimeout(timeoutId);
-hideTypingIndicator();
+    clearTimeout(timeoutId);
+    hideTypingIndicator();
 
-if (!response.ok) {
-  const errorData = await response.json().catch(() => ({}));
-  const errorMessage = errorData.detail || `Server error: ${response.status}`;
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.detail || `Server error: ${response.status}`;
 
-  if (response.status === 413) {
-    addMessage(`❌ ${errorMessage}`, "ai");
-  } else if (response.status === 429) {
-    addMessage(`⏳ Rate limit exceeded. Please wait a moment before trying again.`, "ai");
-  } else if (response.status >= 500) {
-    addMessage(`❌ Server error (${response.status}). Please try again later.`, "ai");
-  } else {
-    addMessage(`❌ ${errorMessage}`, "ai");
-  }
-  sendBtn.disabled = false;
-  return;
-}
-
-const data = await response.json();
-
-addMessage(data.response || "No response received.", "ai");
-
-if (data.charts && data.charts.length > 0) {
-  data.charts.forEach(chart => {
-    const chartHtml = `<img src="data:image/png;base64,${chart.base64_image}" alt="${chart.description}" style="max-width: 100%; border-radius: 8px; margin-top: 10px;" />`;
-    addMessageToDOM(chartHtml, "ai");
-  });
-}
-
-if (data.suggestions && data.suggestions.length > 0) {
-  showQuickReplies(data.suggestions);
-} else {
-  showQuickReplies(QUICK_REPLY_SUGGESTIONS);
-}
-
-if (uploadedFile && data.fileProcessed) {
-  clearUploadedFile();
-}
-
-sendBtn.disabled = false;
-  } catch (err) {
-  clearTimeout(timeoutId);
-  hideTypingIndicator();
-  sendBtn.disabled = false;
-
-  if (err.name === 'AbortError') {
-    addMessage("⏱️ Request timed out. The server took too long to respond. Please try again.", "ai");
-  } else if (err.message && err.message.includes('fetch')) {
-    // Backend not available - use offline fallback responses
-    console.log('Backend not available, using offline mode');
-    const lowerText = text.toLowerCase();
-    let response = FALLBACK_RESPONSES[Math.floor(Math.random() * FALLBACK_RESPONSES.length)];
-
-    if (lowerText.includes('hello') || lowerText.includes('hi')) {
-      response = "Hello! Nice to meet you! How can I help you today?";
-    } else if (lowerText.includes('help')) {
-      response = "I'm here to help! I can answer questions, have conversations, or just chat. What do you need?";
-    } else if (lowerText.includes('time')) {
-      response = `The current time is ${new Date().toLocaleTimeString()}.`;
-    } else if (lowerText.includes('date') || lowerText.includes('day')) {
-      response = `Today is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`;
-    } else if (lowerText.includes('your name')) {
-      response = "I'm MAXY, your AI assistant! I'm running in offline mode right now since the backend server isn't connected. Start the server by running START_SERVER.bat";
-    } else if (lowerText.includes('thank')) {
-      response = "You're welcome! Happy to help!";
-    } else if (lowerText.includes('bye')) {
-      response = "Goodbye! Have a great day!";
-    } else if (lowerText.includes('server') || lowerText.includes('backend') || lowerText.includes('connect')) {
-      response = "To connect to the backend:\n1. Close this browser tab\n2. Run START_SERVER.bat\n3. Wait for 'Uvicorn running' message\n4. Refresh this page";
+      if (response.status === 413) {
+        addMessage(`❌ ${errorMessage}`, "ai");
+      } else if (response.status === 429) {
+        addMessage(`⏳ Rate limit exceeded. Please wait a moment before trying again.`, "ai");
+      } else if (response.status >= 500) {
+        addMessage(`❌ Server error (${response.status}). Please try again later.`, "ai");
+      } else {
+        addMessage(`❌ ${errorMessage}`, "ai");
+      }
+      sendBtn.disabled = false;
+      return;
     }
 
-    addMessage(response + "\n\n⚠️ Running in offline mode. Start the server for full AI features.", "ai");
-    updateConnectionStatus('disconnected', 'Connection Failed');
-  } else {
-    console.error("Backend error:", err);
-    addMessage("❌ An unexpected error occurred. Please try again.", "ai");
+    const data = await response.json();
+
+    addMessage(data.response || "No response received.", "ai");
+
+    if (data.charts && data.charts.length > 0) {
+      data.charts.forEach(chart => {
+        const chartHtml = `<img src="data:image/png;base64,${chart.base64_image}" alt="${chart.description}" style="max-width: 100%; border-radius: 8px; margin-top: 10px;" />`;
+        addMessageToDOM(chartHtml, "ai");
+      });
+    }
+
+    if (data.suggestions && data.suggestions.length > 0) {
+      showQuickReplies(data.suggestions);
+    } else {
+      showQuickReplies(QUICK_REPLY_SUGGESTIONS);
+    }
+
+    if (uploadedFile && data.fileProcessed) {
+      clearUploadedFile();
+    }
+
+    sendBtn.disabled = false;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    hideTypingIndicator();
+    sendBtn.disabled = false;
+
+    if (err.name === 'AbortError') {
+      addMessage("⏱️ Request timed out. The server took too long to respond. Please try again.", "ai");
+    } else if (err.message && err.message.includes('fetch')) {
+      // Backend not available - use offline fallback responses
+      console.log('Backend not available, using offline mode');
+      const lowerText = text.toLowerCase();
+      let response = FALLBACK_RESPONSES[Math.floor(Math.random() * FALLBACK_RESPONSES.length)];
+
+      if (lowerText.includes('hello') || lowerText.includes('hi')) {
+        response = "Hello! Nice to meet you! How can I help you today?";
+      } else if (lowerText.includes('help')) {
+        response = "I'm here to help! I can answer questions, have conversations, or just chat. What do you need?";
+      } else if (lowerText.includes('time')) {
+        response = `The current time is ${new Date().toLocaleTimeString()}.`;
+      } else if (lowerText.includes('date') || lowerText.includes('day')) {
+        response = `Today is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`;
+      } else if (lowerText.includes('your name')) {
+        response = "I'm MAXY, your AI assistant! I'm running in offline mode right now since the backend server isn't connected. Start the server by running START_SERVER.bat";
+      } else if (lowerText.includes('thank')) {
+        response = "You're welcome! Happy to help!";
+      } else if (lowerText.includes('bye')) {
+        response = "Goodbye! Have a great day!";
+      } else if (lowerText.includes('server') || lowerText.includes('backend') || lowerText.includes('connect')) {
+        response = "To connect to the backend:\n1. Close this browser tab\n2. Run START_SERVER.bat\n3. Wait for 'Uvicorn running' message\n4. Refresh this page";
+      }
+
+      addMessage(response + "\n\n⚠️ Running in offline mode. Start the server for full AI features.", "ai");
+      updateConnectionStatus('disconnected', 'Connection Failed');
+    } else {
+      console.error("Backend error:", err);
+      addMessage("❌ An unexpected error occurred. Please try again.", "ai");
+    }
   }
-}
 }
 
 // ===== FILE UPLOAD FUNCTIONS =====

@@ -23,8 +23,8 @@ class Config:
     # CORS Configuration - Allow all localhost origins for development
     ALLOWED_ORIGINS_STR = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8000,http://127.0.0.1:8000,http://127.0.0.1:3000,http://localhost:5500,http://127.0.0.1:5500,http://localhost:*,null")
     ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_STR.split(",") if origin.strip()]
-    # Also add wildcard for file:// protocol (when opening HTML directly)
-    if "*" not in ALLOWED_ORIGINS:
+    # Only add wildcard if in DEBUG mode (convenience for development)
+    if DEBUG and "*" not in ALLOWED_ORIGINS:
         ALLOWED_ORIGINS.append("*")
     
     # Logging Configuration
