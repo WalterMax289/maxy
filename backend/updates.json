@@ -1,34 +1,46 @@
 {
     "updates": [
         {
-            "title": "World News : Top & Breaking World News Today | AP News",
-            "type": "happening",
+            "title": "WIRED - The Latest in Technology, Science, Culture and Business | WIRED",
+            "type": "tech",
             "date": "February 23, 2026",
-            "description": "Stay informed with top world news today . The Associated Press aims to keep you up-to-date with breaking world news stories around the globe."
+            "description": "We bring you the future as it happens. From the latest in science and technology to the big stories in business and culture, we've got you covered."
         },
         {
-            "title": "World news - breaking news , video, headlines and opinion | CNN",
-            "type": "happening",
+            "title": "News \u2013 latest in science and technology | New Scientist",
+            "type": "tech",
             "date": "February 23, 2026",
-            "description": "View CNN world news today for international news and videos from Europe, Asia, Africa, the Middle East and the Americas."
+            "description": "News ; Space. NASA blasts heat shield to prepare for atmospheric re-entry ; Mind. Why some people cannot move on from the death of a loved one ; Technology. Data ..."
         },
         {
-            "title": "Latest news from around the world | The Guardian",
-            "type": "happening",
+            "title": "Technology and Science News - ABC News",
+            "type": "tech",
             "date": "February 23, 2026",
-            "description": "Latest World news news , comment and analysis from the Guardian, the world 's leading liberal voice.Don\u2019t be fooled by recent good news , the UK economy is still in a precarious state."
+            "description": "Technology News \u00b7 NASA boss blasts Boeing, space agency managers for botched Starliner astronaut flight \u00b7 What parents should know about Roblox safety features."
         },
         {
-            "title": "Yahoo News : Latest and Breaking News , Headlines , Live Updates...",
-            "type": "happening",
+            "title": "Engadget | Technology News & Reviews",
+            "type": "tech",
             "date": "February 23, 2026",
-            "description": "Today 's news . US. Politics. 2025 Election. World . Weather. Climate change.7 Awkward, Weird, Or Uncomfortable Tyra Banks Moments Outside Of \"America's Next Top Model\". \"The Tyra Banks Show\" was a wild time."
+            "description": "Dyson announces the PencilWash wet floor cleaner \u00b7 Google Pixel 10a vs. Pixel 9a: What's changed and which one should you buy? \u00b7 Mark Zuckerberg testifies in ... Missing: headlines | Show results with: headlines"
         },
         {
-            "title": "World News : International Headlines , Breaking Reports... | NBC News",
-            "type": "happening",
+            "title": "Bengaluru News Highlights: Cong to finalise more candidates for",
+            "type": "bengaluru",
             "date": "February 23, 2026",
-            "description": "Get the latest news , updates, and video from around the globe. TOP VIDEO. Hallie Jackson NOW."
+            "description": "Bengaluru News Highlights (March 9): \" The candidates have been selected based on the feedback from local leaders and our survey inputs ..."
+        },
+        {
+            "title": "Bengaluru News Highlights: Amid continuous rainfall, IMD issues",
+            "type": "bengaluru",
+            "date": "February 23, 2026",
+            "description": "Bengaluru Weather News Highlights : In other news , 14 students were shortlisted to participate in a three-day event at New York with an opportunity to ..."
+        },
+        {
+            "title": "Bengaluru News Highlights May 1 2022: City reports 120 fresh",
+            "type": "bengaluru",
+            "date": "February 23, 2026",
+            "description": "Karnataka Bengaluru News Highlights : The state reported 104 new Covid-19 cases and one virus-related fatality Sunday, the health department said."
         }
     ]
 }

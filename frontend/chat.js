@@ -1746,23 +1746,46 @@ function updateDailyUpdatesUI(data) {
   // Clear loading state
   updatesHoverList.innerHTML = '';
 
-  data.updates.forEach(update => {
-    const item = document.createElement('div');
-    item.className = 'update-hover-item';
+  // Categorize updates
+  const techUpdates = data.updates.filter(u => u.type === 'tech' || u.type === 'feature' || u.type === 'improvement');
+  const bengaluruUpdates = data.updates.filter(u => u.type === 'bengaluru' || u.type === 'happening');
 
-    let badgeClass = 'badge-feature';
-    if (update.type === 'improvement') badgeClass = 'badge-improvement';
-    if (update.type === 'fix') badgeClass = 'badge-fix';
-    if (update.type === 'happening') badgeClass = 'badge-happening';
+  // Helper to create sections
+  const createSection = (title, updates, titleIcon = '🚀') => {
+    if (updates.length > 0) {
+      const header = document.createElement('div');
+      header.className = 'updates-hover-section-header';
+      header.innerHTML = `<span>${titleIcon}</span> ${title}`;
+      updatesHoverList.appendChild(header);
 
-    item.innerHTML = `
-      <span class="update-hover-badge ${badgeClass}">${update.type || 'update'}</span>
-      <div class="update-hover-title">${update.title}</div>
-      <div class="update-hover-desc">${update.description}</div>
-      <div class="update-hover-date">${update.date}</div>
-    `;
-    updatesHoverList.appendChild(item);
-  });
+      updates.forEach(update => {
+        const item = document.createElement('div');
+        item.className = 'update-hover-item';
+
+        let badgeClass = 'badge-feature';
+        let badgeLabel = update.type || 'update';
+
+        if (update.type === 'tech') badgeClass = 'badge-tech';
+        if (update.type === 'bengaluru') {
+          badgeClass = 'badge-newsflash';
+          badgeLabel = 'News Flash';
+        }
+        if (update.type === 'improvement') badgeClass = 'badge-improvement';
+        if (update.type === 'fix') badgeClass = 'badge-fix';
+
+        item.innerHTML = `
+          <span class="update-hover-badge ${badgeClass}">${badgeLabel}</span>
+          <div class="update-hover-title">${update.title}</div>
+          <div class="update-hover-desc">${update.description}</div>
+          <div class="update-hover-date">${update.date}</div>
+        `;
+        updatesHoverList.appendChild(item);
+      });
+    }
+  };
+
+  createSection('Technology Updates', techUpdates, '💻');
+  createSection('Bengaluru Highlights', bengaluruUpdates, '📍');
 }
 
 function initDailyUpdates() {
