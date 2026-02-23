@@ -134,9 +134,9 @@ const fileName = document.getElementById('fileName');
 const fileIcon = document.getElementById('fileIcon');
 const clearFileBtn = document.getElementById('clearFileBtn');
 
-// User Profile Elements
-const userProfileBtn = document.getElementById('userProfileBtn');
 const userMenu = document.getElementById('userMenu');
+const updatesNavBtn = document.getElementById('updatesNavBtn');
+const updatesHoverInfo = document.querySelector('.updates-hover-info');
 
 // ===== UTILITY FUNCTIONS =====
 function formatTime(date) {
@@ -1673,6 +1673,25 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// Click outside to close Daily Updates popover
+window.addEventListener('click', (e) => {
+  if (updatesHoverInfo && updatesHoverInfo.classList.contains('active')) {
+    if (!updatesNavBtn.contains(e.target)) {
+      updatesHoverInfo.classList.remove('active');
+    }
+  }
+});
+
+// Toggle Daily Updates on click
+if (updatesNavBtn) {
+  updatesNavBtn.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent immediate closing from window listener
+    if (updatesHoverInfo) {
+      updatesHoverInfo.classList.toggle('active');
+    }
+  });
+}
+
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM loaded, initializing...');
@@ -1773,19 +1792,30 @@ function updateDailyUpdatesUI(data) {
         if (update.type === 'improvement') badgeClass = 'badge-improvement';
         if (update.type === 'fix') badgeClass = 'badge-fix';
 
+        // Format date string if it exists
+        let formattedDate = update.date;
+        if (formattedDate && formattedDate.includes('T')) {
+          const d = new Date(formattedDate);
+          formattedDate = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
         item.innerHTML = `
-          <span class="update-hover-badge ${badgeClass}">${badgeLabel}</span>
-          <div class="update-hover-title">${update.title}</div>
-          <div class="update-hover-desc">${update.description}</div>
-          <div class="update-hover-date">${update.date}</div>
+          <div class="update-hover-content">
+            <span class="update-hover-badge ${badgeClass}">${badgeLabel}</span>
+            <div class="update-hover-title">${update.title}</div>
+            <div class="update-hover-desc">${update.description}</div>
+            <div class="update-hover-footer">
+               <span class="update-hover-date">${formattedDate}</span>
+            </div>
+          </div>
         `;
         updatesHoverList.appendChild(item);
       });
     }
   };
 
-  createSection('Technology Updates', techUpdates, '💻');
-  createSection('Bengaluru Highlights', bengaluruUpdates, '📍');
+  createSection('Industry & Tech Updates', techUpdates, '🌐');
+  createSection('Bengaluru News Flash', bengaluruUpdates, '⚡');
 }
 
 function initDailyUpdates() {

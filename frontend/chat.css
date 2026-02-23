@@ -2022,7 +2022,7 @@ textarea::placeholder {
   flex-direction: column;
 }
 
-.updates-nav-item:hover .updates-hover-info {
+.updates-hover-info.active {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
@@ -2054,10 +2054,13 @@ textarea::placeholder {
 }
 
 .updates-hover-list {
-  max-height: 350px;
+  max-height: 450px;
+  /* Increased for better scrolling */
   overflow-y: auto;
-  padding: 10px 0;
+  padding: 0;
   scroll-behavior: smooth;
+  display: flex;
+  flex-direction: column;
 }
 
 .updates-hover-list::-webkit-scrollbar {

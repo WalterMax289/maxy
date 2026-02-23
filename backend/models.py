@@ -97,16 +97,28 @@ class KnowledgeSynthesizer:
         content = (title + " " + body).lower()
         matches = sum(1 for kw in keywords if kw in content)
         
-        # Identity query boost: If query is "who is X", ensure X is in the content
-        identity_keywords = ['who is', 'who was', 'identity', 'person', 'pm of', 'president of', 'ceo of', 'chief minister of']
+        # Identity query detection
+        identity_keywords = ['who is', 'who was', 'identity', 'person', 'pm of', 'president of', 'ceo of', 'chief minister of', 'chief of']
         msg_lower = query.lower()
+        is_identity = any(ik in msg_lower for ik in identity_keywords)
         
-        if any(ik in msg_lower for ik in identity_keywords):
-            # Boost matches that contain "is the [title]" or similar direct statements
-            direct_indicators = ['is the current', 'serving as', 'incumbent', 'holds the position', 'is currently the']
-            if any(di in content for di in direct_indicators):
-                matches += 1 
+        if is_identity:
+            # 1. Recency Boost: Heavily prioritize current status
+            recency_indicators = ['current', 'incumbent', 'serving as', 'holds the position', 'is currently the', 'presently', 'now']
+            if any(ri in content for ri in recency_indicators):
+                matches += 2
             
+            # 2. Historical Penalty: Penalize past officeholders
+            historical_indicators = ['former', 'ex-', 'past', 'who was', 'predecessor', 'served as', 'between', 'during']
+            if any(hi in content for hi in historical_indicators):
+                matches -= 1
+            
+            # 3. Year Range Penalty (e.g., 1991-1996)
+            if re.search(r'\b(19|20)[0-9]{2}[\-–](19|20)[0-9]{2}\b', content):
+                # If there's a year range, it's often a historical context unless "current" is also there
+                if not any(ri in content for ri in recency_indicators):
+                    matches -= 1
+
             # Try to find specific names (Title Case words) in query
             names = re.findall(r'\b[A-Z][a-z]+\b', query)
             if names:
@@ -118,7 +130,7 @@ class KnowledgeSynthesizer:
         score = matches / (len(keywords) + 1)
         
         # News/Headline Penalty for identity queries
-        if any(ik in msg_lower for ik in ['who is', 'pm of', 'president of', 'ceo of', 'cm of']):
+        if is_identity:
             # Titles with colons, question marks at start, or buzzwords are often news
             news_indicators = [':', '?', 'breaking', 'live', 'update', 'latest', 'counters', 'claims', 'vs', 'opinion', 'watch', 'video']
             if any(ni in title.lower() for ni in news_indicators):
@@ -135,12 +147,11 @@ class KnowledgeSynthesizer:
         
         # Penalty for low-quality sources in body (casual mentions)
         junk_indicators = ['reddit', 'quora', 'forum', 'comment', 'manhwa', 'manga', 'recommendation', 'fanfiction']
-        # If the user didn't ask for entertainment, penalize entertainment sources
         if not any(ek in query.lower() for ek in ['manga', 'manhwa', 'comic', 'read']):
             if any(ji in body.lower() for ji in junk_indicators):
                 score *= 0.5
         
-        return score
+        return max(0.01, score)
 
     @staticmethod
     def verify_facts(query: str, results: List[Dict[str, str]]) -> List[Dict[str, Any]]:
@@ -329,11 +340,14 @@ class MAXY1_1:
             # 2. DuckDuckGo Search
             try:
                 with DDGS() as ddgs:
-                    # For identity queries, try to get more results to find the direct answer
+                    # For identity queries, force "current" to avoid historical lists
                     search_query = query
-                    if any(ik in query.lower() for ik in ['pm of', 'ceo of', 'president of']):
-                        if not query.lower().startswith('who is'):
-                            search_query = f"who is the {query}"
+                    position_keywords = ['pm of', 'ceo of', 'president of', 'pm', 'cm of', 'head of', 'chief of']
+                    if any(pk in query.lower() for pk in position_keywords):
+                        if "current" not in query.lower():
+                            search_query = f"current {query}"
+                        if not search_query.lower().startswith('who is'):
+                            search_query = f"who is the {search_query}"
                             
                     results = list(ddgs.text(search_query, max_results=8))
                     for res in results:

@@ -11,33 +11,33 @@ class WorldNewsUpdater:
     
     @staticmethod
     def fetch_categorized_news():
-        """Fetch tech and Bengaluru news using DuckDuckGo Search"""
+        """Fetch professional news and Bengaluru updates using DuckDuckGo News"""
         updates = []
         try:
             with DDGS() as ddgs:
-                # 1. Fetch Tech News (3-4 items)
-                tech_results = list(ddgs.text("latest technology news headlines today", max_results=4))
+                # 1. Fetch Tech & Industry News (Google News style)
+                tech_results = list(ddgs.news("latest technology industry news", max_results=4))
                 for res in tech_results:
                     updates.append({
                         "title": res.get("title", "Tech News"),
                         "type": "tech",
-                        "date": datetime.now().strftime("%B %d, %Y"),
-                        "description": res.get("body", "Latest in technology today.")
+                        "date": res.get("date", datetime.now().strftime("%B %d, %Y")),
+                        "description": res.get("body", "Latest industry developments.")
                     })
                 
-                # 2. Fetch Bengaluru News (2-3 items)
-                bengaluru_results = list(ddgs.text("Bengaluru local news highlights today", max_results=3))
+                # 2. Fetch Bengaluru Highlights
+                bengaluru_results = list(ddgs.news("Bengaluru news highlights", max_results=3))
                 for res in bengaluru_results:
                     updates.append({
                         "title": res.get("title", "Bengaluru News"),
                         "type": "bengaluru",
-                        "date": datetime.now().strftime("%B %d, %Y"),
-                        "description": res.get("body", "Local highlights from Bengaluru.")
+                        "date": res.get("date", datetime.now().strftime("%B %d, %Y")),
+                        "description": res.get("body", "Local news flash from Bengaluru.")
                     })
                 
                 return updates
         except Exception as e:
-            logger.error(f"Error fetching categorized news: {e}")
+            logger.error(f"Error fetching categorized news with DDGS: {e}")
             return updates
 
     @staticmethod
