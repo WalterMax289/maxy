@@ -1099,12 +1099,30 @@
             }
 
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = async (e) => {
                 const avatarData = e.target.result;
+
+                // Sync to Supabase if available
+                if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+                    try {
+                        const { error } = await supabaseClient.auth.updateUser({
+                            data: { avatar: avatarData }
+                        });
+                        if (error) throw error;
+                        console.log('Avatar synced to Supabase');
+                    } catch (err) {
+                        console.error('Supabase avatar sync failed:', err);
+                        showToast('Warning', 'Saved locally, but failed to sync to cloud', 'info');
+                    }
+                }
+
                 userData.avatar = avatarData;
-                console.log('Saving avatar, userData:', userData);
                 localStorage.setItem('maxyUser', JSON.stringify(userData));
-                console.log('Avatar saved to localStorage');
+
+                // Update session object too for consistency
+                const session = JSON.parse(localStorage.getItem('maxySession')) || {};
+                session.avatar = avatarData;
+                localStorage.setItem('maxySession', JSON.stringify(session));
 
                 // Notify other pages (chat.html) about avatar update
                 if (typeof BroadcastChannel !== 'undefined') {
@@ -1125,7 +1143,7 @@
         }
 
         // Save profile
-        function saveProfile() {
+        async function saveProfile() {
             const name = document.getElementById('inputName').value.trim();
             const email = document.getElementById('inputEmail').value.trim();
             const bio = document.getElementById('inputBio').value.trim();
@@ -1135,34 +1153,49 @@
                 return;
             }
 
-            if (!email || !email.includes('@')) {
-                showToast('Error', 'Please enter a valid email', 'error');
-                return;
+            // Show loading state
+            const saveBtn = document.querySelector('button[onclick="saveProfile()"]');
+            const originalHtml = saveBtn.innerHTML;
+            saveBtn.innerHTML = 'Saving...';
+            saveBtn.disabled = true;
+
+            // Sync to Supabase if available
+            if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+                try {
+                    const { error } = await supabaseClient.auth.updateUser({
+                        data: {
+                            full_name: name,
+                            bio: bio
+                        }
+                    });
+                    if (error) throw error;
+                    console.log('Profile synced to Supabase');
+                } catch (err) {
+                    console.error('Supabase profile sync failed:', err);
+                    showToast('Warning', 'Saved locally, but cloud sync failed', 'info');
+                }
             }
 
             userData.name = name;
             userData.email = email;
             userData.bio = bio;
 
-            console.log('Saving user data:', userData);
             localStorage.setItem('maxyUser', JSON.stringify(userData));
-            console.log('User data saved to localStorage');
 
             // Update auth session with new name/email
             const session = JSON.parse(localStorage.getItem('maxySession')) || {};
             session.name = name;
             session.email = email;
+            session.bio = bio;
             localStorage.setItem('maxySession', JSON.stringify(session));
-            console.log('Auth session updated');
 
-            // Also update in users array for auth system
+            // Also update in users array for auth system (local fallback)
             let users = JSON.parse(localStorage.getItem('maxyUsers')) || [];
             const userIndex = users.findIndex(u => u.id === session.id);
             if (userIndex !== -1) {
                 users[userIndex].name = name;
                 users[userIndex].email = email;
                 localStorage.setItem('maxyUsers', JSON.stringify(users));
-                console.log('Users array updated');
             }
 
             // Notify other pages (chat.html) about profile update
@@ -1171,10 +1204,7 @@
                     const bc = new BroadcastChannel('maxy_profile_updates');
                     bc.postMessage({ type: 'profile_updated', userData: userData });
                     bc.close();
-                    console.log('Profile update broadcast sent');
-                } catch (e) {
-                    console.log('BroadcastChannel failed:', e);
-                }
+                } catch (e) { }
             }
 
             // Update display
@@ -1187,6 +1217,8 @@
                 document.getElementById('avatarLetter').textContent = firstLetter;
             }
 
+            saveBtn.innerHTML = originalHtml;
+            saveBtn.disabled = false;
             showToast('Success', 'Profile saved successfully', 'success');
         }
 

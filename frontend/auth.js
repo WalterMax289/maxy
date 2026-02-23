@@ -40,6 +40,8 @@ async function getCurrentUser() {
         id: user.id,
         name: user.user_metadata.full_name || user.email.split('@')[0],
         email: user.email,
+        bio: user.user_metadata.bio || '',
+        avatar: user.user_metadata.avatar || null,
         createdAt: user.created_at
     };
 }
@@ -129,13 +131,17 @@ function updateLocalState(user) {
         id: user.id,
         name: user.user_metadata.full_name || user.email.split('@')[0],
         email: user.email,
+        bio: user.user_metadata.bio || '',
+        avatar: user.user_metadata.avatar || null,
         timestamp: new Date().getTime()
     };
 
     localStorage.setItem('maxySession', JSON.stringify(userData));
     localStorage.setItem('maxyUser', JSON.stringify({
         name: userData.name,
-        email: userData.email
+        email: userData.email,
+        bio: userData.bio,
+        avatar: userData.avatar
     }));
 
     // Synchronize userId with chat.js persistent ID

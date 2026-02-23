@@ -1676,6 +1676,7 @@ document.addEventListener('keydown', (e) => {
 // Click outside to close Daily Updates popover
 window.addEventListener('click', (e) => {
   if (updatesHoverInfo && updatesHoverInfo.classList.contains('active')) {
+    // Close if click is outside both the button and the popover
     if (!updatesNavBtn.contains(e.target)) {
       updatesHoverInfo.classList.remove('active');
     }
@@ -1685,9 +1686,13 @@ window.addEventListener('click', (e) => {
 // Toggle Daily Updates on click
 if (updatesNavBtn) {
   updatesNavBtn.addEventListener('click', (e) => {
-    e.stopPropagation(); // Prevent immediate closing from window listener
+    // Only toggle if we didn't click inside the hover info box itself
+    // This allows clicking items/scrolling inside without closing the popover
     if (updatesHoverInfo) {
-      updatesHoverInfo.classList.toggle('active');
+      if (!updatesHoverInfo.contains(e.target)) {
+        e.stopPropagation(); // Prevent window listener from firing
+        updatesHoverInfo.classList.toggle('active');
+      }
     }
   });
 }

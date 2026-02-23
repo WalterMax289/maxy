@@ -172,6 +172,63 @@ class KnowledgeSynthesizer:
             return verified[0]
         return None
 
+    @staticmethod
+    def extract_identity_answer(query: str, wiki_result: str, intents: Dict[str, bool]) -> Optional[str]:
+        """Shared logic to extract a concise name or identity from search results"""
+        msg_lower = query.lower().strip()
+        is_position_query = any(ik in msg_lower for ik in ['pm of', 'president of', 'ceo of', 'cm of', 'leader of', 'who is the current', 'who is the pm', 'who is the president', 'who is the ceo'])
+        is_person_query = msg_lower.startswith('who is ') and not is_position_query
+        
+        if intents.get('knowledge') and (is_position_query or is_person_query):
+            # Expanded exclusion list for titles, locations, and generic terms
+            blacklist = [
+                "University", "Republic", "States", "Kingdom", "Minister", "President", 
+                "Council", "Congress", "Parliament", "National", "Public", "Official", 
+                "Government", "General", "Cabinet", "Supreme", "Federal", "Union", "South", "North", "East", "West",
+                "India", "American", "British", "World", "Global", "Today", "News", "Breaking", "Live", "Update",
+                "Jagran", "Josh", "Times", "Post", "Gazette", "Chronicle", "Herald", "Observer", "Tribune", "Daily",
+                "Guardian", "Mirror", "Standard", "Express", "Sun", "Mail", "Telegraph", "Independent", "Reuters", "Associated", "Press",
+                "White", "House", "Washington", "Street", "Journal", "Gazette", "City", "County", "District",
+                "Electoral", "College", "Foundation", "Institute", "Organization", "Department", "Agency", "Commission", "Association"
+            ]
+            
+            snippet_clean = wiki_result.replace('\n', ' ').replace(':', ' is ')
+            
+            if is_position_query:
+                # Seeking a Name for a Position
+                # Pattern 1: [Name] is the [Position]
+                match1 = re.search(r'\b([A-Z][a-z]+ [A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s+is\s+(?:the\s+)?(?:current\s+)?(?:prime\s+minister|president|ceo|cm|leader|head|ruler)\b', snippet_clean, re.I)
+                if match1:
+                    name = match1.group(1).strip()
+                    if not any(bl in name for bl in blacklist):
+                        return f"{name}."
+                        
+                # Pattern 2: [Position] is [Name]
+                match2 = re.search(r'\b(?:prime\s+minister|president|ceo|cm|leader)\s+(?:of\s+[\w\s]+)?\s+is\s+([A-Z][a-z]+ [A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\b', snippet_clean, re.I)
+                if match2:
+                    name = match2.group(1).strip()
+                    if not any(bl in name for bl in blacklist):
+                        return f"{name}."
+                        
+                # Fallback for position queries: Stricter general name extraction
+                potential_names = re.findall(r'\b[A-Z][a-z]+ [A-Z][a-z]+(?:\s[A-Z][a-z]+)?\b', snippet_clean)
+                if potential_names:
+                    for name in potential_names:
+                        words_in_name = name.split()
+                        if any(w.lower() in msg_lower for w in words_in_name): continue
+                        if any(bl in name for bl in blacklist): continue
+                        if any(title in name for title in ["Minister", "President", "Secretary", "Director", "Policy", "State", "National", "Public"]): continue
+                        return f"{name}."
+                        
+            elif is_person_query:
+                # Seeking a Title for a Person (e.g. "Who is Narendra Modi")
+                # Return the first 1-2 descriptive sentences
+                sentences = [s.strip() for s in wiki_result.split('. ') if len(s.strip()) > 15]
+                if sentences:
+                    return f"{sentences[0]}."
+        
+        return None
+
 
 class MAXY1_1:
     """MAXY 1.1 - Quick Responses & Thinking
@@ -479,58 +536,9 @@ class MAXY1_1:
             wiki_result = MAXY1_1.quick_wikipedia_lookup(message)
             if wiki_result:
                 # Priority: Identity Extraction (One-word/Short Answer)
-                is_position_query = any(ik in msg_lower for ik in ['pm of', 'president of', 'ceo of', 'cm of', 'leader of', 'who is the current'])
-                is_person_query = msg_lower.startswith('who is ') and not is_position_query
-                
-                if intents.get('knowledge') and (is_position_query or is_person_query):
-                    # Expanded exclusion list for titles, locations, and generic terms
-                    blacklist = [
-                        "University", "Republic", "States", "Kingdom", "Minister", "President", 
-                        "Council", "Congress", "Parliament", "National", "Public", "Official", 
-                        "Government", "General", "Cabinet", "Supreme", "Federal", "Union", "South", "North", "East", "West",
-                        "India", "American", "British", "World", "Global", "Today", "News", "Breaking", "Live", "Update",
-                        "Jagran", "Josh", "Times", "Post", "Gazette", "Chronicle", "Herald", "Observer", "Tribune", "Daily",
-                        "Guardian", "Mirror", "Standard", "Express", "Sun", "Mail", "Telegraph", "Independent", "Reuters", "Associated", "Press",
-                        "White", "House", "Washington", "Street", "Journal", "Gazette", "City", "County", "District",
-                        "Electoral", "College", "Foundation", "Institute", "Organization", "Department", "Agency", "Commission", "Association"
-                    ]
-                    
-                    snippet_clean = wiki_result.replace('\n', ' ').replace(':', ' is ')
-                    
-                    if is_position_query:
-                        # Seeking a Name for a Position
-                        # Pattern 1: [Name] is the [Position]
-                        match1 = re.search(r'\b([A-Z][a-z]+ [A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s+is\s+(?:the\s+)?(?:current\s+)?(?:prime\s+minister|president|ceo|cm|leader|head|ruler)\b', snippet_clean, re.I)
-                        if match1:
-                            name = match1.group(1).strip()
-                            if not any(bl in name for bl in blacklist):
-                                return (f"{name}.", 0.98)
-                                
-                        # Pattern 2: [Position] is [Name]
-                        match2 = re.search(r'\b(?:prime\s+minister|president|ceo|cm|leader)\s+(?:of\s+[\w\s]+)?\s+is\s+([A-Z][a-z]+ [A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\b', snippet_clean, re.I)
-                        if match2:
-                            name = match2.group(1).strip()
-                            if not any(bl in name for bl in blacklist):
-                                return (f"{name}.", 0.98)
-                                
-                    elif is_person_query:
-                        # Seeking a Title for a Person (e.g. "Who is Narendra Modi")
-                        # Return the first 1-2 descriptive sentences
-                        sentences = [s.strip() for s in wiki_result.split('. ') if len(s.strip()) > 15]
-                        if sentences:
-                            # Keep it very concise for MAXY 1.1
-                            return (f"{sentences[0]}.", 0.95)
-                    
-                    # Fallback for position queries: Stricter general name extraction
-                    if is_position_query:
-                        potential_names = re.findall(r'\b[A-Z][a-z]+ [A-Z][a-z]+(?:\s[A-Z][a-z]+)?\b', snippet_clean)
-                        if potential_names:
-                            for name in potential_names:
-                                words_in_name = name.split()
-                                if any(w.lower() in msg_lower for w in words_in_name): continue
-                                if any(bl in name for bl in blacklist): continue
-                                if any(title in name for title in ["Minister", "President", "Secretary", "Director", "Policy", "State", "National", "Public"]): continue
-                                return (f"{name}.", 0.98)
+                identity_answer = KnowledgeSynthesizer.extract_identity_answer(message, wiki_result, intents)
+                if identity_answer:
+                    return (identity_answer, 0.98)
                             
                 # Allow 4-5 sentences for "Gemini-like" fluency for general knowledge
                 raw_sentences = [s.strip() for s in wiki_result.split('. ') if s.strip()]
@@ -1220,6 +1228,18 @@ class MAXY1_2:
 
             raw_response = result['response']
             
+            # Priority: Identity Extraction (One-word/Short Answer)
+            # MAXY 1.2/1.3 context doesn't have native 'intents' dict yet, creating one
+            mock_intents = {'knowledge': True}
+            identity_answer = KnowledgeSynthesizer.extract_identity_answer(message, raw_response, mock_intents)
+            if identity_answer:
+                return {
+                    'response': identity_answer,
+                    'model': MAXY1_2.NAME,
+                    'confidence': 0.98,
+                    'thinking': thinking
+                }
+            
             # Format based on inquiry depth (5-10 sentences)
             response = MAXY1_2.format_research_response(raw_response, context['inquiry_depth'])
             confidence = result['confidence']
@@ -1790,8 +1810,14 @@ class MAXY1_3:
                     research_result = web_result
             
             if research_result['success']:
-                response = MAXY1_2.format_research_response(research_result['response'], analysis['depth'])
-                confidence = research_result['confidence']
+                # Check for identity query first (concise answer)
+                identity_answer = KnowledgeSynthesizer.extract_identity_answer(message, research_result['response'], intents)
+                if identity_answer:
+                    response = identity_answer
+                    confidence = 0.98
+                else:
+                    response = MAXY1_2.format_research_response(research_result['response'], analysis['depth'])
+                    confidence = research_result['confidence']
 
         # Philosophy & Personal (from 1.2)
         if not response:
