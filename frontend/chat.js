@@ -138,6 +138,9 @@ const userMenu = document.getElementById('userMenu');
 const updatesNavBtn = document.getElementById('updatesNavBtn');
 const updatesHoverInfo = document.querySelector('.updates-hover-info');
 
+// Safety: Declare legacy variables to prevent ReferenceErrors
+let userProfileBtn = document.getElementById('userProfileBtn') || null;
+
 // ===== UTILITY FUNCTIONS =====
 function formatTime(date) {
   const now = new Date();
