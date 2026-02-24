@@ -58,6 +58,7 @@ let userCredits = {
   next_refresh: null
 };
 let creditsCheckInterval = null;
+let creditsModalDismissed = false;
 
 // ===== AUTHENTICATION & NAVIGATION =====
 // API Base URL for production deployment
@@ -301,9 +302,14 @@ async function checkCredits() {
         };
         updateCreditsDisplay();
 
-        // Show modal if out of credits
+        // Show modal if out of credits AND not explicitly dismissed
         if (userCredits.credits_remaining === 0) {
-          showCreditsExhaustedModal();
+          if (!creditsModalDismissed) {
+            showCreditsExhaustedModal();
+          }
+        } else {
+          // Reset dismissal flag if credits are no longer exhausted
+          creditsModalDismissed = false;
         }
       } else {
         userCredits.enabled = false;
@@ -453,6 +459,7 @@ function hideCreditsExhaustedModal() {
   const modal = document.getElementById('creditsModal');
   if (modal) {
     modal.style.display = 'none';
+    creditsModalDismissed = true; // Set flag to prevent auto-reopen
   }
 }
 
