@@ -1629,7 +1629,7 @@ textarea::placeholder {
   justify-content: space-between;
   padding: 20px 40px;
   position: relative;
-  z-index: 10;
+  z-index: 100;
   width: 100%;
 }
 
