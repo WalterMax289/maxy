@@ -239,11 +239,13 @@
   <div id="creditsModal"
     style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center;">
     <div
-      style="background: var(--card-bg); padding: 40px; border-radius: 20px; text-align: center; max-width: 400px; border: 1px solid var(--border);">
+      style="background: var(--card-bg); padding: 40px; border-radius: 20px; text-align: center; max-width: 400px; border: 1px solid var(--border); position: relative;">
+      <button id="closeCreditsModal" 
+        style="position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; transition: all 0.2s ease;">✕</button>
       <div style="font-size: 48px; margin-bottom: 20px;">⏰</div>
       <h2 style="margin-bottom: 16px; color: var(--text);">Out of Messages!</h2>
       <p style="color: var(--text-muted); margin-bottom: 24px;">You've used all your messages for this session.</p>
-      <div id="creditsCountdown" style="font-size: 24px; font-weight: bold; color: #f59e0b; margin-bottom: 24px;">
+      <div id="creditsCountdownModal" style="font-size: 24px; font-weight: bold; color: #f59e0b; margin-bottom: 24px;">
         03:00:00</div>
       <p style="color: var(--text-muted); font-size: 14px;">Credits refresh every 3 hours</p>
     </div>

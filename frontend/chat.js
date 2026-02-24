@@ -111,6 +111,7 @@ const submenuButtons = document.querySelectorAll(".upload-submenu button");
 const deleteModal = document.getElementById("deleteModal");
 const cancelDelete = document.getElementById("cancelDelete");
 const confirmDelete = document.getElementById("confirmDelete");
+const closeCreditsModal = document.getElementById("closeCreditsModal");
 
 // MAXY Selector Elements (unified dropdown)
 const maxyTrigger = document.getElementById('maxyTrigger');
@@ -448,10 +449,17 @@ function showCreditsExhaustedModal() {
   startCreditsCountdown();
 }
 
+function hideCreditsExhaustedModal() {
+  const modal = document.getElementById('creditsModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
 function startCreditsCountdown() {
   if (!userCredits.next_refresh) return;
 
-  const countdownEl = document.getElementById('creditsCountdown');
+  const countdownEl = document.getElementById('creditsCountdownModal') || document.getElementById('creditsCountdown');
   const refreshTime = new Date(userCredits.next_refresh).getTime();
 
   const updateCountdown = () => {
@@ -1744,3 +1752,7 @@ window.addEventListener('beforeunload', () => {
 updateScrollButton();
 
 // Legcay styles removed - moved to chat.css
+// Close credits modal
+if (closeCreditsModal) {
+  closeCreditsModal.addEventListener('click', hideCreditsExhaustedModal);
+}
