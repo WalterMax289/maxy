@@ -157,7 +157,7 @@ class CreditManager:
             last_reset = datetime.fromisoformat(last_reset)
         
         next_refresh = None
-        if user["credits_remaining"] == 0:
+        if user["credits_remaining"] < config.MAX_CREDITS_PER_USER:
             next_refresh = (last_reset + timedelta(hours=config.CREDIT_REFRESH_HOURS)).isoformat()
         
         return {

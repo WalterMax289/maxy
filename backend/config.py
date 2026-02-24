@@ -44,7 +44,7 @@ class Config:
     
     # Credit System Configuration
     ENABLE_CREDITS = os.getenv("ENABLE_CREDITS", "True").lower() == "true"
-    MAX_CREDITS_PER_USER = int(os.getenv("MAX_CREDITS_PER_USER", 30))  # messages
+    MAX_CREDITS_PER_USER = int(os.getenv("MAX_CREDITS_PER_USER", 45))  # messages
     CREDIT_REFRESH_HOURS = int(os.getenv("CREDIT_REFRESH_HOURS", 3))  # hours
     
     # Database Configuration

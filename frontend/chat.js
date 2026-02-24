@@ -52,8 +52,8 @@ let connectionCheckInterval = null;
 // Credit system - persists across new chats via userId
 let userCredits = {
   enabled: false,
-  credits_remaining: 30,
-  max_credits: 30,
+  credits_remaining: 45,
+  max_credits: 45,
   refresh_hours: 3,
   next_refresh: null
 };
@@ -349,8 +349,8 @@ function updateCreditsDisplay() {
   if (creditsUsed) creditsUsed.textContent = userCredits.max_credits - userCredits.credits_remaining;
   if (creditsTotal) creditsTotal.textContent = userCredits.max_credits;
 
-  // Start countdown if not already running
-  if (userCredits.next_refresh && !creditsCheckInterval) {
+  // Auto-start countdown if we have a refresh time
+  if (userCredits.next_refresh) {
     startCreditsCountdown();
   }
 }
@@ -466,15 +466,27 @@ function hideCreditsExhaustedModal() {
 function startCreditsCountdown() {
   if (!userCredits.next_refresh) return;
 
-  const countdownEl = document.getElementById('creditsCountdownModal') || document.getElementById('creditsCountdown');
+  // Clear existing interval to prevent multiple timers
+  if (creditsCheckInterval) {
+    clearInterval(creditsCheckInterval);
+  }
+
   const refreshTime = new Date(userCredits.next_refresh).getTime();
 
   const updateCountdown = () => {
     const now = new Date().getTime();
     const distance = refreshTime - now;
 
+    // We need to update both elements if they exist
+    const modalEl = document.getElementById('creditsCountdownModal');
+    const headerEl = document.getElementById('creditsCountdown');
+
     if (distance <= 0) {
-      countdownEl.textContent = '00:00:00';
+      if (modalEl) modalEl.textContent = '00:00:00';
+      if (headerEl) headerEl.textContent = '00:00:00';
+
+      clearInterval(creditsCheckInterval);
+      creditsCheckInterval = null;
       checkCredits(); // Refresh credits
       return;
     }
@@ -483,8 +495,10 @@ function startCreditsCountdown() {
     const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-    countdownEl.textContent =
-      `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+    if (modalEl) modalEl.textContent = timeStr;
+    if (headerEl) headerEl.textContent = timeStr;
   };
 
   updateCountdown();
