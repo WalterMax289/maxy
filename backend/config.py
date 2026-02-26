@@ -1,8 +1,3 @@
-"""
-Configuration management for MAXY Chat Backend
-Handles all environment variables and application settings
-"""
-
 import os
 from typing import List
 from dotenv import load_dotenv
@@ -10,49 +5,38 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    """Application configuration"""
-    
-    # Server Configuration
+   
     HOST = os.getenv("HOST", "0.0.0.0")
     PORT = int(os.getenv("PORT", 8000))
     DEBUG = os.getenv("DEBUG", "False").lower() == "true"
     
-    # Security
     SECRET_KEY = os.getenv("SECRET_KEY", "your-super-secret-key-change-this-in-production")
     
-    # CORS Configuration - Allow all localhost origins for development
     ALLOWED_ORIGINS_STR = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8000,http://127.0.0.1:8000,http://127.0.0.1:3000,http://localhost:5500,http://127.0.0.1:5500,http://localhost:*,null")
     ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_STR.split(",") if origin.strip()]
-    # Only add wildcard if in DEBUG mode (convenience for development)
     if DEBUG and "*" not in ALLOWED_ORIGINS:
         ALLOWED_ORIGINS.append("*")
-    
-    # Logging Configuration
+
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
     LOG_FILE = os.getenv("LOG_FILE", "logs/app.log")
-    
-    # File Processing Configuration
+
     MAX_FILE_SIZE = int(os.getenv("MAX_FILE_SIZE", 10 * 1024 * 1024))  # 10MB default
     ENABLE_FILE_PROCESSING = os.getenv("ENABLE_FILE_PROCESSING", "True").lower() == "true"
     ENABLE_CHARTS = os.getenv("ENABLE_CHARTS", "True").lower() == "true"
     ENABLE_WIKIPEDIA = os.getenv("ENABLE_WIKIPEDIA", "True").lower() == "true"
     
-    # Rate Limiting
     RATE_LIMIT_ENABLED = os.getenv("RATE_LIMIT_ENABLED", "True").lower() == "true"
     RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", 100))  # requests
     RATE_LIMIT_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", 60))  # seconds
     
-    # Credit System Configuration
     ENABLE_CREDITS = os.getenv("ENABLE_CREDITS", "True").lower() == "true"
     MAX_CREDITS_PER_USER = int(os.getenv("MAX_CREDITS_PER_USER", 45))  # messages
     CREDIT_REFRESH_HOURS = int(os.getenv("CREDIT_REFRESH_HOURS", 3))  # hours
     
-    # Database Configuration
     DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./maxy_chat.db")
     DATABASE_POOL_SIZE = int(os.getenv("DATABASE_POOL_SIZE", 10))
     DATABASE_MAX_OVERFLOW = int(os.getenv("DATABASE_MAX_OVERFLOW", 20))
     
-    # API Configuration
     API_TITLE = "MAXY Chat Backend"
     API_VERSION = "2.0.0"
     API_DESCRIPTION = "Advanced multi-model AI chatbot with conversation management, data analysis, and file processing"

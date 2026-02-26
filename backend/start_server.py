@@ -1,8 +1,3 @@
-"""
-Start MAXY Server with Browser Notification
-This script starts the backend server and automatically opens your browser
-"""
-
 import subprocess
 import sys
 import time
@@ -10,16 +5,14 @@ import os
 import webbrowser
 import threading
 import http.client
-
-# Configuration
 SERVER_PORT = 8000
 SERVER_HOST = "127.0.0.1"
 STATUS_URL = f"http://{SERVER_HOST}:{SERVER_PORT}/server-status"
 CHAT_URL = f"http://{SERVER_HOST}:{SERVER_PORT}/"
-MAX_WAIT_TIME = 30  # Maximum seconds to wait for server startup
+MAX_WAIT_TIME = 30  
 
 def check_server_running():
-    """Check if server is already running"""
+    
     try:
         conn = http.client.HTTPConnection(SERVER_HOST, SERVER_PORT, timeout=2)
         conn.request("GET", "/health")
@@ -30,7 +23,7 @@ def check_server_running():
         return False
 
 def wait_for_server():
-    """Wait for server to be ready"""
+    
     print("⏳ Waiting for server to start...")
     start_time = time.time()
     
@@ -42,12 +35,10 @@ def wait_for_server():
     return False
 
 def open_browser():
-    """Open browser with server status page"""
-    time.sleep(2)  # Give server a moment to fully initialize
+    time.sleep(2)  
     
     if check_server_running():
         print("\n🌐 Opening browser...")
-        # Open status page first
         webbrowser.open(STATUS_URL)
         print(f"✅ Status page opened: {STATUS_URL}")
         print(f"📱 Chat URL: {CHAT_URL}")

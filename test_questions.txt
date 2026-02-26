@@ -1,0 +1,150 @@
+Q1. What is the primary source of energy for Earth's climate system?
+A1. The Sun (solar radiation)
+
+Q2. Which blood cells are primarily responsible for oxygen transport in humans?
+A2. Red blood cells (erythrocytes) – due to hemoglobin
+
+Q3. What does the acronym HTTPS stand for?
+A3. HyperText Transfer Protocol Secure
+
+Q4. Which vitamin is produced in the skin when exposed to UVB sunlight?
+A4. Vitamin D (specifically vitamin D3 / cholecalciferol)
+
+Q5. In the context of computer networking, what does DNS stand for?
+A5. Domain Name System
+
+Q6. What is the normal resting adult human heart rate range (beats per minute)?
+A6. 60–100 bpm
+
+Q7. Which programming paradigm is Python most commonly associated with?
+A7. Multi-paradigm (primarily object-oriented + imperative + functional)
+
+Q8. What is the medical term for high blood pressure?
+A8. Hypertension
+
+Q9. What does RAM stand for in computer hardware?
+A9. Random Access Memory
+
+Q10. Which organ produces insulin in the human body?
+A10. Pancreas (beta cells in the islets of Langerhans)
+
+Q11. What is the time complexity of binary search on a sorted array?
+A11. O(log n)
+
+Q12. Which mineral is most important for bone health and muscle contraction?
+A12. Calcium
+
+Q13. What does the acronym CPU stand for?
+A13. Central Processing Unit
+
+Q14. What is the medical name for a heart attack?
+A14. Myocardial infarction
+
+Q15. In object-oriented programming, what does the acronym SOLID represent?
+A15. Single responsibility, Open–closed, Liskov substitution, Interface segregation, Dependency inversion
+
+Q16. Which hormone is primarily responsible for regulating sleep-wake cycles?
+A16. Melatonin
+
+Q17. What is the difference between HTTP/2 and HTTP/1.1 regarding multiplexing?
+A17. HTTP/2 supports multiplexing (multiple requests over a single TCP connection)
+
+Q18. What is the largest artery in the human body?
+A18. Aorta
+
+Q19. In machine learning, what does overfitting mean?
+A19. Model learns training data (including noise) too well and fails to generalize to new data
+
+Q20. Which vitamin deficiency causes scurvy?
+A20. Vitamin C (ascorbic acid)
+
+Q21. What does SQL stand for?
+A21. Structured Query Language
+
+Q22. What is the normal fasting blood glucose range for non-diabetic adults (mg/dL)?
+A22. 70–99 mg/dL
+
+Q23. In cryptography, what is a hash function primarily used for?
+A23. Producing a fixed-size output (digest) from arbitrary input, usually for integrity checking and password storage
+
+Q24. Which part of the brain is primarily responsible for balance and coordination?
+A24. Cerebellum
+
+Q25. What does BMI stand for and what is the formula?
+A25. Body Mass Index  
+Formula: weight (kg) / [height (m)]²
+
+Q1. What gas, discovered on the sun before Earth, is the second most abundant element in the universe?
+A1. Helium
+
+Q2. Which part of the human eye is responsible for most of the focusing power?
+A2. Cornea (followed by the lens)
+
+Q3. In computing, what does SSD stand for and what is its main advantage over HDD?
+A3. Solid State Drive – much faster read/write speeds, no moving parts, lower power consumption
+
+Q4. What is the medical term for abnormally low blood sugar?
+A4. Hypoglycemia
+
+Q5. What does the acronym API stand for in software development?
+A5. Application Programming Interface
+
+Q6. Which hormone, produced by the adrenal glands, is known as the "stress hormone"?
+A6. Cortisol
+
+Q7. In algorithms, what problem does Dijkstra's algorithm solve?
+A7. Finding the shortest path from a single source node to all other nodes in a weighted graph (with non-negative weights)
+
+Q8. What is the primary function of the large intestine (colon) in the digestive system?
+A8. Absorption of water and electrolytes, formation and storage of feces
+
+Q9. What does URL stand for?
+A9. Uniform Resource Locator
+
+Q10. Which vitamin is essential for blood clotting?
+A10. Vitamin K
+
+Q11. What is Big O notation used for in computer science?
+A11. Describing the upper bound (worst-case) time or space complexity of an algorithm
+
+Q12. What condition is characterized by persistent high blood glucose levels?
+A12. Diabetes mellitus
+
+Q13. In networking, what is the main difference between TCP and UDP?
+A13. TCP is connection-oriented and reliable; UDP is connectionless and unreliable (faster, no guaranteed delivery)
+
+Q14. Which organ filters blood and produces urine?
+A14. Kidney(s)
+
+Q15. What does CRUD stand for in database operations?
+A15. Create, Read, Update, Delete
+
+Q16. What is the medical name for a stroke caused by a blood clot?
+A16. Ischemic stroke
+
+Q17. In version control systems, what does the command "git merge" do?
+A17. Integrates changes from one branch into another
+
+Q18. Which mineral is a key component of hemoglobin and helps prevent anemia?
+A18. Iron
+
+Q19. What is the purpose of a "firewall" in computer security?
+A19. To monitor and control incoming and outgoing network traffic based on predetermined security rules
+
+Q20. What is the normal pH range of human blood?
+A20. 7.35–7.45 (slightly alkaline)
+
+Q21. In machine learning, what does a "confusion matrix" help evaluate?
+A21. Performance of a classification model (true positives, true negatives, false positives, false negatives)
+
+Q22. Which part of the brain regulates body temperature, hunger, thirst, and sleep?
+A22. Hypothalamus
+
+Q23. What does JSON stand for and what is it commonly used for?
+A23. JavaScript Object Notation – lightweight data-interchange format (widely used in APIs)
+
+Q24. What is atherosclerosis?
+A24. Buildup of plaques (fats, cholesterol, calcium) inside artery walls, leading to narrowing and hardening of arteries
+
+Q25. In relational databases, what does the term "ACID" stand for?
+A25. Atomicity, Consistency, Isolation, Durability (properties that guarantee reliable database transactions)

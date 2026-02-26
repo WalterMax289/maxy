@@ -1,8 +1,3 @@
-"""
-MAXY Chat Backend - Main FastAPI Application
-Advanced multi-model AI chatbot with file processing and data analysis
-"""
-
 from fastapi import FastAPI, HTTPException, Request, status, UploadFile, File, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
@@ -15,7 +10,6 @@ from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel
 
-# Import custom modules
 from config import config
 from news_updater import WorldNewsUpdater
 from schemas import (
@@ -31,7 +25,6 @@ from data_analyzer import AdvancedAnalyzer, CorrelationAnalyzer
 from chart_generator import ChartGenerator
 from credit_manager import credit_manager, get_user_id_from_request
 
-# Setup logging
 log_dir = os.path.dirname(config.LOG_FILE)
 if log_dir and not os.path.exists(log_dir):
     os.makedirs(log_dir, exist_ok=True)

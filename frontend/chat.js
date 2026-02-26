@@ -1,45 +1,28 @@
-// ===== CHAT STATE =====
 let chats = JSON.parse(localStorage.getItem('maxyChats')) || [];
 let currentChatId = null;
 let pendingDeleteId = null;
 let currentModel = localStorage.getItem('maxyCurrentModel') || 'maxy1.1';
 let editingMessageId = null;
 
-// Generate or retrieve persistent user ID for credit tracking
 let userId = localStorage.getItem('maxyUserId');
 if (!userId) {
   userId = 'user_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
   localStorage.setItem('maxyUserId', userId);
 }
+const PRODUCTION_BACKEND_URL = 'https://maxy-backend.onrender.com';
 
-// Backend URL configuration - can be overridden via localStorage or auto-detected
-// For production deployment on Vercel, set BACKEND_URL to your deployed backend
-// Example: const BACKEND_URL = 'https://your-backend-name.vercel.app';
-// Auto-detect: if served by backend (port 8000 or same origin), use relative URLs
-// Otherwise default to localhost:8000 for development
-const PRODUCTION_BACKEND_URL = 'https://maxy-backend.onrender.com'; // <-- SET YOUR DEPLOYED BACKEND URL HERE (e.g., 'https://maxy-api.vercel.app');
-
-// Auto-detect backend URL based on current location
 function detectBackendUrl() {
-  // If already on port 8000, use relative URLs (same origin)
   if (window.location.port === '8000' || window.location.port === '8001') {
     return '';
   }
-  // If served from static path, backend is likely on same host
   if (window.location.pathname.includes('/static/')) {
     return '';
   }
-  // Check localStorage for manual override
   const stored = localStorage.getItem('maxyBackendUrl');
   if (stored) return stored;
-
-  // Default to localhost
   return 'http://localhost:8000';
 }
 
-// Logic: Use detectBackendUrl() first. If it returns something besides localhost (like empty string for same-origin), 
-// it means we are likely running in the same environment as the backend.
-// Otherwise, fall back to PRODUCTION_BACKEND_URL if detectBackendUrl returns default localhost but we're not on localhost.
 const detectedBase = detectBackendUrl();
 const BACKEND_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   ? detectedBase
@@ -49,7 +32,6 @@ console.log('Backend URL configured as:', BACKEND_URL || '(same origin - relativ
 let isBackendConnected = false;
 let connectionCheckInterval = null;
 
-// Credit system - persists across new chats via userId
 let userCredits = {
   enabled: false,
   credits_remaining: 45,
@@ -59,21 +41,16 @@ let userCredits = {
 };
 let creditsCheckInterval = null;
 let creditsModalDismissed = false;
-
-// ===== AUTHENTICATION & NAVIGATION =====
-// API Base URL for production deployment
 const API_BASE_URL = window.location.hostname === 'localhost'
   ? (BACKEND_URL || 'http://localhost:8000')
-  : BACKEND_URL;  // <-- UPDATE THIS WITH YOUR RENDER BACKEND URL
+  : BACKEND_URL;
 
-// Check if user is authenticated (has active session in localStorage)
 function isAuthenticated() {
   const session = localStorage.getItem('maxySession');
   if (!session) return false;
 
   try {
     const sessionData = JSON.parse(session);
-    // userId is synchronized with Supabase UUID in auth.js
     userId = localStorage.getItem('maxyUserId');
     return !!sessionData.id && !!userId;
   } catch (e) {

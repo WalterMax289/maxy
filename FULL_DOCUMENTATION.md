@@ -2,7 +2,6 @@
 
 Welcome to the comprehensive technical guide for the **MAXY Chat** repository. This document provides a deep dive into the architecture, core modules, and implementation details that power MAXY.
 
----
 
 ## 🏗️ 1. High-Level Architecture
 
@@ -94,9 +93,3 @@ Shared UI components including:
 *   **CORS Errors**: Always ensure the Vercel URL in `ALLOWED_ORIGINS` does NOT have a trailing slash.
 *   **Port Binding**: Render expects the backend to listen on `0.0.0.0:10000` (or the `PORT` env var).
 *   **Memory Usage**: MAXY 1.3 can be memory intensive when analyzing large CSVs (>10MB). Adjust `MAX_FILE_SIZE` in `.env` accordingly.
-
----
-
-<div align="center">
-  <sub>Document generated for WalterMax289 / MAXY Repo v2.0</sub>
-</div>

@@ -1037,6 +1037,46 @@ class MAXY1_2:
             return {'success': False, 'response': f"Web search failed: {e}", 'confidence': 0.5}
     
     @staticmethod
+    def get_weather(city: str) -> Optional[str]:
+        """Fetch weather data from OpenMeteo (Ported from 1.1)"""
+        try:
+            # 1. Geocoding
+            geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&language=en&format=json"
+            geo_res = requests.get(geo_url).json()
+            
+            if not geo_res.get('results'):
+                return None
+                
+            lat = geo_res['results'][0]['latitude']
+            lon = geo_res['results'][0]['longitude']
+            name = geo_res['results'][0]['name']
+            country = geo_res['results'][0]['country']
+            
+            # 2. Weather
+            weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&timezone=auto"
+            w_res = requests.get(weather_url).json()
+            
+            current = w_res.get('current', {})
+            temp = current.get('temperature_2m')
+            humidity = current.get('relative_humidity_2m')
+            wind = current.get('wind_speed_10m')
+            
+            # Weather codes
+            codes = {
+                0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
+                45: "Foggy", 48: "Depositing rime fog", 51: "Light drizzle", 53: "Drizzle",
+                55: "Heavy drizzle", 61: "Slight rain", 63: "Moderate rain", 65: "Heavy rain",
+                71: "Slight snow", 73: "Moderate snow", 75: "Heavy snow", 95: "Thunderstorm"
+            }
+            condition = codes.get(current.get('weather_code'), "Variable")
+            
+            return f"{condition} in {name}, {country}. Temp: {temp}°C, Humidity: {humidity}%, Wind: {wind} km/h."
+            
+        except Exception as e:
+            logger.error(f"Weather error in 1.2: {e}")
+            return None
+
+    @staticmethod
     def analyze_conversation_context(message: str, conversation_history: Optional[List[Dict]] = None) -> Dict[str, Any]:
         """Deep analysis of conversation context and user needs"""
         msg_lower = message.lower().strip()
@@ -1083,7 +1123,15 @@ class MAXY1_2:
             'technology': any(t in msg_lower for t in ['technology', 'computer', 'internet', 'software', 'ai', 'digital', 'network']),
             'geography': any(t in msg_lower for t in ['country', 'capital', 'city', 'continent', 'population', 'location']),
             'personal': any(t in msg_lower for t in ['i feel', 'i think', 'my opinion', 'in my experience', 'personally']),
-            'philosophy': any(t in msg_lower for t in ['meaning', 'philosophy', 'why do we', 'purpose', 'existence', 'ethics', 'thought'])
+            'philosophy': any(t in msg_lower for t in ['meaning', 'philosophy', 'why do we', 'purpose', 'existence', 'ethics', 'thought']),
+            'time_query': any(t in msg_lower for t in ['time', 'what time', 'current time']),
+            'date_query': any(d in msg_lower for d in ['date', 'today', 'what day']),
+            'weather': any(w in msg_lower for w in ['weather', 'temperature', 'rain', 'sunny']),
+            'calculation': any(c in msg_lower for c in ['calculate', 'math', 'plus', 'minus', 'times', 'divided']),
+            'entertainment': any(j in msg_lower for j in ['joke', 'funny', 'laugh']),
+            'help': any(h in msg_lower for h in ['help', 'what can you do']),
+            'daily_updates': any(u in msg_lower for u in ['daily updates', 'what is new', 'whats new', 'latest updates']),
+            'farewell': any(re.search(r'\b' + re.escape(f) + r'\b', msg_lower) for f in ['bye', 'goodbye', 'see you', 'farewell', 'later'])
         }
         
         return {
@@ -1165,6 +1213,40 @@ class MAXY1_2:
         elif any(h in msg_lower for h in ['help', 'what can you do']):
             return ("As MAXY 1.2, I'm here to be your ultimate research and conversation companion! I can assist you with several highly specialized tasks. My primary strength is performing 'Deep Research' where I synthesize information from Wikipedia and other verified sources into comprehensive technical reports. These reports include scholarly overviews, critical insights, and detailed narratives to give you a complete picture of any topic. Additionally, I'm a highly capable conversational AI, able to engage in long-form, context-aware discussions on a wide range of subjects. I can analyze personal perspectives, explore philosophical questions, or just have a friendly, detailed chat about your day. I pride myself on providing depth and accuracy in every response, far beyond simple surface-level facts. What area would you like to dive into first? Whether it's a deep academic dive or a thoughtful conversation, I'm ready to provide the insights you need!", 0.94)
         
+        # Time query - Direct answer with context (7-10 sentences)
+        elif context['topics'].get('time_query'):
+            current = datetime.now().strftime("%I:%M %p")
+            date_str = datetime.now().strftime("%A, %B %d, %Y")
+            return (f"The current time is approximately {current} on this fine {date_str}. Timekeeping is such a fundamental part of our organized society, allowing us to synchronize our activities across the globe with incredible precision. Whether you're tracking seconds for a scientific experiment or just planning your next meal, having an accurate clock is indispensable. I'm always monitoring the temporal flow to ensure I can assist you with any scheduling or time-sensitive research you might need. It's fascinating to think about how our perception of time has evolved from simple sundials to the atomic clocks we use today. Is there a specific reason you're checking the time right now, or are you just staying on top of your schedule? I'm here to help you make the most of every minute of our conversation today, {slang_manager.get_random_slang(use_slang)}!", 0.97)
+
+        # Date query - Direct answer with context (7-10 sentences)
+        elif context['topics'].get('date_query'):
+            current = datetime.now().strftime("%A, %B %d, %Y")
+            return (f"Today's date is {current}, marking another interesting day in our collective history. It's meaningful to note the date as it provides the essential context for everything we discuss, from current events to historical milestones. Every day brings new opportunities for discovery and learning, and I'm thrilled to be part of your journey today. Knowing the date helps us keep track of progress and look forward to future goals with a clear perspective. I'm always updating my knowledge base to reflect the most recent information available on this date. Are you celebrating anything significant today, or is it just a focused day for research and learning? I'm ready to dive into any topic that makes this date memorable for you!", 0.97)
+
+        # Weather - Informative with conversational depth (7-10 sentences)
+        elif context['topics'].get('weather'):
+            words = message.split()
+            city = None
+            if 'in' in words:
+                idx = words.index('in')
+                if idx + 1 < len(words):
+                    city = " ".join(words[idx + 1:]).strip('?.!')
+            if not city and len(words) > 0:
+                 potential = words[-1].strip('?.!')
+                 if potential.istitle() and potential.lower() not in ['weather', 'today', 'now']:
+                     city = potential
+
+            if city:
+                weather_info = MAXY1_2.get_weather(city)
+                if weather_info:
+                    return (f"Here is the latest meteorological update: {weather_info} Understanding the weather is crucial for everything from daily planning to complex climate research. Whether it's the temperature in {city} or global atmospheric patterns, environmental data provides deep context for our lives. My weather protocols are designed to fetch real-time data so you can stay informed no matter where you are. It's interesting to consider how local conditions can impact the broader socio-economic status of a region. Would you like me to research the climate history of this area or look for more atmospheric details? I'm prepared to provide as much depth as you need to satisfy your curiosity about the environment today, {slang_manager.get_random_slang(use_slang)}!", 0.95)
+            return ("I'd be more than happy to check the weather for you, but I'll need a specific city name to provide an accurate report! You can simply ask 'weather in New York' or 'what is the temperature in Tokyo' to trigger my environmental sensors. Once I have the location, I can fetch real-time data including temperature, humidity, and wind conditions. Knowing the weather is a great way to start any detailed discussion about a region's current status or historical development. It's one of the many ways I can provide real-world context to our research sessions. I'm standing by and ready to analyze any location you're curious about right now. Would you like to provide a city name so we can get started?", 0.90)
+
+        # Calculation - Expert context (7-10 sentences)
+        elif context['topics'].get('calculation'):
+            return ("I can certainly help you with those mathematical calculations or complex analytical problems! Mathematics is the universal language that underpins everything from basic finance to the most advanced quantum physics. Whether you need a simple arithmetic result or help brainstorming a more complex formula, I'm here to provide the computational support you need. My system is designed to handle logic and numbers with high precision, ensuring our conclusions are statistically sound. We can even dive into the theory behind the calculations if you're interested in the 'why' as well as the 'what'. Just give me the numbers or the problem statement, and I'll get to work immediately. Accuracy is my top priority when it comes to any form of technical or mathematical inquiry. What specific calculation can I perform for you to help advance your research today?", 0.91)
+
         # Default conversational - Engaging and offering depth (8-15 sentences)
         else:
             return (random.choice([
@@ -1372,19 +1454,11 @@ class MAXY1_3:
         code_patterns = [r'\b' + re.escape(ind) + r'\b' for ind in KnowledgeSynthesizer.CODE_INDICATORS]
         is_code = any(re.search(pattern, msg_lower) for pattern in code_patterns)
         
-        detected_lang = 'python'  # default
-        for lang, keywords in languages.items():
-            if any(kw in msg_lower for kw in keywords):
-                detected_lang = lang
-                break
-        
-        # Priority: If it's a known algorithm or technical concept, it's code
-        technical_concepts = [
-            'bubble sort', 'binary search', 'linked list', 'quick sort', 'merge sort', 
-            'dfs', 'bfs', 'dijkstra', 'dynamic programming', 'hash map', 'stack trace',
-            'rest api', 'webhook', 'database schema', 'unit test', 'regex', 'regular expression'
-        ]
-        if any(concept in msg_lower for concept in technical_concepts):
+        # Language detection logic refinement for web-related queries
+        if 'portfolio' in msg_lower or 'website' in msg_lower or 'landing page' in msg_lower:
+            detected_lang = 'html'
+            if 'css' in msg_lower: detected_lang = 'css'
+            elif 'js' in msg_lower or 'javascript' in msg_lower: detected_lang = 'javascript'
             return True, detected_lang
 
         return is_code, detected_lang
@@ -1626,6 +1700,7 @@ class MAXY1_3:
             'daily_updates': any(u in msg_lower for u in ['daily updates', 'whats new', 'what is new', 'latest updates']),
             'weather': any(w in msg_lower for w in ['weather', 'temperature', 'rain', 'sunny']),
             'calculation': any(c in msg_lower for c in ['calculate', 'math', 'plus', 'minus', 'times', 'divided']),
+            'website_creation': any(ind in msg_lower for ind in ['build', 'create', 'make', 'website', 'web site', 'page', 'landing', 'portfolio', 'ui', 'interface'])
         }
         
         # Deep analysis metrics from 1.2
@@ -1755,41 +1830,57 @@ class MAXY1_3:
 
         # 2. PRIORITY: EXISTING 1.3 FEATURES (Technical/Data)
         
-        # Code Request
+        # Website Request (Moved to Priority over General Code)
+        if not response and (analysis['is_website'] or intents.get('website_creation')):
+             is_website, web_type = MAXY1_3.is_website_request(message)
+             search_query = f"complete premium responsive {web_type} website code template single file HTML CSS Inter font"
+             research_code = MAXY1_3.search_real_code("html", search_query)
+             
+             if research_code and "html" in research_code.lower():
+                 response = f"### 🏗️ MAXY Deep Research: Premium {web_type.capitalize()} Builder\n\n"
+                 response += f"I've synthesized a high-end, responsive **{web_type.capitalize()}** template for you. This design incorporates modern UI/UX standards, fluid animations, and a premium color palette discovered through deep technical research:\n\n"
+                 response += f"{research_code}\n\n"
+                 response += f"**Research Insight:** This code utilizes optimized CSS grid/flexbox patterns and semantic HTML5 for maximum accessibility and performance. "
+                 response += "Would you like me to add glassmorphism effects or refine the typography further?"
+                 confidence = 0.98
+             else:
+                 # Local Fallback - UPGRADED PREMIUM TEMPLATE
+                 if web_type == 'portfolio':
+                     response = "### 🏗️ MAXY Template: Premium Portfolio Specialist\n\n"
+                     response += "I've generated a bespoke, high-performance portfolio starter using a sleek dark-mode aesthetic and modern 'Inter' typography:\n\n"
+                     response += "```html\n"
+                     response += "<!DOCTYPE html>\n<html lang='en'>\n<head>\n"
+                     response += "  <meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>\n"
+                     response += "  <link href='https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap' rel='stylesheet'>\n"
+                     response += "  <style>\n"
+                     response += "    :root { --bg: #0a0a0c; --accent: #3b82f6; --text: #f8fafc; }\n"
+                     response += "    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }\n"
+                     response += "    .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }\n"
+                     response += "    nav { padding: 2rem; display: flex; justify-content: space-between; position: fixed; width: 100%; box-sizing: border-box; z-index: 100; }\n"
+                     response += "    .hero { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }\n"
+                     response += "    h1 { font-size: 5rem; margin: 0; background: linear-gradient(to right, #fff, #64748b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }\n"
+                     response += "    .btn { padding: 1rem 2rem; background: var(--accent); color: white; text-decoration: none; border-radius: 50px; margin-top: 2rem; transition: 0.3s; }\n"
+                     response += "    .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3); }\n"
+                     response += "  </style>\n</head>\n<body>\n"
+                     response += "  <nav class='glass'><div>MAXY PORTFOLIO</div><div>Work . About . Contact</div></nav>\n"
+                     response += "  <section class='hero'>\n"
+                     response += "    <h1>Digital Architecture &<br>Creative Solutions</h1>\n"
+                     response += "    <p>Crafting high-performance experiences for the modern web.</p>\n"
+                     response += "    <a href='#' class='btn'>View Laboratory</a>\n"
+                     response += "  </section>\n</body>\n</html>\n```\n\n"
+                     response += "This premium template is ready for deployment. I can expand it with project galleries, contact forms, or dynamic animations—what's our next step?"
+                     confidence = 0.95
+                 else:
+                     response = f"I'm ready to architect your **{web_type}** website! While I'm refining the deep search for hyper-specific templates, "
+                     response += "I've activated my UI design module. Should we prioritize a minimalist aesthetic or a high-impact, dynamic layout?"
+                     confidence = 0.85
+
+        # Code Request (General)
         if not response and analysis['is_code'] and not analysis['is_chart']:
             is_code, language = MAXY1_3.is_code_request(message)
             response = MAXY1_3.generate_code(language, message)
             if response:
                 confidence = 0.96
-
-        # Website Request
-        if not response and analysis['is_website']:
-             is_website, web_type = MAXY1_3.is_website_request(message)
-             search_query = f"complete responsive simple {web_type} website code template single file HTML CSS"
-             research_code = MAXY1_3.search_real_code("html", search_query)
-             
-             if research_code:
-                 response = f"### 🏗️ MAXY Deep Research: Website Builder\n\n"
-                 response += f"I've researched and synthesized a professional **{web_type.capitalize()}** template for you using modern design standards:\n\n"
-                 response += f"{research_code}\n\n"
-                 response += f"**Research Insight:** This code incorporates responsive layout patterns from verified technical sources. "
-                 response += "Would you like me to add more specific sections or refine the style?"
-                 confidence = 0.95
-             else:
-                 # Local Fallback Template for Common Requests
-                 if web_type == 'portfolio':
-                     response = "### 🏗️ MAXY Template: Professional Portfolio\n\n"
-                     response += "I couldn't find a perfect live match in time, so I've generated a high-quality local starter for you:\n\n"
-                     response += "```html\n"
-                     response += "<!DOCTYPE html>\n<html>\n<head>\n<style>\n  body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; margin: 0; }\n"
-                     response += "  .hero { height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, #1e293b 0%, #0f172a 100%); }\n"
-                     response += "</style>\n</head>\n<body>\n  <nav>Portfolio</nav>\n  <section class='hero'><h1>Hello, I am a Developer</h1></section>\n</body>\n</html>\n```\n\n"
-                     response += "Would you like me to continue searching for more advanced animations or layouts?"
-                     confidence = 0.90
-                 else:
-                     response = f"I'm ready to build your {web_type} website! While I'm refining the deep search for complex templates, "
-                     response += "could you tell me if you have a specific color theme or list of sections in mind?"
-                     confidence = 0.85
 
         # Chart Request
         if not response and analysis['is_chart']:
