@@ -168,10 +168,11 @@ class KnowledgeSynthesizer:
             return 0.5
             
         content = (title + " " + body).lower()
+        title_lower = title.lower().strip()
         matches = sum(1 for kw in keywords if kw in content)
         
         # Identity query detection
-        identity_keywords = ['who is', 'who was', 'identity', 'person', 'pm of', 'president of', 'ceo of', 'chief minister of', 'chief of']
+        identity_keywords = ['who is', 'who was', 'identity', 'person', 'pm of', 'president of', 'ceo of', 'chief minister of', 'chief of', 'founder of', 'creator of', 'author of']
         msg_lower = query.lower()
         is_identity = any(ik in msg_lower for ik in identity_keywords)
         
@@ -186,7 +187,22 @@ class KnowledgeSynthesizer:
             if any(hi in content for hi in historical_indicators):
                 matches -= 1
             
-            # 3. Year Range Penalty (e.g., 1991-1996)
+            # 3. Institution/Organization Penalty for Identity Queries
+            # If we are looking for a PERSON, penalize organizations unless the query explicitly has them
+            institution_indicators = [
+                'institute', 'university', 'college', 'foundation', 'academy', 
+                'organization', 'hospital', 'department', 'agency', 'commission', 
+                'association', 'society', 'center', 'centre', 'school', 'board', 'council'
+            ]
+            if not any(ii in msg_lower for ii in institution_indicators):
+                if any(ii in title_lower for ii in institution_indicators):
+                    matches -= 10 # Strong penalty to prevent MGIMS over Mahatma Gandhi
+
+            # 4. Wikipedia Disambiguation Penalty
+            if "disambiguation" in title_lower:
+                matches -= 5
+
+            # 5. Year Range Penalty (e.g., 1991-1996)
             if re.search(r'\b(19|20)[0-9]{2}[\-–](19|20)[0-9]{2}\b', content):
                 # If there's a year range, it's often a historical context unless "current" is also there
                 if not any(ri in content for ri in recency_indicators):
@@ -199,13 +215,12 @@ class KnowledgeSynthesizer:
                 name_matches = sum(1 for name in names_in_query if name.lower() in content_lower)
                 
                 query_full_name = " ".join(names_in_query).lower()
-                title_lower = title.lower().strip()
                 
                 # Significant boost if the title exactly matches the full name in the query
                 if query_full_name == title_lower:
-                    matches += 15
+                    matches += 20 # Increased from 15
                 elif query_full_name in title_lower:
-                    matches += 5
+                    matches += 8 # Increased from 5
                 
                 # Penalty for sub-topics if the name is found but title contains extra sub-topic context not in query
                 subtopic_indicators = ['assassination', 'family', 'legacy', 'death', 'childhood', 'early life', 'career', 'politics', 'murder', 'killing']
@@ -224,16 +239,16 @@ class KnowledgeSynthesizer:
         if is_identity:
             # Titles with colons, question marks at start, or buzzwords are often news
             news_indicators = [':', '?', 'breaking', 'live', 'update', 'latest', 'counters', 'claims', 'vs', 'opinion', 'watch', 'video']
-            if any(ni in title.lower() for ni in news_indicators):
+            if any(ni in title_lower for ni in news_indicators):
                 score *= 0.3
             
             # Boost if the Title of the result matches the query keywords well
-            title_matches = sum(1 for kw in keywords if kw in title.lower())
+            title_matches = sum(1 for kw in keywords if kw in title_lower)
             if title_matches >= 2:
                 score += 0.2
                 
             # Wikipedia / Factual Source Boost
-            if "wikipedia" in title.lower() or "britannica" in title.lower() or "biography" in title.lower():
+            if "wikipedia" in title_lower or "britannica" in title_lower or "biography" in title_lower:
                 score += 0.4
         
         # Penalty for low-quality sources in body (casual mentions)
@@ -284,7 +299,9 @@ class KnowledgeSynthesizer:
                 "Jagran", "Josh", "Times", "Post", "Gazette", "Chronicle", "Herald", "Observer", "Tribune", "Daily",
                 "Guardian", "Mirror", "Standard", "Express", "Sun", "Mail", "Telegraph", "Independent", "Reuters", "Associated", "Press",
                 "White", "House", "Washington", "Street", "Journal", "Gazette", "City", "County", "District",
-                "Electoral", "College", "Foundation", "Institute", "Organization", "Department", "Agency", "Commission", "Association"
+                "Electoral", "College", "Foundation", "Institute", "Organization", "Department", "Agency", "Commission", "Association",
+                "Academy", "Hospital", "Trust", "Group", "Inc", "Ltd", "Corporation", "Limited", "Society", "Center", "Centre", "School", "Board",
+                "History", "Biography", "Profile", "Fact", "Summary", "Overview", "Details", "Information"
             ]
             
             snippet_clean = wiki_result.replace('\n', ' ').replace(':', ' is ')
@@ -441,6 +458,9 @@ class MAXY1_1:
                             search_query = f"current {query}"
                         if not search_query.lower().startswith('who is'):
                             search_query = f"who is the {search_query}"
+                    elif query.istitle() and len(query.split()) <= 3:
+                        # If query is just a name (e.g. "Mahatma Gandhi"), add "who is"
+                        search_query = f"who is {query}"
                             
                     results = list(ddgs.text(search_query, max_results=8))
                     for res in results:
