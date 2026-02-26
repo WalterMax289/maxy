@@ -304,7 +304,12 @@ class KnowledgeSynthesizer:
         
         if intents.get('knowledge') and (is_position_query or is_person_query):
             # Do NOT extract identity from already formatted research reports
-            if wiki_result.startswith("**VERIFIED RESEARCH REPORT") or wiki_result.startswith("**MAXY ENTERPRISE"):
+            if wiki_result.lstrip().startswith("**VERIFIED RESEARCH REPORT") or wiki_result.lstrip().startswith("**MAXY ENTERPRISE"):
+                return None
+            
+            # Suppression: If the query asks for biography or narrative detail, skip short identity
+            narrative_indicators = ['biography', 'lifestyle', 'narrative', 'detail', 'history', 'life', 'story', 'tell me about', 'tell me everything']
+            if any(ni in msg_lower for ni in narrative_indicators):
                 return None
             
             # Expanded exclusion list for titles, locations, and generic terms
@@ -1392,20 +1397,21 @@ class MAXY1_2:
 
             raw_response = result['response']
             
-            # Priority: Identity Extraction (One-word/Short Answer)
-            mock_intents = {'knowledge': True}
-            identity_answer = KnowledgeSynthesizer.extract_identity_answer(message, raw_response, mock_intents)
-            if identity_answer:
-                return {
-                    'response': identity_answer,
-                    'model': MAXY1_2.NAME,
-                    'confidence': 0.98,
-                    'thinking': thinking
-                }
-            
             # Format based on inquiry depth
             response = MAXY1_2.format_research_response(raw_response, context['inquiry_depth'])
             confidence = result['confidence']
+
+            # Priority Fix: Only extract short identity if depth is surface-level or specific
+            if context['inquiry_depth'] in ['surface', 'moderate']:
+                mock_intents = {'knowledge': True}
+                identity_answer = KnowledgeSynthesizer.extract_identity_answer(message, raw_response, mock_intents)
+                if identity_answer:
+                    return {
+                        'response': identity_answer,
+                        'model': MAXY1_2.NAME,
+                        'confidence': 0.98,
+                        'thinking': thinking
+                    }
         else:
             # Conversation mode with detailed 7-12 sentence responses
             response, confidence = MAXY1_2.generate_detailed_response(context, message, conversation_history, use_slang, user_name)
@@ -1973,14 +1979,16 @@ class MAXY1_3:
                     research_result = web_result
             
             if research_result['success']:
-                # Check for identity query first (concise answer)
-                identity_answer = KnowledgeSynthesizer.extract_identity_answer(message, research_result['response'], intents)
-                if identity_answer:
-                    response = identity_answer
-                    confidence = 0.98
-                else:
-                    response = MAXY1_2.format_research_response(research_result['response'], analysis['depth'])
-                    confidence = research_result['confidence']
+                # Format based on depth first
+                response = MAXY1_2.format_research_response(research_result['response'], analysis['depth'])
+                confidence = research_result['confidence']
+
+                # Identity check for surface/moderate queries only
+                if analysis['depth'] in ['surface', 'moderate']:
+                    identity_answer = KnowledgeSynthesizer.extract_identity_answer(message, research_result['response'], intents)
+                    if identity_answer:
+                        response = identity_answer
+                        confidence = 0.98
 
         # Philosophy & Personal (from 1.2)
         if not response:
