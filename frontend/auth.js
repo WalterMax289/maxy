@@ -66,13 +66,21 @@ async function registerUser(name, email, password) {
         return { success: false, message: error.message };
     }
 
-    // Success - user might need to verify email depending on Supabase settings
+    // Success - check if session was created immediately (indicates verification is OFF)
     if (data.user && data.session) {
         // Logged in immediately
         updateLocalState(data.user);
-        return { success: true, message: 'Registration successful' };
+        return {
+            success: true,
+            message: 'Registration successful',
+            sessionCreated: true
+        };
     } else {
-        return { success: true, message: 'Registration successful! Please check your email for verification.' };
+        return {
+            success: true,
+            message: 'Registration successful! Please check your email for verification.',
+            sessionCreated: false
+        };
     }
 }
 
@@ -230,14 +238,16 @@ async function handleModalSignup() {
 
     if (result.success) {
         showAuthToast(result.message, 'success');
-        if (result.message.includes('check your email')) {
-            // Wait a bit then close
-            setTimeout(closeAuthModal, 3000);
-        } else {
+
+        if (result.sessionCreated) {
+            // Verification is OFF, redirected immediately
             closeAuthModal();
             setTimeout(() => {
                 window.location.href = 'chat.html';
             }, 1500);
+        } else {
+            // Verification is ON, user must check email
+            setTimeout(closeAuthModal, 4000);
         }
     } else {
         showAuthToast(result.message, 'error');
