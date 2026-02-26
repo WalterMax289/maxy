@@ -210,23 +210,40 @@ class KnowledgeSynthesizer:
 
             # Try to find specific names (Title Case words) in query
             names_in_query = re.findall(r'\b[A-Z][a-z]+\b', query)
+            
+            # Robust Fallback for lowercase queries
+            if not names_in_query:
+                # Extract words after "who is", "who was", etc.
+                for trigger in identity_keywords:
+                    if trigger in msg_lower:
+                        after_trigger = msg_lower.split(trigger)[1].strip()
+                        # Clean up punctuation
+                        after_trigger = re.sub(r'[^\w\s]', '', after_trigger)
+                        if after_trigger:
+                            names_in_query = after_trigger.split()
+                        break
+            
             if names_in_query:
                 content_lower = content.lower()
                 name_matches = sum(1 for name in names_in_query if name.lower() in content_lower)
                 
                 query_full_name = " ".join(names_in_query).lower()
                 
-                # Significant boost if the title exactly matches the full name in the query
-                if query_full_name == title_lower:
-                    matches += 20 # Increased from 15
-                elif query_full_name in title_lower:
-                    matches += 8 # Increased from 5
+                # Significant boost if the title matches the name in the query
+                if query_full_name == title_lower or query_full_name in title_lower:
+                    matches += 25
+                elif all(name.lower() in title_lower for name in names_in_query):
+                    matches += 15
                 
-                # Penalty for sub-topics if the name is found but title contains extra sub-topic context not in query
-                subtopic_indicators = ['assassination', 'family', 'legacy', 'death', 'childhood', 'early life', 'career', 'politics', 'murder', 'killing']
-                for ind in subtopic_indicators:
+                # Penalty for sub-topics if the name is found but title contains extra non-person context
+                non_person_subtopics = [
+                    'assassination', 'family', 'legacy', 'death', 'childhood', 'early life', 
+                    'career', 'politics', 'murder', 'killing', 'incident', 'event', 'movement',
+                    'uprising', 'rebellion', 'riot', 'battle', 'war', 'anniversary', 'memorial'
+                ]
+                for ind in non_person_subtopics:
                     if ind in title_lower and ind not in query.lower():
-                        matches -= 5
+                        matches -= 15 # Increased penalty to push biography to top
                         break
                 
                 if name_matches == 0:
@@ -301,7 +318,8 @@ class KnowledgeSynthesizer:
                 "White", "House", "Washington", "Street", "Journal", "Gazette", "City", "County", "District",
                 "Electoral", "College", "Foundation", "Institute", "Organization", "Department", "Agency", "Commission", "Association",
                 "Academy", "Hospital", "Trust", "Group", "Inc", "Ltd", "Corporation", "Limited", "Society", "Center", "Centre", "School", "Board",
-                "History", "Biography", "Profile", "Fact", "Summary", "Overview", "Details", "Information"
+                "History", "Biography", "Profile", "Fact", "Summary", "Overview", "Details", "Information",
+                "Incident", "Event", "Movement", "Battle", "War", "Uprising", "Rebellion", "Riot", "Protest", "Anniversary", "Memorial"
             ]
             
             snippet_clean = wiki_result.replace('\n', ' ').replace(':', ' is ')
