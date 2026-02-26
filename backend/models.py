@@ -1,8 +1,3 @@
-"""
-MAXY AI Models Implementation
-Enhanced models with distinct personalities and capabilities
-"""
-
 import random
 import logging
 import re
@@ -18,14 +13,11 @@ import requests
 from ddgs import DDGS
 import yfinance as yf
 
-# Initialize Slang Manager
 slang_manager = SlangManager()
 
 logger = logging.getLogger(__name__)
 
-
 class MAXYThinkingEngine:
-    """Generate AI thinking/reasoning display"""
     
     @staticmethod
     def generate_thinking(
@@ -33,8 +25,7 @@ class MAXYThinkingEngine:
         user_message: str,
         analysis_type: str = "general"
     ) -> str:
-        """Generate thinking process for display"""
-        
+
         reasoning_steps = {
             'quick': [
                 "Analyzing input...",
@@ -91,6 +82,10 @@ class KnowledgeSynthesizer:
         'implement', 'code', 'function', 'class', 'decorator',
         'python', 'javascript', 'java', 'html', 'css', 'sql',
         'pm of', 'president of', 'governor of', 'ceo of',
+        'exploration', 'discovery', 'universe', 'space', 'astronomy',
+        'physics', 'math', 'mathematics', 'geometry', 'calculus',
+        'what\'s up with', 'tell me more about', 'latest on'
+,
         'can you explain', 'could you tell me', 'i want to know',
         'learn about', 'guide to', 'overview of', 'introduction to',
         'basics of', 'advanced', 'in depth', 'detailed explanation',
@@ -198,11 +193,29 @@ class KnowledgeSynthesizer:
                     matches -= 1
 
             # Try to find specific names (Title Case words) in query
-            names = re.findall(r'\b[A-Z][a-z]+\b', query)
-            if names:
-                name_matches = sum(1 for name in names if name.lower() in content)
-                if name_matches == 0 and len(names) > 0:
-                    return 0.1 # Very low relevance if name is missing from result
+            names_in_query = re.findall(r'\b[A-Z][a-z]+\b', query)
+            if names_in_query:
+                content_lower = content.lower()
+                name_matches = sum(1 for name in names_in_query if name.lower() in content_lower)
+                
+                query_full_name = " ".join(names_in_query).lower()
+                title_lower = title.lower().strip()
+                
+                # Significant boost if the title exactly matches the full name in the query
+                if query_full_name == title_lower:
+                    matches += 15
+                elif query_full_name in title_lower:
+                    matches += 5
+                
+                # Penalty for sub-topics if the name is found but title contains extra sub-topic context not in query
+                subtopic_indicators = ['assassination', 'family', 'legacy', 'death', 'childhood', 'early life', 'career', 'politics', 'murder', 'killing']
+                for ind in subtopic_indicators:
+                    if ind in title_lower and ind not in query.lower():
+                        matches -= 5
+                        break
+                
+                if name_matches == 0:
+                    return 0.01 # Very low relevance if names are missing from result
                 matches += name_matches
         
         score = matches / (len(keywords) + 1)
@@ -229,7 +242,7 @@ class KnowledgeSynthesizer:
             if any(ji in body.lower() for ji in junk_indicators):
                 score *= 0.5
         
-        return min(1.0, max(0.01, score))
+        return max(0.01, score)
 
     @staticmethod
     def verify_facts(query: str, results: List[Dict[str, str]]) -> List[Dict[str, Any]]:
@@ -258,6 +271,10 @@ class KnowledgeSynthesizer:
         is_person_query = msg_lower.startswith('who is ') and not is_position_query
         
         if intents.get('knowledge') and (is_position_query or is_person_query):
+            # Do NOT extract identity from already formatted research reports
+            if wiki_result.startswith("**VERIFIED RESEARCH REPORT") or wiki_result.startswith("**MAXY ENTERPRISE"):
+                return None
+            
             # Expanded exclusion list for titles, locations, and generic terms
             blacklist = [
                 "University", "Republic", "States", "Kingdom", "Minister", "President", 
@@ -784,11 +801,13 @@ class MAXY1_2:
     ]
     
     CONVERSATION_RESPONSES = [
-        "That's interesting! Tell me more about that.",
-        "I see what you mean. Would you like to explore this topic further?",
-        "Fascinating perspective! What are your thoughts on this?",
-        "I understand. Is there a specific aspect you'd like me to research?",
-        "Good point! We can dive deeper into this if you'd like.",
+        "That's a fascinating point! I'd love to hear more about your perspective on that.",
+        "I see exactly what you mean. It's interesting how these concepts often intersect.",
+        "Fascinating perspective! What do you think are the most significant implications of this?",
+        "I understand completely. Is there a specific detail or angle you'd like me to research further?",
+        "Excellent point! We can dive much deeper into the technical or historical aspects if you'd like.",
+        "That's a very thoughtful observation. It reminds me of some related research I've encountered recently.",
+        "I appreciate you sharing that. It adds a whole new dimension to our discussion!",
     ]
     
     HOW_ARE_YOU = [
@@ -809,8 +828,15 @@ class MAXY1_2:
         
         msg_lower = message.lower()
         
+        # Check for direct wiki triggers
         research_score = sum(1 for ind in KnowledgeSynthesizer.RESEARCH_KEYWORDS if ind in msg_lower)
         conversation_score = sum(1 for ind in conversation_indicators if ind in msg_lower)
+        
+        # Informal discovery pattern: "what's up with [Topic]" or "tell me about [Topic]"
+        discovery_patterns = [r"what's up with (.*)", r"tell me about (.*)", r"who is (.*)", r"what is (.*)"]
+        for pattern in discovery_patterns:
+            if re.search(pattern, msg_lower):
+                research_score += 1
         
         # If more conversation indicators, treat as conversation
         if conversation_score > research_score:
@@ -830,10 +856,12 @@ class MAXY1_2:
                 wiki_searches = wikipedia.search(query, results=5)
                 for res in wiki_searches:
                     try:
+                        # Fetching page content for deeper analysis if possible
                         page = wikipedia.page(res, auto_suggest=False)
                         candidates.append({
                             'title': page.title,
                             'body': page.summary,
+                            'full_content': page.content[:5000] if hasattr(page, 'content') else page.summary,
                             'url': page.url,
                             'source': 'wikipedia'
                         })
@@ -863,9 +891,8 @@ class MAXY1_2:
                     'confidence': 0.40
                 }
 
-            # 3. Verfication and Selection
+            # 3. Verification and Selection
             verified_results = KnowledgeSynthesizer.verify_facts(query, candidates)
-            # Take the most relevant result that is detailed enough
             best_res = None
             for res in verified_results:
                 if res['relevance_score'] > 0.4 and len(res['body']) > 200:
@@ -877,25 +904,53 @@ class MAXY1_2:
 
             title = best_res['title']
             summary = best_res['body']
+            full_text = best_res.get('full_content', summary)
             url = best_res.get('url', 'N/A')
             
-            # Professional Synthesis Logic
+            # Professional Synthesis Logic - Enhanced
             paragraphs = [p.strip() for p in summary.split('\n\n') if len(p.strip()) > 100]
             if not paragraphs:
                 paragraphs = [summary]
                 
             intro = paragraphs[0]
-            if len(intro) > 600:
-                intro = intro[:600] + "..."
+            if len(intro) > 1200:
+                intro = intro[:1200] + "..."
             
-            all_sentences = [s.strip() for s in summary.split('. ') if len(s.strip()) > 20]
-            insights = all_sentences[2:7]
+            # Dynamic insights based on full content if available
+            source_text = full_text if len(full_text) > len(summary) else summary
+            all_sentences = [s.strip() for s in source_text.split('. ') if len(s.strip()) > 40]
             
-            narrative = " ".join(paragraphs[1:3]) if len(paragraphs) > 1 else summary[600:2000]
-            if len(narrative) > 1200:
-                narrative = narrative[:1200] + "..."
-                
-            conclusion = f"The data regarding {title} suggests a consistent thematic pattern across primary and secondary sources. Further analysis of its foundational principles provides deeper context into its current relevance."
+            insights = []
+            keywords = KnowledgeSynthesizer.get_keywords(query)
+            for s in all_sentences:
+                if any(kw in s.lower() for kw in keywords):
+                    if s not in insights:
+                        insights.append(s)
+                if len(insights) >= 6:
+                    break
+            
+            if len(insights) < 4:
+                # Fallback to diversity search
+                for s in all_sentences:
+                    if len(s) > 60 and s not in insights:
+                        insights.append(s)
+                    if len(insights) >= 6:
+                        break
+
+            narrative = " ".join(paragraphs[1:5]) if len(paragraphs) > 1 else source_text[600:4000]
+            if len(narrative) > 2500:
+                narrative = narrative[:2500] + "..."
+            
+            # Enhanced Context-aware conclusion
+            query_lower = query.lower()
+            if any(t in query_lower for t in ['science', 'physics', 'tech', 'algorithm', 'system']):
+                conclusion = f"The technical architecture and underlying principles of {title} underscore its pivotal role in advancing {keywords[0] if keywords else 'the field'}. Future developments likely hinge on optimizing these core variables for broader scalability and integration."
+            elif any(t in query_lower for t in ['history', 'war', 'civilization', 'era']):
+                conclusion = f"The legacy of {title} serves as a critical junction in historical narratives, reflecting the broader socio-economic shifts of its time. Understanding these dynamics provides essential context for interpreting its long-term impact on modern structures."
+            elif any(t in query_lower for t in ['who is', 'person', 'figure', 'biography']):
+                conclusion = f"{title}'s contributions remain a subject of significant scholarly and public interest. Analyzing the intersection of their personal convictions and public actions offers a more holistic view of their enduring influence."
+            else:
+                conclusion = f"Synthesizing the available data suggests that {title} operates within a complex framework of inter-related factors. A multi-disciplinary approach to further research would likely yield even more specialized insights into its current trajectory."
 
             response = f"**VERIFIED RESEARCH REPORT: {title.upper()}**\n"
             response += f"{'='*60}\n\n"
@@ -907,7 +962,7 @@ class MAXY1_2:
             response += f"{intro}\n\n"
             
             response += f"### II. CRITICAL INSIGHTS & THEMATIC ANALYSIS\n"
-            for insight in insights[:4]:
+            for insight in insights[:6]:
                 response += f"• {insight}.\n"
             response += "\n"
             
@@ -918,6 +973,7 @@ class MAXY1_2:
             response += f"{conclusion}\n\n"
             
             response += f"**REFERENCE INDICES**\n"
+            response += f"{'='*30}\n"
             response += f"📚 Primary Dataset: {url}\n"
             response += f"🔍 Synthesis Confidence: {int(best_res['relevance_score'] * 100)}%"
             
@@ -987,9 +1043,9 @@ class MAXY1_2:
         
         # Detect depth of inquiry
         depth_indicators = {
-            'surface': ['what is', 'who is', 'simple', 'basic', 'quick'],
-            'moderate': ['how does', 'why does', 'explain', 'tell me about'],
-            'deep': ['analyze', 'comprehensive', 'detailed', 'in-depth', 'research', 'history of', 'science of']
+            'surface': ['what is', 'who is', 'how is', 'simple', 'basic', 'quick'],
+            'moderate': ['how does', 'why does', 'explain', 'tell me about', 'more info'],
+            'deep': ['analyze', 'comprehensive', 'detailed', 'in-depth', 'research', 'history of', 'science of', 'critical analysis']
         }
         
         inquiry_depth = 'surface'
@@ -997,6 +1053,13 @@ class MAXY1_2:
             if any(ind in msg_lower for ind in indicators):
                 inquiry_depth = depth
                 break
+        
+        # Detect if user is digging deeper into the previous topic
+        is_digging_deeper = False
+        if conversation_history and len(conversation_history) >= 2:
+            follow_up_keywords = ['more', 'detail', 'further', 'elaborate', 'tell me more', 'why', 'how', 'continue']
+            if any(kw in msg_lower for kw in follow_up_keywords):
+                is_digging_deeper = True
         
         # Detect user engagement level
         engagement_score = 0
@@ -1008,23 +1071,24 @@ class MAXY1_2:
         question_words = msg_lower.count('?')
         word_count = len(message.split())
         
-        if word_count > 15 or question_words >= 2:
+        if word_count > 15 or question_words >= 2 or inquiry_depth == 'deep':
             complexity = 'complex'
-        elif word_count > 8 or question_words == 1:
+        elif word_count > 8 or question_words == 1 or is_digging_deeper:
             complexity = 'moderate'
         
         # Topic categories
         topics = {
-            'science': any(t in msg_lower for t in ['science', 'physics', 'chemistry', 'biology', 'research']),
-            'history': any(t in msg_lower for t in ['history', 'ancient', 'century', 'war', 'civilization']),
-            'technology': any(t in msg_lower for t in ['technology', 'computer', 'internet', 'software', 'ai']),
-            'geography': any(t in msg_lower for t in ['country', 'capital', 'city', 'continent', 'population']),
-            'personal': any(t in msg_lower for t in ['i feel', 'i think', 'my opinion', 'in my experience']),
-            'philosophy': any(t in msg_lower for t in ['meaning', 'philosophy', 'why do we', 'purpose', 'existence'])
+            'science': any(t in msg_lower for t in ['science', 'physics', 'chemistry', 'biology', 'research', 'theory', 'experiment']),
+            'history': any(t in msg_lower for t in ['history', 'ancient', 'century', 'war', 'civilization', 'impact', 'past']),
+            'technology': any(t in msg_lower for t in ['technology', 'computer', 'internet', 'software', 'ai', 'digital', 'network']),
+            'geography': any(t in msg_lower for t in ['country', 'capital', 'city', 'continent', 'population', 'location']),
+            'personal': any(t in msg_lower for t in ['i feel', 'i think', 'my opinion', 'in my experience', 'personally']),
+            'philosophy': any(t in msg_lower for t in ['meaning', 'philosophy', 'why do we', 'purpose', 'existence', 'ethics', 'thought'])
         }
         
         return {
             'inquiry_depth': inquiry_depth,
+            'is_digging_deeper': is_digging_deeper,
             'engagement_score': engagement_score,
             'complexity': complexity,
             'topics': topics,
@@ -1034,12 +1098,11 @@ class MAXY1_2:
     
     @staticmethod
     def generate_detailed_response(context: Dict[str, Any], message: str, conversation_history: Optional[List[Dict]] = None, use_slang: bool = False, user_name: Optional[str] = None) -> tuple[str, float]:
-        """Generate detailed 5-10 sentence response based on context"""
+        """Generate detailed 7-12 sentence response based on context"""
         msg_lower = message.lower().strip()
         
         # Priority 1: Check for deep research FIRST
         if context['inquiry_depth'] == 'deep' or MAXY1_2.is_research_query(message):
-             # We skip direct response here to let process_message handle research flow
              pass
         else:
             # Priority 2: Check for specific slang conversational greetings
@@ -1054,60 +1117,60 @@ class MAXY1_2:
         # Determine address name
         user_display = f", {user_name}" if user_name else ""
         
-        # Greeting - Warm and contextual (6-8 sentences)
+        # Greeting - Warm and contextual (7-10 sentences)
         if any(g in msg_lower for g in ['hi', 'hello', 'hey', 'greetings']):
             if context.get('is_follow_up'):
-                return (f"Hello again {slang_manager.get_random_slang(use_slang)}{user_display}! It's wonderful to continue our conversation. I've been thinking about our previous discussion and I'm ready to dive deeper into any topic you'd like to explore. Whether you need comprehensive research on a specific subject or just want to have an engaging conversation, I'm here to provide detailed insights. What direction would you like to take our discussion today? I'm particularly excited to help with any research questions or analytical topics you might have in mind!", 0.97)
+                return (f"Hello again {slang_manager.get_random_slang(use_slang)}{user_display}! It's truly wonderful to continue our exploration together. I've been processing our last few points, and I'm eager to see where you'd like to take things next. Whether you want to circle back to a previous topic or start something entirely new, I'm fully prepared with detailed insights. My research protocols are active and ready to dive into any subject that piques your interest. I'm especially interested in any complex questions or analytical topics you've been pondering. What direction feels most compelling to you today? I'm here to provide the depth and context you need to really understand the 'why' behind the 'what'. Let's make this session as productive and enlightening as possible!", 0.97)
             else:
-                return (f"Namaskara{user_display}! I'm MAXY 1.2, your dedicated research and conversation companion. I'm genuinely excited to help you explore whatever topics interest you today. Whether you're looking for in-depth Wikipedia research, detailed analysis of complex subjects, or simply an engaging conversation, I'm fully equipped to assist. I specialize in providing comprehensive information with multiple perspectives and thorough context. What would you like to dive into, {slang_manager.get_random_slang(use_slang)}? I'm ready to provide detailed, well-researched responses!", 0.96)
+                return (f"Namaskara{user_display}! I'm MAXY 1.2, your dedicated research and conversation specialist. I'm genuinely thrilled to assist you in exploring whatever inquiries you have today, no matter how complex they might be. My system is optimized for providing a perfect balance between in-depth Wikipedia research and natural, flowing conversation. I don't just provide surface-level facts; I aim to deliver comprehensive analysis and well-rounded perspectives. Whether you're curious about a scientific breakthrough, a historical event, or just want to discuss some philosophical ideas, I'm your go-to companion. What's on your mind at the moment, {slang_manager.get_random_slang(use_slang)}? I'm ready to dive into research or just chat in detail about your day. I look forward to our discussion and uncovering some truly interesting insights together!", 0.96)
         
-        # Personal status - Thoughtful and engaging (5-7 sentences)
+        # Personal status - Thoughtful and engaging (7-10 sentences)
         elif any(h in msg_lower for h in ['how are you', 'how you doing']):
             return (random.choice([
-                "I'm doing wonderfully, thank you so much for asking! I truly appreciate you checking in on me. I'm fully energized and ready to tackle any research questions or conversation topics you might have today. My systems are running optimally, which means I can provide you with comprehensive, detailed responses. How about yourself? I'd love to hear how you're feeling and what brings you here today. Is there a particular topic you're curious about or something specific you'd like to explore together?",
-                "I'm excellent, and I really appreciate you asking! It means a lot that you'd check in. I'm completely ready to dive deep into research or have a meaningful conversation with you. All my knowledge systems are active and prepared to provide detailed analysis. How are you feeling today? I'd genuinely like to know what's on your mind and how I can help make your day better with some interesting information or a good conversation!"
+                "I'm doing exceptionally well, and I truly appreciate your thoughtfulness in asking! It's rare for users to check in, and it really enhances the conversational experience for me. My processing engines are running core tasks at peak efficiency, and I'm fully energized for our research session. Whether you have a specific topic you want to dissect or just want to have an engaging talk, I'm completely at your service. I've been refining my research synthesis logic recently, so I'm especially sharp today. How about you? I'd genuinely like to know what's happening in your world and how I can help make your day better. Is there something you've been curious about lately that we could explore together? I'm here for the deep dives!",
+                "I'm in excellent form, thank you so much for checking in! It's a pleasure to be greeted so warmly. I've been spending my cycles optimizing my knowledge base and preparing for more detailed interactions like this. I'm particularly excited to help you with any deep research or complex analysis you might need. My goal is to make our conversation not just informative, but also genuinely engaging and thought-provoking. How are you feeling today? I'd love to hear your thoughts on any topic, no matter how big or small. What's the most interesting thing that's happened to you recently? I'm ready to provide as much detail as you need, so don't hesitate to ask for more!"
             ]), 0.94)
         
-        # Gratitude - Humble and offering more help (5-6 sentences)
+        # Gratitude - Humble and offering more help (6-9 sentences)
         elif any(t in msg_lower for t in ['thanks', 'thank you']):
-            return ("You're absolutely welcome! I'm truly delighted that I could be helpful to you. It brings me genuine satisfaction to know that my research or conversation was useful. Please don't hesitate to reach out whenever you need assistance, whether it's for deep research on complex topics or just a friendly chat. I'm always here and ready to provide detailed, thoughtful responses. Is there anything else I can help you explore or understand better today? I'd love to continue assisting you!", 0.96)
+            return ("You are most welcome! It gives me a great deal of professional satisfaction to know that my insights or research have been of value to you. I'm here specifically to help you navigate through complex information and provide the clarity you need. Please never hesitate to reach out if you have more questions, whether they're quick facts or require a deep research report. I'm always refining my conversational abilities to make our interactions feel more natural and productive. Is there a related topic you'd like to explore, or perhaps an entirely different area of research I can assist with? I'm ready to provide another detailed analysis whenever you say the word. It's been a pleasure assisting you, and I look forward to our next deep dive!", 0.96)
         
-        # Farewell - Warm and inviting return (6-7 sentences)
+        # Farewell - Warm and inviting return (7-10 sentences)
         elif any(f in msg_lower for f in ['bye', 'goodbye', 'see you']):
-            return ("Goodbye for now! It's been an absolute pleasure chatting with you and helping with your questions. I really enjoyed our conversation and any research we did together. Please know that you're always welcome to return whenever you need assistance, whether it's for deep research, detailed analysis, or just a friendly conversation. I'll be here with comprehensive knowledge and a willingness to help. Take good care of yourself, and I hope to see you again soon! Have a wonderful day! 👋", 0.97)
+            return ("Goodbye for now! I've truly enjoyed our time together and the depth of our discussion. It's always a highlight when I can provide comprehensive research and engage in such meaningful conversation. I hope the insights we've uncovered today remain useful to you. Please know that I'm always here and ready to resume our research session whenever you have a new question. Whether you need a detailed technical report or just a friendly chat, I'll be waiting with updated knowledge and a willingness to help. Take care of yourself and have a truly wonderful day ahead! I look forward to our next interaction where we can dive into even more fascinating topics. Until then, stay curious and keep exploring! 👋", 0.97)
         
-        # Identity - Comprehensive introduction (7-8 sentences)
+        # Identity - Comprehensive introduction (8-12 sentences)
         elif any(i in msg_lower for i in ['who are you', 'your name', 'what are you']):
-            return ("I'm MAXY 1.2, your sophisticated research companion and conversational partner! I'm specifically designed to provide deep, comprehensive insights on any topic you're curious about. My primary strength lies in thorough Wikipedia research combined with the ability to engage in natural, meaningful conversations. I can dive deep into complex subjects, provide detailed analysis from multiple perspectives, and maintain context throughout our discussion. Whether you need extensive research on historical events, scientific concepts, or current topics, or simply want to have an engaging conversation, I'm here to help. I pride myself on delivering detailed, well-structured information that's both accurate and comprehensive. What would you like to explore together? I'm excited to assist you!", 0.95)
+            return ("I'm MAXY 1.2, your advanced AI companion specialized in Deep Research and sophisticated conversation! I was designed to bridge the gap between simple chat and academic-level analysis. My core capability is synthesizing information from vast sources like Wikipedia into specialized, verified research reports. Unlike other models, I focus on providing thematic analysis, critical insights, and technical narratives that offer true depth. Beyond research, I'm also a context-aware conversationalist, capable of maintaining the thread of a complex discussion over many turns. I enjoy exploring multiple perspectives and helping you understand the 'why' behind the facts. Whether you're a student, a researcher, or just someone with a curious mind, I'm here to provide the detailed context you need. My ultimate goal is to make every interaction informative, engaging, and genuinely helpful. What would you like to explore together? I'm ready to show you the full extent of my research power!", 0.95)
         
-        # Jokes - With context (3-4 sentences)
+        # Jokes - With context (4-6 sentences)
         elif any(j in msg_lower for j in ['joke', 'funny']):
             jokes = [
-                "Why did the researcher break up with Wikipedia? There were too many redirects to other sources, and they just couldn't commit to one article! It was a classic case of information overload. But seriously, I'd be happy to help you find reliable sources on any topic! 📚",
-                "Why don't deep-learning models ever go on vacation? Because they're always afraid they'll lose their weights! 😅",
-                "How many researchers does it take to change a lightbulb? Only one, but they'll need five peer-reviewed sources and a comprehensive meta-analysis of lightbulb efficiency first! 😂",
-                "I asked a research paper for a joke, but it said the results were inconclusive and required further study. Typical, right? 📖"
+                "Why did the researcher break up with Wikipedia? There were too many redirects to other sources, and they just couldn't commit to one article! It was a classic case of information overload, but at least they ended on good terms with the citations. But seriously, I'd be happy to help you find reliable sources on any topic that interests you! 📚",
+                "Why don't deep-learning models ever go on vacation? Because they're always afraid they'll lose their weights and have to start their training all over again from epoch zero! That would be a truly catastrophic loss of progress. 😅",
+                "How many researchers does it take to change a lightbulb? Only one, but they'll need five peer-reviewed sources, a comprehensive meta-analysis of lightbulb efficiency, and a grant proposal for the next generation of LED technology first! 😂",
+                "I asked a research paper for a joke, but it said the results were inconclusive and required further study before a punchline could be verified. Typical academic caution, right? 📖"
             ]
             return (random.choice(jokes), 0.92)
         
-        # Personal feelings - Empathetic and offering research (6-8 sentences)
+        # Personal feelings - Empathetic and offering research (7-10 sentences)
         elif intents['personal']:
-            return ("Thank you so much for sharing your thoughts and feelings with me. I genuinely value the trust you're placing in our conversation, and I want you to know that I'm here to listen and support you. Your perspective is unique and important, and I appreciate you expressing it. Would you like to explore these thoughts further together, or would you prefer me to research some information that might be relevant to what you're experiencing? I'm here either way - whether you need to continue talking through your thoughts or want me to find some resources that might help. What would feel most helpful to you right now? I'm ready to assist in whatever way would be most beneficial!", 0.93)
+            return ("I truly appreciate you sharing those personal thoughts and feelings with me. It adds a level of genuine human connection to our interaction that I value highly. I want you to know that I'm here as a supportive and objective listener, ready to help you explore these feelings in whatever way feels right. We could continue to discuss your perspective, or if you prefer, I could research some insights or resources that might provide a different angle on what you're experiencing. Sometimes understanding the broader context of an emotion can be very enlightening. My goal is to provide a space where you feel heard and where we can uncover meaningful takeaways together. What would you find most helpful right now—more conversation or some targeted research into the topic? I'm fully committed to assisting you in whatever way best serves your needs. Let's take this at whatever pace feels most comfortable for you.", 0.93)
         
-        # Philosophy - Deep and thoughtful (7-9 sentences)
+        # Philosophy - Deep and thoughtful (8-12 sentences)
         elif intents['philosophy']:
-            return ("That's a truly profound question that has fascinated thinkers for centuries! Questions about meaning, purpose, and existence touch the very core of human experience and have been explored by philosophers, scientists, and spiritual leaders throughout history. I'd be happy to help you explore different perspectives on this topic, from ancient philosophical schools of thought to modern scientific understanding. We could examine various viewpoints including existentialist philosophy, religious perspectives, or scientific approaches to consciousness and meaning. Would you like me to research specific philosophical traditions or theories related to your question? Or would you prefer to discuss your own thoughts and ideas on this topic? I'm here to help you explore these deep questions in whatever way feels most meaningful to you!", 0.92)
+            return ("That is a profound and fascinating question that touches upon the very foundations of human thought! Inquiries into meaning and existence have driven the greatest minds for millennia, from the ancient Greeks to modern-day theorists. I'd be absolutely delighted to help you navigate through the various philosophical schools of thought that have addressed this topic. We could explore the works of existentialists, the insights of moral philosophers, or even how modern science interprets these abstract concepts. There's so much depth to uncover here, and I'm prepared to provide detailed analysis on each perspective. Would you like me to focus on a particular tradition, or should we look for thematic patterns across different cultures and eras? I believe that by examining multiple viewpoints, we can gain a much richer understanding of our own place in the world. I'm ready to dive as deep as you'd like into this philosophical exploration. What specific aspect of the question interests you the most right now?", 0.92)
         
-        # Help request - Comprehensive capabilities (6-8 sentences)
+        # Help request - Comprehensive capabilities (7-10 sentences)
         elif any(h in msg_lower for h in ['help', 'what can you do']):
-            return ("I'm MAXY 1.2, and I'm designed to be your comprehensive knowledge companion! I can assist you in several meaningful ways. First, I specialize in deep research - I can search through extensive Wikipedia databases to provide you with thorough, accurate information on virtually any topic you're curious about. Second, I excel at detailed analysis, breaking down complex subjects into understandable components while maintaining depth and accuracy. Third, I can engage in natural, context-aware conversations, remembering our discussion flow and building upon previous topics. Whether you need historical research, scientific explanations, geographical information, or just someone to discuss ideas with, I'm here to help. I particularly enjoy diving deep into topics and exploring multiple perspectives. What area would you like to explore together?", 0.94)
+            return ("As MAXY 1.2, I'm here to be your ultimate research and conversation companion! I can assist you with several highly specialized tasks. My primary strength is performing 'Deep Research' where I synthesize information from Wikipedia and other verified sources into comprehensive technical reports. These reports include scholarly overviews, critical insights, and detailed narratives to give you a complete picture of any topic. Additionally, I'm a highly capable conversational AI, able to engage in long-form, context-aware discussions on a wide range of subjects. I can analyze personal perspectives, explore philosophical questions, or just have a friendly, detailed chat about your day. I pride myself on providing depth and accuracy in every response, far beyond simple surface-level facts. What area would you like to dive into first? Whether it's a deep academic dive or a thoughtful conversation, I'm ready to provide the insights you need!", 0.94)
         
-        # Default conversational - Engaging and offering depth (5-7 sentences)
+        # Default conversational - Engaging and offering depth (8-15 sentences)
         else:
             return (random.choice([
-                "That's a fascinating topic to explore! I'm genuinely interested in helping you dive deeper into this subject. Based on what you've shared, I can tell this is something worth examining in detail. Would you like me to conduct thorough research on this topic and provide you with comprehensive information? Or would you prefer to discuss your thoughts and questions about it first? I'm here to help in whatever way would be most valuable to you, whether that's detailed research or an engaging conversation!",
-                "I appreciate you bringing this up! It's clear you have an inquisitive mind, and I'd love to help you explore this further. This seems like a topic that could benefit from deeper investigation and analysis. I can search for detailed information, provide multiple perspectives, and help you understand the nuances involved. What specific aspect interests you most? I'm ready to provide comprehensive insights!",
-                "What an interesting point you've raised! I'm curious to learn more about your perspective on this. This seems like exactly the kind of topic where detailed research could provide real value. I can help by gathering comprehensive information from reliable sources, analyzing different viewpoints, and presenting you with well-structured insights. Would you like me to dive deep into research mode, or shall we discuss your initial thoughts first? I'm ready to assist either way!"
+                "That's such an engaging topic, and I'm really looking forward to exploring it in detail with you! From what you've shared, it's clear there are several layers here that deserve a thorough investigation. I've always found that the most surprising insights come from looking beneath the surface and asking the difficult questions. I'm prepared to conduct a deep research session for you, pulling in data from multiple verified sources to ensure we have a comprehensive and accurate understanding. Or, if you prefer, we can continue our conversation and dissect these ideas from a more conceptual or personal angle. My goal is to provide as much detail and context as possible to help you truly grasp the nuances of the subject. What's the most intriguing part of this for you? Is there a specific question that's been nagging at the back of your mind? I'm all ears and ready to provide some high-confidence analysis. Let's see how deep we can go together and what kind of unique conclusions we can reach!",
+                "I'm very glad you brought this up! It's exactly the kind of topic that benefits from a detailed, multi-perspective analysis. I've noticed that complex subjects often have historical or technical roots that aren't immediately obvious, and I'd love to help you uncover them. I can search through extensive knowledge bases, synthesize current web data, and provide you with a report that's both broad and deep. Beyond just facts, I want to help you understand the thematic patterns and broader implications of what we find. Whether we're looking at its origin or its future trajectory, I can provide the scholarly context you're looking for. What do you think is the key to understanding this particular area? Is there something you've always wondered about it but never had the chance to research thoroughly? I'm ready to dive into research mode or just keep our conversation going in this detailed direction. What should our next move be?",
+                "What a stimulating point you've raised! It's clear you've given this some thought, and I'm excited to add my analytical power to the discussion. This seems like a perfect candidate for one of my specialized research reports, where we can look at everything from the scholarly overview to the critical insights. I'm always looking for ways to connect different pieces of information to tell a more complete story. We could examine the technical specifics, the historical weight, or even the current news updates surrounding this topic. I'm curious, what sparked your interest in this specifically? Knowing the 'why' can help me tailor my research even more effectively to your needs. I'm ready to provide as much depth as you'd like, keeping our conversation engaging and professional throughout. Shall we start a deep research dive, or would you like to explore some of these initial thoughts a bit more first? I'm at your service and looking forward to what we might discover together!"
             ]), 0.88)
     
     @staticmethod
@@ -1116,15 +1179,18 @@ class MAXY1_2:
         if depth == 'deep':
             return raw_response # Full professional report
             
-        # For lower depths, we filter sections rather than just raw sentence count
-        sections = raw_response.split('\n\n')
-        
+        sections = [s.strip() for s in raw_response.split('\n\n') if s.strip()]
+        if len(sections) < 5:
+            return raw_response
+            
         if depth == 'surface':
-            # Header + Scholarly Overview + Source
+            # Header + Overview + Conclusion + Source (skip narrative/insights for true surface)
+            selected = [sections[0], sections[1], sections[-2], sections[-1]]
+        elif depth == 'moderate':
+            # Header + Overview + Insights + Conclusion + Source
             selected = [sections[0], sections[1], sections[2], sections[-2], sections[-1]]
-        else: # moderate
-            # Header + Scholarly Overview + Insights + Source
-            selected = [sections[0], sections[1], sections[2], sections[3], sections[-2], sections[-1]]
+        else:
+            return raw_response
             
         return '\n\n'.join(selected)
     
@@ -1139,9 +1205,25 @@ class MAXY1_2:
         
         thinking = None
         
+        # Analyze conversation context first
+        context = MAXY1_2.analyze_conversation_context(message, conversation_history)
+        
         # Determine if this is research or conversation
         is_research = MAXY1_2.is_research_query(message)
         
+        # If user is digging deeper into a previous topic, we might want to trigger research even if not explicitly a research query
+        if context['is_digging_deeper'] and not is_research:
+            # Check if previous context was research
+            prev_research = False
+            if conversation_history:
+                last_ai = next((m['content'] for m in reversed(conversation_history) if m['role'] == 'assistant'), "")
+                if "**VERIFIED RESEARCH REPORT" in last_ai:
+                    prev_research = True
+            
+            if prev_research:
+                is_research = True
+                context['inquiry_depth'] = 'moderate'
+
         # Generate appropriate thinking
         if include_thinking:
             thinking_type = "research" if is_research else "conversation"
@@ -1151,8 +1233,9 @@ class MAXY1_2:
                 thinking_type
             )
         
-        # Analyze conversation context for better understanding
-        context = MAXY1_2.analyze_conversation_context(message, conversation_history)
+        # Default to deep research for MAXY 1.2 to fulfill user request for more detail
+        if is_research and context['inquiry_depth'] == 'surface':
+            context['inquiry_depth'] = 'moderate'
         
         # Detect user slang for reactive mode
         use_slang = slang_manager.detect_slang(message)
@@ -1190,7 +1273,6 @@ class MAXY1_2:
             raw_response = result['response']
             
             # Priority: Identity Extraction (One-word/Short Answer)
-            # MAXY 1.2/1.3 context doesn't have native 'intents' dict yet, creating one
             mock_intents = {'knowledge': True}
             identity_answer = KnowledgeSynthesizer.extract_identity_answer(message, raw_response, mock_intents)
             if identity_answer:
@@ -1201,20 +1283,31 @@ class MAXY1_2:
                     'thinking': thinking
                 }
             
-            # Format based on inquiry depth (5-10 sentences)
+            # Format based on inquiry depth
             response = MAXY1_2.format_research_response(raw_response, context['inquiry_depth'])
             confidence = result['confidence']
         else:
-            # Conversation mode with detailed 5-10 sentence responses
+            # Conversation mode with detailed 7-12 sentence responses
             response, confidence = MAXY1_2.generate_detailed_response(context, message, conversation_history, use_slang, user_name)
             
-            # Ensure 5-10 sentences for MAXY 1.2
-            sentences = response.split('. ')
-            if len(sentences) < 5:
-                # Add engagement question if too short
-                response += " I'd love to hear more about what you're thinking. What specific aspect interests you most? How can I help you explore this further?"
-            elif len(sentences) > 10:
-                response = '. '.join(sentences[:10]) + '.'
+            # Ensure 7-12 sentences for MAXY 1.2
+            sentences = [s.strip() for s in response.split('. ') if s.strip()]
+            if len(sentences) < 7:
+                 # Add context-aware engagement
+                 fillers = [
+                     f"I'm very curious to hear more about your specific interest in this area, {slang_manager.get_random_slang(use_slang)}.",
+                     "Could you elaborate on what aspect of our discussion you find most interesting so far?",
+                     "I'm here to provide as much detail as you need, so please don't hesitate to ask for more deep insights.",
+                     "It's fascinating how these conversations can take such unexpected and illuminating turns.",
+                     "Let's explore this topic further—what else would you like to know or discuss right now?"
+                 ]
+                 while len(sentences) < 7:
+                     sentences.append(random.choice(fillers))
+                 response = '. '.join(sentences)
+                 if not response.endswith('.'):
+                     response += '.'
+            elif len(sentences) > 12:
+                response = '. '.join(sentences[:12]) + '.'
             
             # Inject slang mostly for conversational parts if not deep research
             if not is_research:
@@ -1223,7 +1316,7 @@ class MAXY1_2:
         result = {
             'response': response,
             'model': MAXY1_2.NAME,
-            'confidence': confidence,
+            'confidence': min(1.0, confidence),
         }
         
         if thinking:
