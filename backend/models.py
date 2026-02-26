@@ -1354,8 +1354,8 @@ class MAXY1_2:
             )
         
         # Default to deep research for MAXY 1.2 to fulfill user request for more detail
-        if is_research and context['inquiry_depth'] == 'surface':
-            context['inquiry_depth'] = 'moderate'
+        if is_research:
+            context['inquiry_depth'] = 'deep'
         
         # Detect user slang for reactive mode
         use_slang = slang_manager.detect_slang(message)
