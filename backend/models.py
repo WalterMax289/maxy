@@ -84,8 +84,12 @@ class KnowledgeSynthesizer:
         'pm of', 'president of', 'governor of', 'ceo of',
         'exploration', 'discovery', 'universe', 'space', 'astronomy',
         'physics', 'math', 'mathematics', 'geometry', 'calculus',
-        'what\'s up with', 'tell me more about', 'latest on'
-,
+        'what\'s up with', 'tell me more about', 'latest on',
+        'write an essay', 'write a speech', 'compose an essay',
+        'give me a speech', 'draft an essay', 'persuasive essay',
+        'write about', 'give me an essay', 'i want an essay',
+        'an essay about', 'an essay on', 'compose a speech',
+        'write me an essay', 'write me a speech', 'draft a speech',
         'can you explain', 'could you tell me', 'i want to know',
         'learn about', 'guide to', 'overview of', 'introduction to',
         'basics of', 'advanced', 'in depth', 'detailed explanation',
@@ -1320,6 +1324,176 @@ class MAXY1_2:
         return '\n\n'.join(selected)
     
     @staticmethod
+    def detect_essay_intent(message: str) -> Optional[Dict[str, Any]]:
+        """Detect if user wants an essay or speech and extract parameters"""
+        msg_lower = message.lower().strip()
+        essay_triggers = [
+            'write an essay', 'write me an essay', 'give me an essay',
+            'i want an essay', 'compose an essay', 'draft an essay',
+            'an essay about', 'an essay on',
+        ]
+        speech_triggers = [
+            'write a speech', 'write me a speech', 'give me a speech',
+            'compose a speech', 'draft a speech',
+        ]
+        mode = None
+        if any(t in msg_lower for t in speech_triggers):
+            mode = 'speech'
+        elif any(t in msg_lower for t in essay_triggers) or 'persuasive essay' in msg_lower or 'write about' in msg_lower:
+            mode = 'essay'
+        if not mode:
+            return None
+        # Extract topic after on/about/regarding/for
+        topic = msg_lower
+        for prep in ['regarding ', 'about ', ' on ', 'for ', 'of ']:
+            if prep in topic:
+                topic = topic.split(prep, 1)[-1].strip()
+                break
+        for trigger in (essay_triggers + speech_triggers +
+                        ['write', 'give me', 'compose', 'draft', 'an essay',
+                         'a speech', 'persuasive', 'me', 'i want']):
+            topic = topic.replace(trigger, '').strip()
+        topic = topic.strip('?.!,')
+        if not topic or len(topic) < 3:
+            topic = 'general knowledge'
+        # Detect style
+        style = 'academic'
+        if 'persuasive' in msg_lower:
+            style = 'persuasive'
+        elif any(w in msg_lower for w in ['inspire', 'inspiring', 'motivational', 'motivate']):
+            style = 'inspirational'
+        elif any(w in msg_lower for w in ['casual', 'simple', 'easy', 'short']):
+            style = 'casual'
+        # Detect word target (default 425 = midpoint of 400-450)
+        word_match = re.search(r'(\d+)\s*word', msg_lower)
+        word_target = int(word_match.group(1)) if word_match else 425
+        return {'mode': mode, 'style': style, 'topic': topic, 'word_target': word_target}
+
+    @staticmethod
+    def format_as_essay(raw_research: str, style: str, word_target: int, variation: int = 0) -> str:
+        """Re-format Wikipedia research into a flowing essay (no markdown section headers)"""
+        TRANSITIONS = [
+            "Furthermore, ", "Building on this, ", "A key consideration is that ",
+            "It is also important to note that ", "Expanding on this idea, ",
+            "This connects closely to the fact that ", "Notably, ",
+            "In addition, ", "Moreover, ", "From another perspective, "
+        ]
+        COUNTER_INTROS = [
+            "Some may argue that ", "Critics often contend that ",
+            "A common counterpoint is that ", "Opponents of this view suggest that "
+        ]
+        REBUTTALS = [
+            "However, the evidence clearly indicates the opposite.",
+            "Yet, upon closer examination, this position does not hold.",
+            "Nevertheless, the broader consensus strongly supports the original view."
+        ]
+        CONCLUSIONS = ["In conclusion, ", "To summarize, ", "Ultimately, ", "In essence, ", "To conclude, "]
+        # Strip markdown, headers, bullets
+        clean = re.sub(r'###[^\n]*\n', '', raw_research)
+        clean = re.sub(r'\*\*VERIFIED RESEARCH REPORT[^\n]*\n', '', clean)
+        clean = re.sub(r'\*\*REFERENCE INDICES\*\*.*', '', clean, flags=re.DOTALL)
+        clean = re.sub(r'={3,}', '', clean)
+        clean = re.sub(r'\*\*(.*?)\*\*', r'\1', clean)
+        clean = re.sub(r'\u2022 ', '', clean)
+        clean = clean.strip()
+        sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', clean) if len(s.strip()) > 15]
+        # Variation: shuffle body sentences for re-requests to produce a fresh essay
+        if variation > 0 and len(sentences) > 6:
+            mid = len(sentences) // 2
+            body_a = sentences[1:mid]
+            body_b = sentences[mid:]
+            random.shuffle(body_a)
+            sentences = [sentences[0]] + body_b + body_a
+        if not sentences:
+            return raw_research
+        hook = sentences[0]
+        body_sentences = sentences[1:]
+        essay = f"{hook}\n\n"
+        para_buf = []
+        para_count = 0
+        for i, sent in enumerate(body_sentences):
+            para_buf.append(sent)
+            if len(para_buf) == 3 or i == len(body_sentences) - 1:
+                para_text = ' '.join(para_buf)
+                if para_count > 0:
+                    trans = TRANSITIONS[(variation + para_count) % len(TRANSITIONS)]
+                    para_text = trans + para_text[0].lower() + para_text[1:]
+                essay += para_text + "\n\n"
+                para_buf = []
+                para_count += 1
+                if len(essay.split()) >= word_target:
+                    break
+        # Persuasive style: counterargument + rebuttal
+        if style == 'persuasive' and sentences:
+            counter = COUNTER_INTROS[variation % len(COUNTER_INTROS)]
+            rebuttal = REBUTTALS[variation % len(REBUTTALS)]
+            essay += f"{counter}{sentences[-1]} {rebuttal}\n\n"
+        # Conclusion
+        c_start = CONCLUSIONS[variation % len(CONCLUSIONS)]
+        essay += f"{c_start}{hook[0].lower() + hook[1:]}\n"
+        # Trim to word target
+        words = essay.split()
+        if len(words) > word_target + 50:
+            essay = ' '.join(words[:word_target]) + '...'
+        word_count = len(essay.split())
+        header = f"\U0001f4dd **Essay \u2014 {style.capitalize()} Style** (~{word_count} words)\n\n"
+        return header + essay.strip()
+
+    @staticmethod
+    def format_as_speech(raw_research: str, style: str, word_target: int, variation: int = 0) -> str:
+        """Re-format Wikipedia research into a speech with rhetorical conventions"""
+        OPENINGS = [
+            "Ladies and gentlemen, ", "Dear friends and esteemed guests, ",
+            "Good day to all of you here today. ", "Fellow thinkers and curious minds, "
+        ]
+        RHETORICAL = [
+            "But why does this matter?", "So what does this mean for us?",
+            "Have you ever wondered why this is so important?",
+            "And yet, how often do we truly reflect on this?"
+        ]
+        CLOSINGS = [
+            "Let us move forward with this knowledge and make a difference.",
+            "I urge each one of you to carry this understanding forward.",
+            "Together, we can shape a better-informed world. Thank you.",
+            "Remember: knowledge is only powerful when acted upon. Thank you."
+        ]
+        # Strip markdown, headers, bullets
+        clean = re.sub(r'###[^\n]*\n', '', raw_research)
+        clean = re.sub(r'\*\*VERIFIED RESEARCH REPORT[^\n]*\n', '', clean)
+        clean = re.sub(r'\*\*REFERENCE INDICES\*\*.*', '', clean, flags=re.DOTALL)
+        clean = re.sub(r'={3,}', '', clean)
+        clean = re.sub(r'\*\*(.*?)\*\*', r'\1', clean)
+        clean = re.sub(r'\u2022 ', '', clean)
+        clean = clean.strip()
+        sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', clean) if len(s.strip()) > 15]
+        # Variation: shuffle tail for re-requests
+        if variation > 0 and len(sentences) > 6:
+            mid = len(sentences) // 2
+            tail = sentences[mid:]
+            random.shuffle(tail)
+            sentences = sentences[:mid] + tail
+        if not sentences:
+            return raw_research
+        opening = OPENINGS[variation % len(OPENINGS)]
+        rhetorical = RHETORICAL[variation % len(RHETORICAL)]
+        closing = CLOSINGS[variation % len(CLOSINGS)]
+        speech = f"{opening}{sentences[0]}\n\n"
+        body = sentences[1:]
+        for i, sent in enumerate(body):
+            speech += sent + ' '
+            if (i + 1) % 3 == 0:
+                speech += f"\n\n{rhetorical}\n\n" if i < len(body) - 3 else "\n\n"
+            if len(speech.split()) >= word_target - 30:
+                break
+        speech += f"\n\n{closing}"
+        words = speech.split()
+        if len(words) > word_target + 50:
+            speech = ' '.join(words[:word_target]) + f'... {closing}'
+        word_count = len(speech.split())
+        header = f"\U0001f3a4 **Speech \u2014 {style.capitalize()} Style** (~{word_count} words)\n\n"
+        return header + speech.strip()
+
+    @staticmethod
     def process_message(
         message: str,
         include_thinking: bool = True,
@@ -1364,7 +1538,38 @@ class MAXY1_2:
         
         # Detect user slang for reactive mode
         use_slang = slang_manager.detect_slang(message)
-        
+
+        # ── ESSAY / SPEECH GENERATION (runs before normal research path) ──
+        essay_intent = MAXY1_2.detect_essay_intent(message)
+        if essay_intent:
+            topic = essay_intent['topic']
+            # Check if user is asking for more/another version
+            variation = 0
+            if conversation_history:
+                prev_responses = [m['content'] for m in conversation_history if m['role'] == 'assistant']
+                variation = sum(1 for r in prev_responses if '📝 **Essay' in r or '🎤 **Speech' in r)
+            result = MAXY1_2.deep_wikipedia_research(topic)
+            if not result['success'] or 'does not reside' in result['response']:
+                result = MAXY1_2.perform_web_search(topic)
+            if result['success']:
+                if essay_intent['mode'] == 'speech':
+                    essay_response = MAXY1_2.format_as_speech(
+                        result['response'], essay_intent['style'],
+                        essay_intent['word_target'], variation
+                    )
+                else:
+                    essay_response = MAXY1_2.format_as_essay(
+                        result['response'], essay_intent['style'],
+                        essay_intent['word_target'], variation
+                    )
+                return {
+                    'response': essay_response,
+                    'model': MAXY1_2.NAME,
+                    'confidence': 0.97,
+                    'thinking': thinking
+                }
+        # ── END ESSAY / SPEECH ──
+
         if is_research:
             # Deep research mode with formatted response length
             result = MAXY1_2.deep_wikipedia_research(message)
