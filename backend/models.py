@@ -1498,6 +1498,13 @@ class MAXY1_3:
         code_patterns = [r'\b' + re.escape(ind) + r'\b' for ind in KnowledgeSynthesizer.CODE_INDICATORS]
         is_code = any(re.search(pattern, msg_lower) for pattern in code_patterns)
         
+        # Default language detection
+        detected_lang = 'python'
+        for lang, keywords in languages.items():
+            if any(kw in msg_lower for kw in keywords):
+                detected_lang = lang
+                break
+        
         # Language detection logic refinement for web-related queries
         if 'portfolio' in msg_lower or 'website' in msg_lower or 'landing page' in msg_lower:
             detected_lang = 'html'
