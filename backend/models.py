@@ -1884,7 +1884,7 @@ class MAXY1_3:
         """Detect if message is asking for a chart and extract data, labels, and title"""
         msg_lower = message.lower()
         
-        chart_indicators = ['chart', 'graph', 'pie chart', 'bar chart', 'line chart', 'visualization', 'plot', 'create a chart', 'make a chart', 'histogram']
+        chart_indicators = ['chart', 'graph', 'pie chart', 'bar chart', 'line chart', 'visualization', 'plot', 'create a chart', 'make a chart', 'histogram', 'donut chart', 'radar chart', 'area chart', 'donut', 'radar', 'spider chart']
         is_chart = any(ind in msg_lower for ind in chart_indicators)
         
         # Determine chart type
