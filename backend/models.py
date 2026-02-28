@@ -151,7 +151,11 @@ class KnowledgeSynthesizer:
         'dynamic programming', 'recursion', 'greedy algorithm',
         'stack', 'queue', 'linked list', 'binary tree', 'bst',
         'heap', 'hash table', 'snippet', 'coding', 'develop', 'setup', 'server', 'logic',
-        'sort', 'search', 'array', 'list', 'tree', 'graph', 'data structure'
+        'sort', 'search', 'array', 'list', 'tree', 'graph', 'data structure',
+        'boilerplate', 'repository', 'rest api', 'crud', 'component',
+        'react', 'nextjs', 'vue', 'node', 'express', 'django', 'flask',
+        'refactor', 'unit test', 'integration test', 'deployment script',
+        'dockerfile', 'kubernetes', 'yaml config'
     ]
     
     @staticmethod
@@ -1691,13 +1695,13 @@ class MAXY1_3:
         
         # Programming language keywords
         languages = {
-            'python': ['python', 'py '],
-            'javascript': ['javascript', 'js '],
-            'java': ['java'],
+            'python': ['python', 'py ', 'django', 'flask', 'fastapi', 'pandas', 'numpy'],
+            'javascript': ['javascript', 'js ', 'node', 'express', 'react', 'nextjs', 'vue', 'svelte', 'typescript', 'ts '],
+            'java': ['java', 'spring', 'hibernate', 'maven', 'gradle'],
             'cpp': ['c++', 'cpp', 'c plus plus'],
-            'html': ['html'],
-            'css': ['css'],
-            'sql': ['sql']
+            'html': ['html', 'markup', 'div ', 'anchor'],
+            'css': ['css', 'styling', 'tailwind', 'bootstrap', 'sass', 'scss'],
+            'sql': ['sql', 'query', 'database search', 'select from', 'insert into']
         }
         
         code_patterns = [r'\b' + re.escape(ind) + r'\b' for ind in KnowledgeSynthesizer.CODE_INDICATORS]
@@ -1711,11 +1715,18 @@ class MAXY1_3:
                 break
         
         # Language detection logic refinement for web-related queries
-        if 'portfolio' in msg_lower or 'website' in msg_lower or 'landing page' in msg_lower:
+        if any(w in msg_lower for w in ['portfolio', 'website', 'landing page', 'dashboard', 'ui component', 'web page']):
             detected_lang = 'html'
-            if 'css' in msg_lower: detected_lang = 'css'
-            elif 'js' in msg_lower or 'javascript' in msg_lower: detected_lang = 'javascript'
+            if 'css' in msg_lower or 'style' in msg_lower: detected_lang = 'css'
+            elif any(js in msg_lower for js in ['js ', 'javascript', 'node', 'react', 'nextjs']): detected_lang = 'javascript'
             return True, detected_lang
+
+        # Explicit "How to" or "Explain" check for Deep Research disambiguation
+        technical_info_triggers = ['explain how', 'tell me about', 'why do we use', 'theory of', 'what is the difference']
+        if any(trigger in msg_lower for trigger in technical_info_triggers):
+            # If it's more about info than "coding", return false to trigger Deep Research instead
+            if not any(code_trigger in msg_lower for code_trigger in ['write code', 'generate code', 'implement', 'snippet', 'boilerplate']):
+                return False, detected_lang
 
         return is_code, detected_lang
     
@@ -2101,35 +2112,48 @@ class MAXY1_3:
                  confidence = 0.98
              else:
                  # Local Fallback - UPGRADED PREMIUM TEMPLATE
-                 if web_type == 'portfolio':
-                     response = "### 🏗️ MAXY Template: Premium Portfolio Specialist\n\n"
-                     response += "I've generated a bespoke, high-performance portfolio starter using a sleek dark-mode aesthetic and modern 'Inter' typography:\n\n"
-                     response += "```html\n"
-                     response += "<!DOCTYPE html>\n<html lang='en'>\n<head>\n"
-                     response += "  <meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'>\n"
-                     response += "  <link href='https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap' rel='stylesheet'>\n"
-                     response += "  <style>\n"
-                     response += "    :root { --bg: #0a0a0c; --accent: #3b82f6; --text: #f8fafc; }\n"
-                     response += "    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }\n"
-                     response += "    .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }\n"
-                     response += "    nav { padding: 2rem; display: flex; justify-content: space-between; position: fixed; width: 100%; box-sizing: border-box; z-index: 100; }\n"
-                     response += "    .hero { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }\n"
-                     response += "    h1 { font-size: 5rem; margin: 0; background: linear-gradient(to right, #fff, #64748b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }\n"
-                     response += "    .btn { padding: 1rem 2rem; background: var(--accent); color: white; text-decoration: none; border-radius: 50px; margin-top: 2rem; transition: 0.3s; }\n"
-                     response += "    .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3); }\n"
-                     response += "  </style>\n</head>\n<body>\n"
-                     response += "  <nav class='glass'><div>MAXY PORTFOLIO</div><div>Work . About . Contact</div></nav>\n"
-                     response += "  <section class='hero'>\n"
-                     response += "    <h1>Digital Architecture &<br>Creative Solutions</h1>\n"
-                     response += "    <p>Crafting high-performance experiences for the modern web.</p>\n"
-                     response += "    <a href='#' class='btn'>View Laboratory</a>\n"
-                     response += "  </section>\n</body>\n</html>\n```\n\n"
-                     response += "This premium template is ready for deployment. I can expand it with project galleries, contact forms, or dynamic animations—what's our next step?"
-                     confidence = 0.95
-                 else:
-                     response = f"I'm ready to architect your **{web_type}** website! While I'm refining the deep search for hyper-specific templates, "
-                     response += "I've activated my UI design module. Should we prioritize a minimalist aesthetic or a high-impact, dynamic layout?"
-                     confidence = 0.85
+                  if web_type == 'portfolio':
+                      response = "### 🏗️ MAXY Template: Premium Portfolio Specialist\n\n"
+                      response += "I've generated a bespoke, high-performance portfolio starter using a sleek dark-mode aesthetic and modern 'Inter' typography:\n\n"
+                      template = """```html
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <title>MAXY Portfolio</title>
+  <link href='https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap' rel='stylesheet'>
+  <style>
+    :root { --bg: #0a0a0c; --accent: #3b82f6; --text: #f8fafc; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }
+    .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
+    nav { padding: 2rem; display: flex; justify-content: space-between; position: fixed; width: 100%; box-sizing: border-box; z-index: 100; }
+    .hero { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    h1 { font-size: 5rem; margin: 0; background: linear-gradient(to right, #fff, #64748b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .btn { padding: 1rem 2rem; background: var(--accent); color: white; text-decoration: none; border-radius: 50px; margin-top: 2rem; transition: 0.3s; display: inline-block; }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3); }
+  </style>
+</head>
+<body>
+  <nav class='glass'>
+    <div><strong>MAXY PORTFOLIO</strong></div>
+    <div>Work . About . Contact</div>
+  </nav>
+  <section class='hero'>
+    <h1>Digital Architecture &<br>Creative Solutions</h1>
+    <p>Crafting high-performance experiences for the modern web.</p>
+    <a href='#' class='btn'>View Laboratory</a>
+  </section>
+</body>
+</html>
+```"""
+                      response += template + "\n\n"
+                      response += "This premium template is ready for deployment. I can expand it with project galleries, contact forms, or dynamic animations—what's our next step?"
+                      confidence = 0.95
+                  else:
+                      response = f"I'm ready to architect your **{web_type}** website! While I'm refining the deep search for hyper-specific templates, "
+                      response += "I've activated my UI design module. Should we prioritize a minimalist aesthetic or a high-impact, dynamic layout?"
+                      confidence = 0.85
 
         # Code Request (General)
         if not response and analysis['is_code'] and not analysis['is_chart']:
