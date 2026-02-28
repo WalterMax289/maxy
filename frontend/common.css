@@ -214,11 +214,12 @@
 
 @media (max-width: 768px) {
     .updates-hover-info {
-        right: -20px;
+        right: -100px;
         width: 280px;
+        max-width: calc(100vw - 40px);
     }
 
     .updates-hover-info::before {
-        right: 28px;
+        right: 108px;
     }
 }
