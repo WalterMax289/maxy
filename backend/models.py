@@ -12,6 +12,13 @@ from slang_manager import SlangManager
 import requests
 from ddgs import DDGS
 import yfinance as yf
+import pandas as pd
+try:
+    import PyPDF2
+    from docx import Document as DocxDocument
+except ImportError:
+    PyPDF2 = None
+    DocxDocument = None
 
 slang_manager = SlangManager()
 
@@ -376,7 +383,10 @@ class KnowledgeSynthesizer:
 
 
 class MAXY1_1:
-    """MAXY 1.1 - Quick Responses & Thinking
+    NAME = "MAXY 1.1"
+    SYSTEM_PROMPT = "You are MAXY 1.1, a quick, helpful, and friendly AI assistant. Your goal is to provide fast and accurate answers while being polite and engaging. Use concise formatting and occasional emojis to stay friendly."
+    
+    @staticmethod
     
     Optimized for:
     - Lightning-fast responses
@@ -645,14 +655,13 @@ class MAXY1_1:
         if slang_response:
             return (slang_response, 0.99)
         
-        # Greeting - Friendly and welcoming (3-4 sentences)
+        # Greeting - Friendly and welcoming (MAXY 1.1 Persona)
         if intents['greeting']:
-            # Use real user name if available, otherwise fall back to slang/friend
             address = user_name if user_name else slang_manager.get_random_slang(use_slang)
             if intent_analysis.get('is_new_user', False):
-                return (f"Hey {address}! Welcome! I'm MAXY 1.1, your quick AI assistant. I'm here to help with fast answers and friendly chat. What can I do for you today?", 0.98)
+                return (f"Hi {address}! 👋 I'm MAXY 1.1, your quick and friendly AI assistant. I'm optimized for fast answers and helpful chat. What can I do for you today?", 0.98)
             else:
-                return (f"Hey {address}! Great to see you again! Ready when you are. What's on your mind today?", 0.97)
+                return (f"Hi {address}! Great to see you! Ready to help you with anything fast. What's on your mind?", 0.97)
         
         # Farewell - Warm goodbye (2-3 sentences)
         elif intents['farewell']:
@@ -782,23 +791,28 @@ class MAXY1_1:
         # Detect if user is using slang to trigger reactive mode
         use_slang = slang_manager.detect_slang(message)
         
-        # Analyze user intent for better understanding
-        intent_analysis = MAXY1_1.analyze_user_intent(message)
+        # Context analysis & Follow-up detection
+        is_followup, prev_context = MAXY1_3.detect_followup(message, conversation_history)
+        effective_message = f"{prev_context} {message}" if is_followup else message
         
-        # Context analysis
-        context_status = MAXY1_1.analyze_casual_context(message, conversation_history or [])
+        intent_analysis = MAXY1_1.analyze_user_intent(effective_message)
         
         # Generate thinking process
         thinking = None
         if include_thinking:
             thinking = MAXYThinkingEngine.generate_thinking(
                 MAXY1_1.NAME,
-                message,
+                effective_message,
                 "quick"
             )
         
-        # Generate appropriate concise response with slang awareness
-        response, confidence = MAXY1_1.generate_concise_response(intent_analysis, message, use_slang, user_name)
+        # Generate appropriate concise response
+        response, confidence = MAXY1_1.generate_concise_response(intent_analysis, effective_message, use_slang, user_name)
+        
+        if is_followup:
+            # Prepend context acknowledgment if needed
+            if len(response.split()) < 10:
+                response = f"Sure! Building on that: {response}"
         
         # Adjust for context
         if context_status == "continuing_conversation" and intent_analysis['intents']['greeting']:
@@ -834,7 +848,10 @@ class MAXY1_1:
 
 
 class MAXY1_2:
-    """MAXY 1.2 - Deep Research & Wikipedia Knowledge + Conversation
+    NAME = "MAXY 1.2"
+    SYSTEM_PROMPT = "You are MAXY 1.2, a sophisticated academic and research-oriented AI. You excel at providing in-depth analysis, scholarly overviews, and comprehensive reports. Your tone is formal, objective, and thorough, prioritizing accuracy and structured information synthesis."
+    
+    @staticmethod
     
     Optimized for:
     - Deep Wikipedia research with detailed analysis
@@ -1513,11 +1530,15 @@ class MAXY1_2:
         
         thinking = None
         
-        # Analyze conversation context first
-        context = MAXY1_2.analyze_conversation_context(message, conversation_history)
+        # Context analysis & Follow-up detection
+        is_followup, prev_context = MAXY1_3.detect_followup(message, conversation_history)
+        effective_message = f"{prev_context} {message}" if is_followup else message
+        
+        # Analyze conversation context
+        context = MAXY1_2.analyze_conversation_context(effective_message, conversation_history)
         
         # Determine if this is research or conversation
-        is_research = MAXY1_2.is_research_query(message)
+        is_research = MAXY1_2.is_research_query(effective_message)
         
         # If user is digging deeper into a previous topic, we might want to trigger research even if not explicitly a research query
         if context['is_digging_deeper'] and not is_research:
@@ -1537,7 +1558,7 @@ class MAXY1_2:
             thinking_type = "research" if is_research else "conversation"
             thinking = MAXYThinkingEngine.generate_thinking(
                 MAXY1_2.NAME,
-                message,
+                effective_message,
                 thinking_type
             )
         
@@ -1548,8 +1569,8 @@ class MAXY1_2:
         # Detect user slang for reactive mode
         use_slang = slang_manager.detect_slang(message)
 
-        # ── ESSAY / SPEECH GENERATION (runs before normal research path) ──
-        essay_intent = MAXY1_2.detect_essay_intent(message)
+        # ── ESSAY / SPEECH GENERATION ──
+        essay_intent = MAXY1_2.detect_essay_intent(effective_message)
         if essay_intent:
             topic = essay_intent['topic']
             # Check if user is asking for more/another version
@@ -1666,7 +1687,35 @@ class MAXY1_2:
 
 
 class MAXY1_3:
-    """MAXY 1.3 - Advanced AI Assistant for Data Analysis, Programming, and Visualization
+    NAME = "MAXY 1.3"
+    SYSTEM_PROMPT = "You are MAXY 1.3, a high-performance, premium AI engine. You have access to advanced tools for web search, code generation, file analysis, and data visualization. Always respond with a professional tone, use clean markdown formatting, and provide deep technical insights."
+    
+    @staticmethod
+    def detect_followup(message: str, history: Optional[List[Dict]]) -> Tuple[bool, str]:
+        """Detect if current message is a follow-up to previous context"""
+        if not history:
+            return False, ""
+        
+        msg_lower = message.lower().strip().strip('?.!')
+        followup_indicators = [
+            'more', 'next', 'why', 'how', 'explain more', 'elaborate',
+            'detail', 'tell me more', 'yes', 'keep going',
+            'diff', 'difference', 'compare', 'extend', 'add more'
+        ]
+        
+        # Check for very short messages or specific keywords
+        is_short = len(msg_lower.split()) <= 3
+        has_indicator = any(re.search(r'\b' + re.escape(ind) + r'\b', msg_lower) for ind in followup_indicators)
+        
+        if is_short or has_indicator:
+            # Find the last assistant message
+            for m in reversed(history):
+                if m['role'] == 'assistant':
+                    return True, m['content']
+            
+        return False, ""
+
+    @staticmethod
     
     Capabilities:
     - Processing and analyzing uploaded files
@@ -1692,6 +1741,54 @@ class MAXY1_3:
         """Lazy import to avoid circular imports"""
         from chart_generator import ChartGenerator
         return ChartGenerator
+
+    @staticmethod
+    def analyze_file(file_path: str) -> Dict[str, Any]:
+        """Analyze various file types and return structured content/summary"""
+        if not os.path.exists(file_path):
+            return {'success': False, 'error': 'File not found'}
+        
+        ext = os.path.splitext(file_path)[1].lower()
+        try:
+            content = ""
+            summary = ""
+            
+            if ext == '.pdf' and PyPDF2:
+                with open(file_path, 'rb') as f:
+                    reader = PyPDF2.PdfReader(f)
+                    text = ""
+                    for page in reader.pages[:10]: # Analyze first 10 pages
+                        text += page.extract_text() + "\n"
+                    content = text
+                    summary = f"PDF Document with {len(reader.pages)} pages."
+            
+            elif ext in ['.docx', '.doc'] and DocxDocument:
+                doc = DocxDocument(file_path)
+                text = "\n".join([para.text for para in doc.paragraphs])
+                content = text
+                summary = f"Word Document with {len(doc.paragraphs)} paragraphs."
+            
+            elif ext == '.csv':
+                df = pd.read_csv(file_path)
+                content = df.to_string(index=False, max_rows=10)
+                summary = f"CSV File with {len(df)} rows and columns: {list(df.columns)}"
+            
+            elif ext in ['.xlsx', '.xls']:
+                df = pd.read_excel(file_path)
+                content = df.to_string(index=False, max_rows=10)
+                summary = f"Excel File with {len(df)} rows and columns: {list(df.columns)}"
+            
+            else:
+                return {'success': False, 'error': f'Unsupported file type: {ext}'}
+                
+            return {
+                'success': True,
+                'content': content,
+                'summary': summary,
+                'type': ext
+            }
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
     
     @staticmethod
     def is_code_request(message: str) -> tuple[bool, str]:
@@ -1800,6 +1897,12 @@ class MAXY1_3:
             chart_type = 'scatter'
         elif 'histogram' in msg_lower:
             chart_type = 'histogram'
+        elif 'donut' in msg_lower:
+            chart_type = 'donut'
+        elif 'radar' in msg_lower or 'spider' in msg_lower:
+            chart_type = 'radar'
+        elif 'area' in msg_lower:
+            chart_type = 'area'
         
         # Try to extract numbers from message
         import re
@@ -1845,6 +1948,24 @@ class MAXY1_3:
                 base64_image = ChartGenerator.create_pie_chart(
                     labels=labels,
                     values=[float(d) for d in data],
+                    title=title
+                )
+            elif chart_type == 'donut':
+                base64_image = ChartGenerator.create_donut_chart(
+                    labels=labels,
+                    values=[float(d) for d in data],
+                    title=title
+                )
+            elif chart_type == 'radar':
+                base64_image = ChartGenerator.create_radar_chart(
+                    labels=labels,
+                    values=[float(d) for d in data],
+                    title=title
+                )
+            elif chart_type == 'area':
+                base64_image = ChartGenerator.create_area_chart(
+                    x=list(range(len(data))),
+                    y=[float(d) for d in data],
                     title=title
                 )
             elif chart_type == 'bar':
@@ -2038,8 +2159,12 @@ class MAXY1_3:
         response = None
         analysis_type = "analysis" # Default for 1.3
         
+        # Context analysis & Follow-up detection
+        is_followup, prev_context = MAXY1_3.detect_followup(message, conversation_history)
+        effective_message = f"{prev_context} {message}" if is_followup else message
+        
         # Analyze comprehensive intent
-        analysis = MAXY1_3.analyze_user_intent(message)
+        analysis = MAXY1_3.analyze_user_intent(effective_message)
         intents = analysis['intents']
         use_slang = slang_manager.detect_slang(message)
         
@@ -2053,10 +2178,30 @@ class MAXY1_3:
         else:
             analysis_type = "general"
 
+        # Check for file analysis request
+        file_path_match = re.search(r'(?:analyze|read|check|open)\s+(?:the\s+)?(.*?(\.pdf|\.docx?|\.csv|\.xlsx?))\b', message.lower())
+        if not response and file_path_match:
+            file_path = file_path_match.group(1).strip()
+            # If path doesn't exist, check in common directories
+            if not os.path.exists(file_path):
+                 # Try relative to current dir or if it's just a filename
+                 file_path = os.path.join(os.getcwd(), os.path.basename(file_path))
+            
+            file_res = MAXY1_3.analyze_file(file_path)
+            if file_res['success']:
+                response = f"### 📂 File Analysis: {os.path.basename(file_path)}\n\n"
+                response += f"**Summary:** {file_res['summary']}\n\n"
+                response += "**Extracted Insights (Preview):**\n"
+                response += f"> {file_res['content'][:1500]}..."
+                analysis_type = "analysis"
+                confidence = 0.98
+            else:
+                response = f"I attempted to analyze the file at `{file_path}`, but encountered an issue: {file_res.get('error', 'Unknown error')}. Please ensure the file exists and is in a supported format (PDF, Word, CSV, Excel)."
+        
         if include_thinking:
             thinking = MAXYThinkingEngine.generate_thinking(
                 MAXY1_3.NAME,
-                message,
+                effective_message,
                 analysis_type
             )
         
@@ -2281,10 +2426,16 @@ class MAXY1_3:
              response = "I can definitely help with that calculation! Please provide the numbers and the operation you'd like me to perform."
              confidence = 0.90
 
-        # Help
+        # Help - Premium Persona alignment
         if not response and intents['help']:
-            response = "I am MAXY 1.3, upgraded with a **Grand Unified Engine**! I can:\n\n🚀 **Build & Code** - Websites, Python, JS, SQL\n📊 **Analyze & Visualize** - CSVs, Statistics, Charts\n🔍 **Research** - Deep Wiki & Web searches\n🌤️ **Utility** - Weather, Time, Stock prices\n💬 **Chat** - Intelligent, context-aware conversation"
-            confidence = 0.98
+            response = "I am MAXY 1.3, your **High-Performance AI Engine**. My premium capabilities include:\n\n" \
+                       "🚀 **Advanced Engineering** - Full-stack web building & technical architecture\n" \
+                       "📂 **Universal Analysis** - Deep insights from PDF, Word, CSV, and Excel documents\n" \
+                       "📊 **Dynamic Visualization** - Professional Donut, Radar, and Area charts\n" \
+                       "🔍 **Intelligence Synthesis** - Multi-source technical research & data extraction\n" \
+                       "💬 **Strategic Conversation** - Context-aware, professional-grade dialogue\n\n" \
+                       "How may I assist your high-level objectives today?"
+            confidence = 0.99
 
         # FINAL FALLBACKS
         if not response:
@@ -2304,7 +2455,7 @@ class MAXY1_3:
             
             if not response:
                 slang = slang_manager.get_random_slang(use_slang)
-                response = f"I'm here to help with your project, {slang}! I'm ready for code generation, data analysis, or deep research. Could you provide a bit more detail on what you're looking for?"
+                response = f"I am MAXY 1.3, and I'm ready to provide premium support for your technical project, {slang}. I specialize in architectural code generation, complex data insights, and multi-file analysis. Could you specify your technical objective?"
             confidence = 0.85
         
         # Slang Enhancement

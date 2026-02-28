@@ -88,6 +88,51 @@ class ChartGenerator:
             return None
     
     @staticmethod
+    def create_donut_chart(
+        labels: List[str],
+        values: List[float],
+        title: str = "Donut Chart",
+        palette: str = "default",
+        hole_size: float = 0.7
+    ) -> Optional[str]:
+        """Create professional donut chart"""
+        try:
+            fig, ax = plt.subplots(figsize=(10, 8))
+            colors = COLOR_PALETTES.get(palette, COLOR_PALETTES['default'])
+            
+            wedges, texts, autotexts = ax.pie(
+                values,
+                labels=labels,
+                autopct='%1.1f%%',
+                colors=colors,
+                startangle=90,
+                pctdistance=0.85,
+                explode=[0.02] * len(labels),
+                shadow=False
+            )
+            
+            # draw circle to make it a donut
+            centre_circle = plt.Circle((0,0), hole_size, fc='white')
+            fig.gca().add_artist(centre_circle)
+            
+            ax.set_title(title, fontsize=16, fontweight='bold', pad=20)
+            
+            # Style text
+            for text in texts:
+                text.set_fontsize(11)
+                text.set_fontweight('bold')
+            
+            for autotext in autotexts:
+                autotext.set_fontweight('bold')
+                autotext.set_fontsize(10)
+            
+            plt.tight_layout()
+            return ChartGenerator.fig_to_base64(fig)
+        except Exception as e:
+            logger.error(f"Error creating donut chart: {str(e)}")
+            return None
+    
+    @staticmethod
     def create_bar_chart(
         categories: List[str],
         values: List[float],
@@ -190,6 +235,74 @@ class ChartGenerator:
         
         except Exception as e:
             logger.error(f"Error creating line chart: {str(e)}")
+            return None
+
+    @staticmethod
+    def create_area_chart(
+        x: List[float],
+        y: List[float],
+        title: str = "Area Chart",
+        xlabel: str = "X-axis",
+        ylabel: str = "Y-axis",
+        palette: str = "professional"
+    ) -> Optional[str]:
+        """Create professional area chart"""
+        try:
+            fig, ax = plt.subplots(figsize=(12, 7))
+            color = COLOR_PALETTES.get(palette, COLOR_PALETTES['professional'])[0]
+            
+            ax.fill_between(x, y, color=color, alpha=0.3)
+            ax.plot(x, y, color=color, linewidth=2, marker='o', markersize=4)
+            
+            ax.set_xlabel(xlabel, fontsize=12, fontweight='bold')
+            ax.set_ylabel(ylabel, fontsize=12, fontweight='bold')
+            ax.set_title(title, fontsize=16, fontweight='bold', pad=20)
+            ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.7)
+            
+            plt.tight_layout()
+            return ChartGenerator.fig_to_base64(fig)
+        except Exception as e:
+            logger.error(f"Error creating area chart: {str(e)}")
+            return None
+
+    @staticmethod
+    def create_radar_chart(
+        labels: List[str],
+        values: List[float],
+        title: str = "Radar Chart",
+        palette: str = "rainbow"
+    ) -> Optional[str]:
+        """Create professional radar (spider) chart"""
+        try:
+            # Number of variables
+            num_vars = len(labels)
+            
+            # Compute angle of each axis
+            angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
+            
+            # The plot is circular, so we need to "complete the loop"
+            values += values[:1]
+            angles += angles[:1]
+            
+            fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))
+            color = COLOR_PALETTES.get(palette, COLOR_PALETTES['rainbow'])[0]
+            
+            ax.fill(angles, values, color=color, alpha=0.25)
+            ax.plot(angles, values, color=color, linewidth=2)
+            
+            # Fix axis to go in the right order and start at 12 o'clock
+            ax.set_theta_offset(np.pi / 2)
+            ax.set_theta_direction(-1)
+            
+            # Draw one axe per variable + add labels
+            plt.xticks(angles[:-1], labels, fontsize=11, fontweight='bold')
+            
+            ax.set_title(title, fontsize=18, fontweight='bold', pad=30)
+            
+            plt.tight_layout()
+            return ChartGenerator.fig_to_base64(fig)
+        except Exception as e:
+            logger.error(f"Error creating radar chart: {str(e)}")
             return None
     
     @staticmethod
