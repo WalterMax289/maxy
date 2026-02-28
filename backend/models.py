@@ -90,6 +90,8 @@ class KnowledgeSynthesizer:
         'write about', 'give me an essay', 'i want an essay',
         'an essay about', 'an essay on', 'compose a speech',
         'write me an essay', 'write me a speech', 'draft a speech',
+        'write a paragraph', 'composition', 'argumentative essay', 'descriptive essay',
+        'narrative essay', 'expository essay', 'formal speech', 'keynote',
         'can you explain', 'could you tell me', 'i want to know',
         'learn about', 'guide to', 'overview of', 'introduction to',
         'basics of', 'advanced', 'in depth', 'detailed explanation',
@@ -1334,11 +1336,14 @@ class MAXY1_2:
         essay_triggers = [
             'write an essay', 'write me an essay', 'give me an essay',
             'i want an essay', 'compose an essay', 'draft an essay',
-            'an essay about', 'an essay on',
+            'an essay about', 'an essay on', 'write a paragraph',
+            'write a composition', 'argumentative essay', 'persuasive essay',
+            'descriptive essay', 'narrative essay'
         ]
         speech_triggers = [
             'write a speech', 'write me a speech', 'give me a speech',
-            'compose a speech', 'draft a speech',
+            'compose a speech', 'draft a speech', 'formal speech',
+            'keynote address'
         ]
         mode = None
         if any(t in msg_lower for t in speech_triggers):
@@ -2069,6 +2074,33 @@ class MAXY1_3:
                     confidence = 0.99
             except Exception as e:
                 logger.error(f"Error in MAXY 1.3 daily_updates handler: {e}")
+
+        # ── ESSAY / SPEECH GENERATION (Integrated from 1.2) ──
+        essay_intent = MAXY1_2.detect_essay_intent(message)
+        if not response and essay_intent:
+            topic = essay_intent['topic']
+            variation = 0
+            if conversation_history:
+                prev_responses = [m['content'] for m in conversation_history if m['role'] == 'assistant']
+                variation = sum(1 for r in prev_responses if '📝 **Essay' in r or '🎤 **Speech' in r)
+            
+            result = MAXY1_2.deep_wikipedia_research(topic)
+            if not result['success'] or 'does not reside' in result['response']:
+                result = MAXY1_2.perform_web_search(topic)
+                
+            if result['success']:
+                if essay_intent['mode'] == 'speech':
+                    response = MAXY1_2.format_as_speech(
+                        result['response'], essay_intent['style'],
+                        essay_intent['word_target'], variation
+                    )
+                else:
+                    response = MAXY1_2.format_as_essay(
+                        result['response'], essay_intent['style'],
+                        essay_intent['word_target'], variation
+                    )
+                confidence = 0.97
+        # ── END ESSAY / SPEECH ──
 
         # 1. PRIORITY: UTILITY FEATURES (Weather/Time/Date) - Priority check to avoid false positives
         
