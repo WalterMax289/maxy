@@ -2129,7 +2129,16 @@ class MAXY1_3:
 
         # 2. PRIORITY: EXISTING 1.3 FEATURES (Technical/Data)
         
-        # Website Request (Moved to Priority over General Code)
+        # Chart Request (Moved up to prevent interception by Website fallback)
+        if not response and analysis['is_chart']:
+            is_chart, chart_type, data, labels, title = MAXY1_3.is_chart_request(message)
+            base64_image, desc = MAXY1_3.generate_chart_image(chart_type, data, labels, title)
+            if base64_image:
+                response = f"I've created a {chart_type} chart for you based on your data! 📊\n\n**{title}** breakdown shows {len(data)} distinct data points total."
+                chart_data = {'type': chart_type, 'title': title, 'base64_image': base64_image, 'description': desc}
+                confidence = 0.95
+
+        # Website Request
         if not response and (analysis['is_website'] or intents.get('website_creation')):
              is_website, web_type = MAXY1_3.is_website_request(message)
              search_query = f"complete premium responsive {web_type} website code template single file HTML CSS Inter font"
@@ -2193,15 +2202,6 @@ class MAXY1_3:
             response = MAXY1_3.generate_code(language, message)
             if response:
                 confidence = 0.96
-
-        # Chart Request
-        if not response and analysis['is_chart']:
-            is_chart, chart_type, data, labels, title = MAXY1_3.is_chart_request(message)
-            base64_image, desc = MAXY1_3.generate_chart_image(chart_type, data, labels, title)
-            if base64_image:
-                response = f"I've created a {chart_type} chart for you based on your data! 📊\n\n**{title}** breakdown shows {len(data)} distinct data points total."
-                chart_data = {'type': chart_type, 'title': title, 'base64_image': base64_image, 'description': desc}
-                confidence = 0.95
 
         # Stock Analysis
         if not response:
