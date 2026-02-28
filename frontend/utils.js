@@ -37,10 +37,33 @@ function createToastContainer() {
     return container;
 }
 
+// --- API CONFIGURATION ---
+function getApiBaseUrl() {
+    // If already defined globally (legacy support)
+    if (typeof API_BASE_URL !== 'undefined') return API_BASE_URL;
+
+    const PRODUCTION_URL = 'https://maxy-backend.onrender.com';
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+    // Check localStorage first (manual override)
+    const stored = localStorage.getItem('maxyBackendUrl');
+    if (stored) return stored;
+
+    if (isLocal) {
+        // If we're served from a specific port, try to use it
+        if (window.location.port === '8000' || window.location.port === '8001') {
+            return ''; // Same origin
+        }
+        return 'http://localhost:8000';
+    }
+
+    return PRODUCTION_URL;
+}
+
 // --- DAILY UPDATES ---
 async function fetchDailyUpdates() {
     try {
-        const baseUrl = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : (localStorage.getItem('maxyBackendUrl') || 'http://localhost:8000');
+        const baseUrl = getApiBaseUrl();
         const response = await fetch(`${baseUrl}/api/updates`);
         if (!response.ok) throw new Error('Failed to fetch updates');
         return await response.json();
