@@ -1099,6 +1099,10 @@
             typing: true
         };
 
+        // UI Element variables
+        const updatesNavBtn = document.getElementById('updatesNavBtn');
+        const updatesHoverInfo = document.querySelector('.updates-hover-info');
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             loadUserData();
@@ -1403,16 +1407,22 @@
 
         if (updatesNavBtn) {
             updatesNavBtn.addEventListener('click', (e) => {
+                // Robust detection: find if we clicked the button or anything inside it
                 const btn = e.target.closest('#updatesNavBtn');
                 if (!btn) return;
 
-                if (updatesHoverInfo && !updatesHoverInfo.contains(e.target)) {
-                    e.stopPropagation();
-                    updatesHoverInfo.classList.toggle('active');
-                    if (updatesHoverInfo.classList.contains('active')) {
-                        fetchDailyUpdates().then(data => {
-                            if (data) updateDailyUpdatesUI(data);
-                        });
+                // Only toggle if we didn't click inside the hover info box itself
+                if (updatesHoverInfo) {
+                    if (!updatesHoverInfo.contains(e.target)) {
+                        e.stopPropagation(); // Prevent window listener from firing
+                        updatesHoverInfo.classList.toggle('active');
+
+                        // Re-fetch updates if opening
+                        if (updatesHoverInfo.classList.contains('active')) {
+                            fetchDailyUpdates().then(data => {
+                                if (data) updateDailyUpdatesUI(data, 'updatesHoverList');
+                            });
+                        }
                     }
                 }
             });
