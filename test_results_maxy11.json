@@ -279,6 +279,12 @@
         "status": "Success"
     },
     {
+        "id": 31,
+        "question": "Which hormone, produced by the adrenal glands, is known as the \"stress hormone\"?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
         "id": 32,
         "question": "In algorithms, what problem does Dijkstra's algorithm solve?",
         "expected": "Finding the shortest path from a single source node to all other nodes in a weighted graph (with non-negative weights)",
@@ -286,6 +292,12 @@
         "thinking": "Analyzing: 'In algorithms, what problem does Dijkstra's algori'\n\nProcessing:\n1. Analyzing input...\n2. Formulating response...\n3. Optimizing output...\n",
         "time_taken": 15.86,
         "status": "Success"
+    },
+    {
+        "id": 32,
+        "question": "In algorithms, what problem does Dijkstra's algorithm solve?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
     },
     {
         "id": 33,
@@ -297,6 +309,12 @@
         "status": "Success"
     },
     {
+        "id": 33,
+        "question": "What is the primary function of the large intestine (colon) in the digestive system?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
         "id": 34,
         "question": "What does URL stand for?",
         "expected": "Uniform Resource Locator",
@@ -304,6 +322,12 @@
         "thinking": "Analyzing: 'What does URL stand for?'\n\nProcessing:\n1. Analyzing input...\n2. Formulating response...\n3. Optimizing output...\n",
         "time_taken": 2.05,
         "status": "Success"
+    },
+    {
+        "id": 34,
+        "question": "What does URL stand for?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
     },
     {
         "id": 35,
@@ -315,6 +339,12 @@
         "status": "Success"
     },
     {
+        "id": 35,
+        "question": "Which vitamin is essential for blood clotting?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
         "id": 36,
         "question": "What is Big O notation used for in computer science?",
         "expected": "Describing the upper bound (worst-case) time or space complexity of an algorithm",
@@ -322,6 +352,12 @@
         "thinking": "Analyzing: 'What is Big O notation used for in computer scienc'\n\nProcessing:\n1. Analyzing input...\n2. Formulating response...\n3. Optimizing output...\n",
         "time_taken": 16.56,
         "status": "Success"
+    },
+    {
+        "id": 36,
+        "question": "What is Big O notation used for in computer science?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
     },
     {
         "id": 37,
@@ -333,6 +369,12 @@
         "status": "Success"
     },
     {
+        "id": 37,
+        "question": "What condition is characterized by persistent high blood glucose levels?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
         "id": 38,
         "question": "In networking, what is the main difference between TCP and UDP?",
         "expected": "TCP is connection-oriented and reliable; UDP is connectionless and unreliable (faster, no guaranteed delivery)",
@@ -340,6 +382,12 @@
         "thinking": "Analyzing: 'In networking, what is the main difference between'\n\nProcessing:\n1. Analyzing input...\n2. Formulating response...\n3. Optimizing output...\n",
         "time_taken": 15.99,
         "status": "Success"
+    },
+    {
+        "id": 38,
+        "question": "In networking, what is the main difference between TCP and UDP?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
     },
     {
         "id": 39,
@@ -351,6 +399,12 @@
         "status": "Success"
     },
     {
+        "id": 39,
+        "question": "Which organ filters blood and produces urine?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
         "id": 40,
         "question": "What does CRUD stand for in database operations?",
         "expected": "Create, Read, Update, Delete",
@@ -358,6 +412,12 @@
         "thinking": "Analyzing: 'What does CRUD stand for in database operations?'\n\nProcessing:\n1. Analyzing input...\n2. Formulating response...\n3. Optimizing output...\n",
         "time_taken": 13.97,
         "status": "Success"
+    },
+    {
+        "id": 40,
+        "question": "What does CRUD stand for in database operations?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
     },
     {
         "id": 41,
@@ -369,6 +429,12 @@
         "status": "Success"
     },
     {
+        "id": 41,
+        "question": "What is the medical name for a stroke caused by a blood clot?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
         "id": 42,
         "question": "In version control systems, what does the command \"git merge\" do?",
         "expected": "Integrates changes from one branch into another",
@@ -376,6 +442,12 @@
         "thinking": "Analyzing: 'In version control systems, what does the command '\n\nProcessing:\n1. Analyzing input...\n2. Formulating response...\n3. Optimizing output...\n",
         "time_taken": 2.07,
         "status": "Success"
+    },
+    {
+        "id": 42,
+        "question": "In version control systems, what does the command \"git merge\" do?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
     },
     {
         "id": 43,
@@ -387,6 +459,12 @@
         "status": "Success"
     },
     {
+        "id": 43,
+        "question": "Which mineral is a key component of hemoglobin and helps prevent anemia?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
         "id": 44,
         "question": "What is the purpose of a \"firewall\" in computer security?",
         "expected": "To monitor and control incoming and outgoing network traffic based on predetermined security rules",
@@ -394,6 +472,12 @@
         "thinking": "Analyzing: 'What is the purpose of a \"firewall\" in computer se'\n\nProcessing:\n1. Analyzing input...\n2. Formulating response...\n3. Optimizing output...\n",
         "time_taken": 16.3,
         "status": "Success"
+    },
+    {
+        "id": 44,
+        "question": "What is the purpose of a \"firewall\" in computer security?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
     },
     {
         "id": 45,
@@ -405,6 +489,12 @@
         "status": "Success"
     },
     {
+        "id": 45,
+        "question": "What is the normal pH range of human blood?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
         "id": 46,
         "question": "In machine learning, what does a \"confusion matrix\" help evaluate?",
         "expected": "Performance of a classification model (true positives, true negatives, false positives, false negatives)",
@@ -412,6 +502,12 @@
         "thinking": "Analyzing: 'In machine learning, what does a \"confusion matrix'\n\nProcessing:\n1. Analyzing input...\n2. Formulating response...\n3. Optimizing output...\n",
         "time_taken": 21.88,
         "status": "Success"
+    },
+    {
+        "id": 46,
+        "question": "In machine learning, what does a \"confusion matrix\" help evaluate?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
     },
     {
         "id": 47,
@@ -423,6 +519,12 @@
         "status": "Success"
     },
     {
+        "id": 47,
+        "question": "Which part of the brain regulates body temperature, hunger, thirst, and sleep?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
         "id": 48,
         "question": "What does JSON stand for and what is it commonly used for?",
         "expected": "JavaScript Object Notation – lightweight data-interchange format (widely used in APIs)",
@@ -430,6 +532,12 @@
         "thinking": "Analyzing: 'What does JSON stand for and what is it commonly u'\n\nProcessing:\n1. Analyzing input...\n2. Formulating response...\n3. Optimizing output...\n",
         "time_taken": 18.47,
         "status": "Success"
+    },
+    {
+        "id": 48,
+        "question": "What does JSON stand for and what is it commonly used for?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
     },
     {
         "id": 49,
@@ -441,6 +549,12 @@
         "status": "Success"
     },
     {
+        "id": 49,
+        "question": "What is atherosclerosis?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
         "id": 50,
         "question": "In relational databases, what does the term \"ACID\" stand for?",
         "expected": "Atomicity, Consistency, Isolation, Durability (properties that guarantee reliable database transactions)",
@@ -448,5 +562,11 @@
         "thinking": "Analyzing: 'In relational databases, what does the term \"ACID\"'\n\nProcessing:\n1. Analyzing input...\n2. Formulating response...\n3. Optimizing output...\n",
         "time_taken": 14.84,
         "status": "Success"
+    },
+    {
+        "id": 50,
+        "question": "In relational databases, what does the term \"ACID\" stand for?",
+        "status": "Failed",
+        "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /chat (Caused by NewConnectionError(\"HTTPConnection(host='localhost', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
     }
 ]

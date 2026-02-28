@@ -384,17 +384,6 @@ class KnowledgeSynthesizer:
 
 class MAXY1_1:
     NAME = "MAXY 1.1"
-    SYSTEM_PROMPT = "You are MAXY 1.1, a quick, helpful, and friendly AI assistant. Your goal is to provide fast and accurate answers while being polite and engaging. Use concise formatting and occasional emojis to stay friendly."
-    
-    @staticmethod
-    
-    Optimized for:
-    - Lightning-fast responses
-    - Clear thinking process display
-    - Friendly, concise conversational AI
-    """
-    
-    NAME = "MAXY 1.1"
     VERSION = "1.1.0"
     DESCRIPTION = "Quick response AI with visible thinking process"
     
@@ -617,6 +606,25 @@ class MAXY1_1:
         intents = intent_analysis['intents']
         msg_lower = message.lower().strip()
         
+        # Priority 0: Simple math check (before Wikipedia)
+        math_pattern = r'what is (\d+)\s*([+\-*/])\s*(\d+)'
+        math_match = re.match(math_pattern, msg_lower)
+        if math_match:
+            a = int(math_match.group(1))
+            op = math_match.group(2)
+            b = int(math_match.group(3))
+            if op == '+':
+                return (f"The answer is {a + b}.", 0.99)
+            elif op == '-':
+                return (f"The answer is {a - b}.", 0.99)
+            elif op == '*':
+                return (f"The answer is {a * b}.", 0.99)
+            elif op == '/' and b != 0:
+                div_result = a / b
+                if div_result == int(div_result):
+                    return (f"The answer is {int(div_result)}.", 0.99)
+                return (f"The answer is {div_result}.", 0.99)
+        
         # Priority 0: Daily Updates handler
         if intents.get('daily_updates'):
             try:
@@ -814,11 +822,7 @@ class MAXY1_1:
             if len(response.split()) < 10:
                 response = f"Sure! Building on that: {response}"
         
-        # Adjust for context
-        if context_status == "continuing_conversation" and intent_analysis['intents']['greeting']:
-            # Don't greet again if we are continuing
-            response = "I'm listening! Go on." 
-            confidence = 0.99
+        # Adjust for context (skip - context_status not available)
         
         # Ensure response logic for MAXY 1.1 conciseness
         # Only truncate if it's NOT a very short (likely identity) response
@@ -848,17 +852,6 @@ class MAXY1_1:
 
 
 class MAXY1_2:
-    NAME = "MAXY 1.2"
-    SYSTEM_PROMPT = "You are MAXY 1.2, a sophisticated academic and research-oriented AI. You excel at providing in-depth analysis, scholarly overviews, and comprehensive reports. Your tone is formal, objective, and thorough, prioritizing accuracy and structured information synthesis."
-    
-    @staticmethod
-    
-    Optimized for:
-    - Deep Wikipedia research with detailed analysis
-    - Natural human-AI conversation
-    - Context-aware responses
-    """
-    
     NAME = "MAXY 1.2"
     VERSION = "1.2.0"
     DESCRIPTION = "Deep research expert with Wikipedia knowledge and conversational abilities"
@@ -1715,22 +1708,6 @@ class MAXY1_3:
             
         return False, ""
 
-    @staticmethod
-    
-    Capabilities:
-    - Processing and analyzing uploaded files
-    - Code generation in multiple programming languages
-    - Data visualization (charts, graphs)
-    - Data extraction and insights
-    - Pattern recognition in text
-    - Summary generation
-    - Natural conversation
-    - Weather updates
-    - Wikipedia & Deep Research
-    - Philosophical & Personal discussion
-    - Jokes & Entertainment
-    """
-    
     NAME = "MAXY 1.3"
     VERSION = "1.3.1"
     DESCRIPTION = "The ultimate MAXY model - data analysis, programming, visualization, and deep research expert"
@@ -2297,12 +2274,11 @@ class MAXY1_3:
                  response += "Would you like me to add glassmorphism effects or refine the typography further?"
                  confidence = 0.98
              else:
-                 # Local Fallback - UPGRADED PREMIUM TEMPLATE
+                  # Local Fallback - UPGRADED PREMIUM TEMPLATE
                   if web_type == 'portfolio':
                       response = "### 🏗️ MAXY Template: Premium Portfolio Specialist\n\n"
                       response += "I've generated a bespoke, high-performance portfolio starter using a sleek dark-mode aesthetic and modern 'Inter' typography:\n\n"
-                      template = """```html
-<!DOCTYPE html>
+                      template = """<!DOCTYPE html>
 <html lang='en'>
 <head>
   <meta charset='UTF-8'>
@@ -2331,8 +2307,8 @@ class MAXY1_3:
     <a href='#' class='btn'>View Laboratory</a>
   </section>
 </body>
-</html>
-```"""
+</html>"""
+                      response += "```html\n" + template + "\n```\n\n"
                       response += template + "\n\n"
                       response += "This premium template is ready for deployment. I can expand it with project galleries, contact forms, or dynamic animations—what's our next step?"
                       confidence = 0.95
