@@ -1323,7 +1323,7 @@ function setupDragAndDrop() {
       reader.onload = (event) => {
         uploadedFileContent = event.target.result;
         addMessageToDOM(`<img src="${event.target.result}" style="max-width: 300px; max-height: 200px; border-radius: 12px; margin-top: 10px;" />`, "user");
-        addMessage("Image uploaded successfully! What would you like to know about it?", "ai");
+        addMessage("Note: MAXY can analyze image metadata (dimensions, format, colors) but cannot 'see' or describe image content. Ask me about the technical details!", "ai");
       };
       reader.readAsDataURL(file);
     } else {
@@ -1339,6 +1339,20 @@ function setupDragAndDrop() {
 }
 
 // ===== EVENT LISTENERS =====
+
+// Textarea - handle paste events for images
+textarea.addEventListener("paste", (e) => {
+  const items = e.clipboardData?.items;
+  if (items) {
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        e.preventDefault();
+        showToast("Image paste not supported", "MAXY doesn't support image input. Please use the upload button for images.", "error");
+        return;
+      }
+    }
+  }
+});
 
 // Textarea
 textarea.addEventListener("input", autoGrow);
@@ -1396,7 +1410,7 @@ document.querySelectorAll(".hidden-file-input").forEach(input => {
         reader.onload = (event) => {
           uploadedFileContent = event.target.result;
           addMessageToDOM(`<img src="${event.target.result}" style="max-width: 300px; max-height: 200px; border-radius: 12px; margin-top: 10px;" />`, "user");
-          addMessage("Image uploaded successfully! What would you like to know about it?", "ai");
+          addMessage("Note: MAXY can analyze image metadata (dimensions, format, colors) but cannot 'see' or describe image content. Ask me about the technical details!", "ai");
         };
         reader.readAsDataURL(file);
       } else if (file.type === 'application/pdf' || file.type.includes('text') || file.name.endsWith('.txt') || file.name.endsWith('.doc') || file.name.endsWith('.docx')) {

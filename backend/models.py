@@ -191,7 +191,27 @@ class KnowledgeSynthesizer:
         # Identity query detection
         identity_keywords = ['who is', 'who was', 'identity', 'person', 'pm of', 'president of', 'ceo of', 'chief minister of', 'chief of', 'founder of', 'creator of', 'author of']
         msg_lower = query.lower()
-        is_identity = any(ik in msg_lower for ik in identity_keywords)
+        
+        # Enhanced detection for proper names (People)
+        is_proper_noun = False
+        concept_words = ['energy', 'science', 'math', 'physics', 'history', 'law', 'theory', 'system', 'process', 'effect', 'method', 'technology', 'biology', 'chemistry', 'machine', 'power']
+        if not any(ik in msg_lower for ik in identity_keywords):
+            # Check if likely a name (all words capitalized, 1-4 words)
+            words = query.split()
+            if 1 <= len(words) <= 4 and all(w[0].isupper() for w in words if w.isalpha()):
+                # Exclude if it contains common concept words
+                if not any(cw in msg_lower for cw in concept_words):
+                    is_proper_noun = True
+        
+        is_identity = any(ik in msg_lower for ik in identity_keywords) or is_proper_noun
+        
+        # General Title Match Boost (Applies to ALL queries)
+        # Strip common search prefixes to find the core topic
+        lookup_topic = re.sub(r'^(?:the\s+)?(?:what is|who is|tell me about|importance of|history of|details of|about|research on|info on|essay on|speech on|essay about|speech about)\s+', '', msg_lower).strip()
+        if lookup_topic == title_lower:
+            matches += 50 # Increased from 30 for super prioritization of core topic
+        elif title_lower.startswith(lookup_topic):
+            matches += 25 # Increased from 15
         
         if is_identity:
             # 1. Recency Boost: Heavily prioritize current status
@@ -213,7 +233,7 @@ class KnowledgeSynthesizer:
             ]
             if not any(ii in msg_lower for ii in institution_indicators):
                 if any(ii in title_lower for ii in institution_indicators):
-                    matches -= 10 # Strong penalty to prevent MGIMS over Mahatma Gandhi
+                    matches -= 20 # Increased from 10 to better filter universities/institutes
 
             # 4. Wikipedia Disambiguation Penalty
             if "disambiguation" in title_lower:
@@ -247,8 +267,12 @@ class KnowledgeSynthesizer:
                 query_full_name = " ".join(names_in_query).lower()
                 
                 # Significant boost if the title matches the name in the query
-                if query_full_name == title_lower or query_full_name in title_lower:
-                    matches += 25
+                if query_full_name == title_lower:
+                    matches += 70 # Massive boost for exact title match
+                elif title_lower.startswith(query_full_name):
+                    matches += 40 # Strong boost for "Mahatma Gandhi (biography)"
+                elif query_full_name in title_lower:
+                    matches += 25 # Moderate boost for "Life of Mahatma Gandhi"
                 elif all(name.lower() in title_lower for name in names_in_query):
                     matches += 15
                 
@@ -256,7 +280,9 @@ class KnowledgeSynthesizer:
                 non_person_subtopics = [
                     'assassination', 'family', 'legacy', 'death', 'childhood', 'early life', 
                     'career', 'politics', 'murder', 'killing', 'incident', 'event', 'movement',
-                    'uprising', 'rebellion', 'riot', 'battle', 'war', 'anniversary', 'memorial'
+                    'uprising', 'rebellion', 'riot', 'battle', 'war', 'anniversary', 'memorial',
+                    'series', 'setu', 'bridge', 'statue', 'museum', 'road', 'street', 'airport',
+                    'station', 'award', 'prize', 'film', 'movie', 'book'
                 ]
                 for ind in non_person_subtopics:
                     if ind in title_lower and ind not in query.lower():
@@ -912,6 +938,23 @@ class MAXY1_2:
     def deep_wikipedia_research(query: str) -> Dict[str, Any]:
         """Perform comprehensive verified research with professional synthesis"""
         try:
+            # Topic Augmentation for better identity detection
+            concept_words = ['energy', 'science', 'math', 'physics', 'history', 'law', 'theory', 'system', 'process', 'effect', 'method', 'technology', 'biology', 'chemistry', 'machine', 'power', 'environment']
+            augmented_query = query
+            msg_lower = query.lower()
+            position_keywords = ['pm of', 'ceo of', 'president of', 'pm', 'cm of', 'head of', 'chief of', 'governor of']
+            if any(pk in msg_lower for pk in position_keywords):
+                if "current" not in msg_lower:
+                    augmented_query = f"current {query}"
+                if not augmented_query.lower().startswith('who is'):
+                    augmented_query = f"who is the {augmented_query}"
+            elif (query.istitle() or len(query.split()) <= 3) and not any(kw in msg_lower for kw in ['essay', 'speech', 'write']):
+                # Only add "who is" if it's likely a person (no concept words)
+                if not any(cw in msg_lower for cw in concept_words):
+                     if not any(ik in msg_lower for ik in ['who is', 'who was', 'what is', 'what was']):
+                         augmented_query = f"who is {query}"
+            
+            # Use augmented query for scoring, but original for search if needed
             candidates = []
             
             # 1. Wiki Search
@@ -936,7 +979,8 @@ class MAXY1_2:
             # 2. Web Search
             try:
                 with DDGS() as ddgs:
-                    web_results = list(ddgs.text(query, max_results=5))
+                    # Use augmented query for web search to trigger identity patterns
+                    web_results = list(ddgs.text(augmented_query, max_results=5))
                     for res in web_results:
                         candidates.append({
                             'title': res['title'],
@@ -955,7 +999,8 @@ class MAXY1_2:
                 }
 
             # 3. Verification and Selection
-            verified_results = KnowledgeSynthesizer.verify_facts(query, candidates)
+            # Use augmented query for scoring to ensure identity detection
+            verified_results = KnowledgeSynthesizer.verify_facts(augmented_query, candidates)
             best_res = None
             for res in verified_results:
                 if res['relevance_score'] > 0.4 and len(res['body']) > 200:
@@ -2129,6 +2174,14 @@ class MAXY1_3:
         user_name: Optional[str] = None
     ) -> Dict[str, Any]:
         """Ultimate message processing consolidating ALL MAXY features"""
+        
+        # Check for image input - MAXY models don't support image vision
+        if file_data and file_data.get('type', '').startswith('image'):
+            return {
+                'response': "I apologize, but the current MAXY models don't support image analysis or vision. I can only process text, documents (PDF, Word, text files), and code files. If you'd like to analyze an image, please describe what you see in the image and I'll do my best to help based on that description!",
+                'model': MAXY1_3.NAME,
+                'confidence': 1.0,
+            }
         
         thinking = None
         confidence = 0.85
