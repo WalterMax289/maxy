@@ -915,8 +915,10 @@
 
     <!-- Header with hamburger -->
     <header>
-        <img src="assets/maxy12.gif" alt="MAXY Logo" class="logo-circle" id="logoGif" title="Click to refresh"
-            loading="lazy">
+        <video autoplay loop muted playsinline class="logo-circle" id="logoVid" title="Click to refresh"
+            onclick="location.reload()">
+            <source src="assets/maxy12.mp4" type="video/mp4">
+        </video>
         <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">☰</button>
         <nav>
             <button class="close-menu" id="closeMenu" aria-label="Close menu">&times;</button>
