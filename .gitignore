@@ -26,3 +26,11 @@ logs/
 nul
 backend/nul
 
+# Test Results & Benchmarks
+test_results_*.json
+benchmark_report.json
+domain_results.json
+test_log.txt
+test_questions.txt
+answers_verification.md
+
